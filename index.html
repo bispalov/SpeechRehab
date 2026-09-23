@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Слуховая дифференциация: 1000+ Слов</title>
+    <style>
+        :root {
+            --bg-color: #f0f4f8;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --label-color: #555555;
+            --input-bg: #ffffff;
+            --input-border: #cccccc;
+            --word-box-bg: #e9ecef;
+            --option-btn-bg: #ffffff;
+            --option-btn-text: #007bff;
+            --option-btn-border: #007bff;
+            --option-btn-hover: #e7f1ff;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --label-color: #aaaaaa;
+            --input-bg: #2d2d2d;
+            --input-border: #444444;
+            --word-box-bg: #2a2a2a;
+            --option-btn-bg: #2d2d2d;
+            --option-btn-text: #4da3ff;
+            --option-btn-border: #4da3ff;
+            --option-btn-hover: #384756;
+            --shadow: rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px var(--shadow);
+            text-align: center;
+            box-sizing: border-box;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        h1 {
+            color: var(--text-color);
+            font-size: 20px;
+            margin: 0;
+        }
+        .theme-toggle-btn {
+            background: none;
+            border: 1px solid var(--input-border);
+            color: var(--text-color);
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            width: auto;
+        }
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+        }
+        .control-group {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        label {
+            font-weight: bold;
+            color: var(--label-color);
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        select, input[type="range"], button {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--input-border);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+        }
+        .slider-container span {
+            font-weight: bold;
+            color: var(--text-color);
+            min-width: 45px;
+        }
+        .card {
+            margin: 15px 0;
+            padding: 20px;
+            background-color: var(--word-box-bg);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: background-color 0.3s;
+        }
+        .speak-main-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 18px;
+            padding: 15px;
+        }
+        .speak-main-btn:hover {
+            background-color: #218838;
+        }
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .option-row {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+        }
+        .option-btn {
+            flex-grow: 1;
+            background-color: var(--option-btn-bg);
+            border: 2px solid var(--option-btn-border);
+            color: var(--option-btn-text);
+            font-weight: bold;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 12px;
+            text-align: center;
+        }
+        .option-btn:hover {
+            background-color: var(--option-btn-hover);
+        }
+        .option-btn.correct {
+            background-color: #28a745 !important;
+            color: white !important;
+            border-color: #28a745 !important;
+        }
+        .option-btn.wrong {
+            background-color: #dc3545 !important;
+            color: white !important;
+            border-color: #dc3545 !important;
+        }
+        .audio-btn {
+            width: 50px;
+            flex-shrink: 0;
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .audio-btn:hover {
+            background-color: #138496;
+        }
+        .next-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-row">
+        <h1>Слуховая дифференциация</h1>
+        <button class="theme-toggle-btn" id="themeBtn" onclick="toggleTheme()">☀️ Светлая</button>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <label for="categorySelect">Выберите категорию:</label>
+            <select id="categorySelect" onchange="changeCategory()">
+                <!-- Категории загружаются автоматически -->
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="voiceSelect">Пол голоса (Русский):</label>
+            <select id="voiceSelect">
+                <option value="male" selected>👨 Мужской</option>
+                <option value="female">👩 Женский</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="rateRange">Скорость речи:</label>
+            <div class="slider-container">
+                <input type="range" id="rateRange" min="0.5" max="1.5" step="0.1" value="0.9" oninput="updateRateLabel(this.value)">
+                <span id="rateValue">0.9x</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <button class="speak-main-btn" onclick="speakWord(targetWord)">🔊 Прослушать загаданное слово</button>
+    </div>
+
+    <label>Выберите слово, которое вы услышали (все варианты — реальные слова):</label>
+    <div class="options-grid" id="optionsContainer">
+        <!-- Варианты ответов загружаются автоматически -->
+    </div>
+
+    <button class="next-btn" onclick="nextQuestion()">Следующее слово ➔</button>
+</div>
+
+<script>
+    const dictionary = {
+        "1. Быт и Мебель": ["Дом", "Кровать", "Стол", "Стул", "Шкаф", "Диван", "Кресло", "Окно", "Дверь", "Зеркало", "Полка", "Ковер", "Лампа", "Подушка", "Одеяло", "Простыня", "Телевизор", "Часы", "Ключ", "Замок", "Стена", "Пол", "Потолок", "Балкон", "Штора", "Батарея", "Люстра", "Ваза", "Картина", "Карниз", "Вешалка", "Тумба", "Матрас", "Плед", "Скатерть", "Жалюзи", "Ящик", "Порог", "Ручка", "Розетка"],
+        "2. Посуда и Кухня": ["Ложка", "Вилка", "Нож", "Тарелка", "Чашка", "Стакан", "Кастрюля", "Сковорода", "Чайник", "Кувшин", "Миска", "Блюдце", "Половник", "Лопатка", "Тёрка", "Доска", "Поднос", "Солонка", "Сахарница", "Масленка", "Хлебница", "Духовка", "Плита", "Холодильник", "Микроволновка", "Миксер", "Блендер", "Фильтр", "Губка", "Полотенце", "Раковина", "Кран", "Скалка", "Ситечко", "Дуршлаг", "Банка", "Бутылка", "Пробка", "Фольга", "Пергамент"],
+        "3. Здоровье и Тело": ["Врач", "Больница", "Аптека", "Лекарство", "Таблетка", "Градусник", "Укол", "Бинт", "Вата", "Пластырь", "Мазь", "Капли", "Боль", "Сердце", "Голова", "Рука", "Нога", "Палец", "Спина", "Живот", "Грудь", "Шея", "Лицо", "Глаз", "Ухо", "Нос", "Рот", "Зуб", "Язык", "Колено", "Локоть", "Плечо", "Кровь", "Пульс", "Давление", "Температура", "Кашель", "Насморк", "Сон"],
+        "4. Общение и Эмоции": ["Привет", "Спасибо", "Пожалуйста", "Да", "Нет", "Хорошо", "Плохо", "Помоги", "Как дела", "До свидания", "Здравствуйте", "Простите", "Люблю", "Радость", "Грусть", "Улыбка", "Смех", "Слезы", "Добро", "Мир", "Дружба", "Забота", "Ласка", "Поцелуй", "Объятия", "Покой", "Страх", "Удивление", "Надежда", "Вера", "Согласен", "Не хочу", "Буду", "Не буду", "Дай", "На", "Иди", "Стой", "Слушай", "Смотри"],
+        "5. Одежда и Обувь": ["Рубашка", "Брюки", "Джинсы", "Платье", "Юбка", "Футболка", "Свитер", "Кофта", "Куртка", "Пальто", "Плащ", "Шапка", "Шарф", "Перчатки", "Варежки", "Носки", "Колготки", "Белье", "Пижама", "Халат", "Ботинки", "Сапоги", "Туфли", "Кроссовки", "Тапочки", "Сандалии", "Ремень", "Пуговица", "Молния", "Карман", "Воротник", "Рукав", "Капюшон", "Шнурки", "Шляпа", "Панамка", "Жилет", "Костюм", "Жакет"],
+        "6. Продукты и Еда": ["Хлеб", "Масло", "Сыр", "Молоко", "Мясо", "Рыба", "Яйцо", "Суп", "Каша", "Салат", "Соль", "Сахар", "Перец", "Соус", "Макароны", "Крупа", "Рис", "Гречка", "Лапша", "Пирог", "Торт", "Печенье", "Конфета", "Шоколад", "Мед", "Варенье", "Сметана", "Творог", "Кефир", "Йогурт", "Колбаса", "Сосиски", "Котлета", "Пельмени", "Блины", "Сэндвич", "Мука", "Дрожжи", "Уксус", "Горчица"],
+        "7. Напитки": ["Вода", "Чай", "Кофе", "Сок", "Молоко", "Компот", "Морс", "Кисель", "Лимонад", "Квас", "Коктейль", "Какао", "Минералка", "Отвар", "Напиток", "Нектар", "Эспрессо", "Капучино", "Смузи", "Тоник"],
+        "8. Фрукты и Ягоды": ["Яблоко", "Груша", "Банан", "Апельсин", "Лимон", "Мандарин", "Персик", "Абрикос", "Слива", "Виноград", "Клубника", "Малина", "Земляника", "Вишня", "Черешня", "Черника", "Смородина", "Арбуз", "Дыня", "Ананас", "Киви", "Манго", "Гранат", "Инжир", "Хурма", "Алыча", "Ежевика", "Клюква", "Брусника", "Облепиха"],
+        "9. Овощи и Зелень": ["Картофель", "Морковь", "Свекла", "Лук", "Чеснок", "Огурец", "Помидор", "Капуста", "Перец", "Кабачок", "Баклажан", "Тыква", "Горох", "Фасоль", "Кукуруза", "Редис", "Репа", "Зелень", "Укроп", "Петрушка", "Салат", "Шпинат", "Щавель", "Сельдерей", "Базилик"],
+        "10. Гигиена и Уход": ["Мыло", "Шампунь", "Паста", "Щетка", "Вода", "Полотенце", "Расческа", "Ножницы", "Зеркало", "Крем", "Салфетка", "Бумага", "Мочалка", "Пена", "Гель", "Духи", "Дезодорант", "Бритва", "Вата", "Пемза"],
+        "11. Семья и Люди": ["Мама", "Папа", "Сын", "Дочь", "Бабушка", "Дедушка", "Брат", "Сестра", "Внук", "Внучка", "Дядя", "Тетя", "Муж", "Жена", "Ребенок", "Друг", "Сосед", "Гость", "Человек", "Малыш"],
+        "12. Профессии": ["Врач", "Учитель", "Повар", "Водитель", "Продавец", "Строитель", "Пожарный", "Полицейский", "Почтальон", "Парикмахер", "Швея", "Сантехник", "Электрик", "Инженер", "Пилот"],
+        "13. Город и Транспорт": ["Город", "Улица", "Дом", "Дорога", "Машина", "Автобус", "Трамвай", "Троллейбус", "Метро", "Поезд", "Самолет", "Такси", "Остановка", "Магазин", "Парк", "Аптека", "Мост", "Светофор", "Тротуар", "Площадь"],
+        "14. Природа и Погода": ["Солнце", "Небо", "Облако", "Дождь", "Снег", "Ветер", "Гроза", "Радуга", "Звезда", "Луна", "День", "Ночь", "Утро", "Вечер", "Лес", "Река", "Озеро", "Море", "Гора", "Поле"],
+        "15. Время и Календарь": ["Время", "Час", "Минута", "Секунда", "День", "Неделя", "Месяц", "Год", "Вчера", "Сегодня", "Завтра", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье", "Зима", "Весна", "Лето", "Осень"],
+        "16. Животные Домашние": ["Кошка", "Собака", "Корова", "Лошадь", "Свинья", "Овца", "Коза", "Кролик", "Кот", "Щенок", "Котенок", "Теленок", "Жеребенок", "Осел", "Хомяк"],
+        "17. Животные Дикие": ["Волк", "Лиса", "Медведь", "Заяц", "Еж", "Белка", "Олень", "Лось", "Лев", "Тигр", "Слон", "Обезьяна", "Жираф", "Бегемот", "Крокодил"],
+        "18. Птицы": ["Птица", "Воробей", "Ворона", "Голубь", "Синица", "Дятел", "Утка", "Гусь", "Курица", "Петух", "Индюк", "Сова", "Орел", "Аист", "Ласточка"],
+        "19. Цвета": ["Белый", "Черный", "Красный", "Синий", "Зеленый", "Желтый", "Оранжевый", "Фиолетовый", "Розовый", "Коричневый", "Серый", "Голубой", "Бежевый", "Бордовый", "Салатовый"],
+        "20. Числа и Счет": ["Один", "Два", "Три", "Четыре", "Пять", "Шесть", "Семь", "Восемь", "Девять", "Десять", "Сто", "Тысяча", "Первый", "Второй", "Третий", "Много", "Мало", "Половина", "Ноль", "Пара"],
+        "21. Действия (Глаголы)": ["Идти", "Сидеть", "Стоять", "Лежать", "Спать", "Есть", "Пить", "Говорить", "Слушать", "Смотреть", "Читать", "Писать", "Дать", "Взять", "Мыть", "Чистить", "Одеть", "Снять", "Открыть", "Закрыть"],
+        "22. Качества (Прилагательные)": ["Большой", "Маленький", "Горячий", "Холодный", "Теплый", "Вкусный", "Чистый", "Грязный", "Новый", "Старый", "Добрый", "Хороший", "Плохой", "Быстрый", "Медленный", "Сильный", "Светлый", "Темный", "Мягкий", "Твердый"],
+        "23. Инструменты и Ремонт": ["Молоток", "Гвоздь", "Винт", "Отвертка", "Пила", "Клещи", "Топор", "Лопата", "Грабли", "Ведро", "Щетка", "Клей", "Краска", "Кисть", "Провод"],
+        "24. Отдых и Увлечения": ["Книга", "Газета", "Музыка", "Песня", "Танец", "Кино", "Радио", "Игра", "Мяч", "Прогулка", "Сад", "Цветы", "Рыбалка", "Спорт", "Праздник"],
+        "25. Канцелярия и Учеба": ["Ручка", "Карандаш", "Тетрадь", "Блокнот", "Бумага", "Ластик", "Линейка", "Книга", "Сумка", "Конверт", "Папка", "Клей", "Ножницы", "Маркер", "Краски"]
+    };
+
+    const realWordPairs = {
+        "Дом": ["Дым", "Том", "Ком", "Лом", "Док"],
+        "Стол": ["Стул", "Ствол", "Столб", "Сток"],
+        "Стул": ["Стол", "Стук", "Слуг", "Ступ"],
+        "Шкаф": ["Шарф", "Штаб", "Шнур", "Шаг"],
+        "Пол": ["Кол", "Вол", "Гол", "Поле"],
+        "Балкон": ["Барон", "Флакон", "Баллон", "Дракон"],
+        "Дверь": ["Зверь", "Тверь", "Двор", "День"],
+        "Замок": ["Закон", "Залог", "Комок", "Самок"],
+        "Рама": ["Дама", "Рана", "Яма", "Лама"],
+        "Полка": ["Палка", "Иголка", "Волк", "Полька"],
+        "Ложка": ["Мошка", "Кошка", "Ножка", "Ладошка"],
+        "Вилка": ["Жилка", "Пилка", "Балка", "Папка"],
+        "Нож": ["Еж", "Рожь", "Ложь", "Ковш", "Муж"],
+        "Банка": ["Манка", "Ранка", "Санка", "Палка"],
+        "Чашка": ["Кашка", "Шашка", "Чаща", "Ручка"],
+        "Кран": ["Клан", "Храм", "Крик", "Край"],
+        "Миска": ["Киска", "Маска", "Диск", "Леска"],
+        "Соль": ["Моль", "Боль", "Роль", "Толь"],
+        "Голова": ["Голос", "Голубь", "Гора", "Голод"],
+        "Рот": ["Кот", "Крот", "Плот", "Год", "Рог"],
+        "Зуб": ["Дуб", "Суп", "Сруб", "Чуб"],
+        "Нос": ["Пёс", "Нёс", "Трос", "Воз"],
+        "Ухо": ["Эхо", "Муха", "Пух", "Уха"],
+        "Рука": ["Река", "Мука", "Ручей", "Сука"],
+        "Нога": ["Нуга", "Тайга", "Дуга", "Нора"],
+        "Боль": ["Моль", "Соль", "Ноль", "Быль"],
+        "Сыр": ["Сор", "Сын", "Сэр", "Пир", "Мир"],
+        "Суп": ["Зуб", "Дуб", "Сноп", "Соп"],
+        "Каша": ["Чаша", "Наша", "Маша", "Даша"],
+        "Сок": ["Ток", "Бок", "Рок", "Сук", "Сон"],
+        "Чай": ["Май", "Лай", "Час", "Чайник"],
+        "Крупа": ["Группа", "Труба", "Круг", "Кружка"],
+        "Мука": ["Рука", "Муха", "Лука", "Штука"],
+        "Рис": ["Рысь", "Лис", "Трос", "Пис"],
+        "Кот": ["Крот", "Рот", "Код", "Год"],
+        "Кошка": ["Ложка", "Мошка", "Крошка", "Сошка"],
+        "Собака": ["Бумага", "Свобода", "Сладость", "Слуга"],
+        "Волк": ["Шелк", "Толк", "Пол", "Полка"],
+        "Лиса": ["Коса", "Роса", "Оса", "Лист"],
+        "Заяц": ["Палец", "Танец", "Глянец", "Яйцо"],
+        "Утка": ["Шутка", "Будка", "Улитка", "Дудка"],
+        "Коза": ["Коса", "Роза", "Лоза", "Гроза"],
+        "День": ["Тень", "Пень", "Лень", "Дон"],
+        "Ночь": ["Дочь", "Печь", "Мечь", "Прочь"],
+        "Лес": ["Вес", "Бес", "Лев", "Леска"],
+        "Река": ["Рука", "Мука", "Репка", "Речка"],
+        "Гора": ["Нора", "Кора", "Пора", "Гроза"],
+        "Дождь": ["Вождь", "Гвоздь", "Дрожь", "Дочь"],
+        "Снег": ["След", "Смех", "Свет", "Снегирь"],
+        "Гроза": ["Роза", "Лоза", "Коза", "Глаза"],
+        "Врач": ["Грач", "Плач", "Мяч", "Враг"],
+        "Папа": ["Лапа", "Капа", "Пара", "Папка"],
+        "Мама": ["Рама", "Дама", "Яма", "Маска"],
+        "Сын": ["Сыр", "Сон", "Син", "Сын"],
+        "Дочь": ["Ночь", "Печь", "Дичь", "Дрожь"],
+        "Брат": ["Брад", "Брак", "Враг", "Град"],
+        "Бык": ["Бок", "Бак", "Бук", "Рык"],
+        "Рыба": ["Липа", "Лапа", "Рыбачка", "Роба"],
+        "Лук": ["Люк", "Сук", "Бук", "Жук"],
+        "Мак": ["Рак", "Бак", "Лак", "Так"],
+        "Книга": ["Фига", "Лига", "Миг", "Крик"],
+        "Песня": ["Пеня", "Перст", "Перья", "Печь"],
+        "Мыло": ["Шило", "Мило", "Мел", "Муло"],
+        "Сад": ["Суд", "Зад", "Град", "Лад"],
+        "Цветы": ["Кусты", "Листы", "Мосты", "Черты"]
+    };
+
+    let targetWord = "";
+    let voices = [];
+    let maleVoices = [];
+    let femaleVoices = [];
+    let isAnswered = false;
+
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const themeBtn = document.getElementById('themeBtn');
+
+        if (currentTheme === 'dark') {
+            document.documentElement.removeAttribute('data-theme');
+            themeBtn.innerHTML = '🌙 Темная';
+        } else {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeBtn.innerHTML = '☀️ Светлая';
+        }
+    }
+
+    function getRealDistractors(word, currentCategory) {
+        if (realWordPairs[word]) {
+            let pool = [...realWordPairs[word]];
+            pool.sort(() => Math.random() - 0.5);
+            return pool.slice(0, 3);
+        }
+
+        let allWords = [];
+        for (let cat in dictionary) {
+            allWords.push(...dictionary[cat]);
+        }
+
+        let candidates = allWords.filter(w => 
+            w !== word && 
+            Math.abs(w.length - word.length) <= 2 &&
+            w.charAt(0).toLowerCase() === word.charAt(0).toLowerCase()
+        );
+
+        if (candidates.length < 3) {
+            candidates = allWords.filter(w => w !== word && Math.abs(w.length - word.length) <= 2);
+        }
+
+        candidates.sort(() => Math.random() - 0.5);
+        return candidates.slice(0, 3);
+    }
+
+    function updateRateLabel(val) {
+        document.getElementById('rateValue').textContent = val + 'x';
+    }
+
+    // Ключевые слова для распознавания пола голоса в его системном имени.
+    // Список расширен именами, которые встречаются в голосах Android (Google TTS),
+    // Windows и iOS.
+    const maleVoiceHints = [
+        'pavel', 'dmitry', 'dmitri', 'alexander', 'aleksandr', 'ivan', 'boris',
+        'vladimir', 'nikolai', 'nikolay', 'yuri', 'yuriy', 'maxim', 'artemiy',
+        'artem', 'sergey', 'sergei', 'egor', 'anton', 'male', 'муж', 'мужской',
+        'dfc', 'rud'
+    ];
+    const femaleVoiceHints = [
+        'milena', 'elena', 'irina', 'ekaterina', 'katya', 'anna', 'olga',
+        'tatiana', 'tatyana', 'anastasia', 'victoria', 'svetlana', 'maria',
+        'mariya', 'natasha', 'natalia', 'female', 'жен', 'женский'
+    ];
+
+    function classifyVoiceGender(voice) {
+        const name = voice.name.toLowerCase();
+        if (maleVoiceHints.some(hint => name.includes(hint))) return 'male';
+        if (femaleVoiceHints.some(hint => name.includes(hint))) return 'female';
+        return 'unknown';
+    }
+
+    function populateVoiceList() {
+        if (!('speechSynthesis' in window)) return;
+
+        const allVoices = speechSynthesis.getVoices();
+        if (!allVoices || allVoices.length === 0) return;
+        voices = allVoices;
+
+        // Строгая фильтрация ТОЛЬКО по русскоязычным голосам
+        const ruVoices = voices.filter(voice => {
+            const lang = voice.lang.toLowerCase().replace('_', '-');
+            return lang.startsWith('ru');
+        });
+
+        const male = [];
+        const female = [];
+        const unknown = [];
+
+        ruVoices.forEach(voice => {
+            const gender = classifyVoiceGender(voice);
+            if (gender === 'male') male.push(voice);
+            else if (gender === 'female') female.push(voice);
+            else unknown.push(voice);
+        });
+
+        // На многих Android-устройствах доступен только один системный
+        // русскоязычный голос без указания пола в названии. В этом случае
+        // используем его для обеих ролей — слышимая разница всё равно
+        // достигается изменением тембра (pitch) в speakWord().
+        maleVoices = male.length ? male : (unknown.length ? [unknown[0]] : ruVoices.slice(0, 1));
+        femaleVoices = female.length ? female : (unknown.length ? [unknown[unknown.length - 1]] : ruVoices.slice(0, 1));
+    }
+
+    populateVoiceList();
+    if ('speechSynthesis' in window) {
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = populateVoiceList;
+        }
+
+        // На части Android-браузеров/WebView событие onvoiceschanged не
+        // срабатывает вовремя (или вообще), поэтому дополнительно опрашиваем
+        // список голосов в течение первых нескольких секунд после загрузки.
+        let voiceCheckAttempts = 0;
+        const voiceCheckInterval = setInterval(() => {
+            voiceCheckAttempts++;
+            const currentVoices = speechSynthesis.getVoices();
+            if (currentVoices.length > 0) {
+                populateVoiceList();
+            }
+            if (currentVoices.length > 0 || voiceCheckAttempts >= 10) {
+                clearInterval(voiceCheckInterval);
+            }
+        }, 300);
+    }
+
+    function speakWord(textToSpeak) {
+        if (!textToSpeak || !('speechSynthesis' in window)) return;
+
+        // Явный cancel перед новой репликой нужен и на Android, иначе
+        // очередь озвучки может "зависнуть" после нескольких нажатий подряд.
+        speechSynthesis.cancel();
+
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+
+        // Обязательно фиксируем язык для Android TTS
+        utterance.lang = 'ru-RU';
+
+        const voiceSelect = document.getElementById('voiceSelect');
+        const gender = voiceSelect ? voiceSelect.value : 'male';
+        const voicePool = gender === 'female' ? femaleVoices : maleVoices;
+
+        if (voicePool && voicePool.length > 0) {
+            utterance.voice = voicePool[0];
+        }
+
+        // Подстройка тембра гарантирует слышимую разницу между мужским и
+        // женским вариантом даже тогда, когда на устройстве физически
+        // доступен только один русский системный голос (частый случай на
+        // Android).
+        utterance.pitch = gender === 'female' ? 1.25 : 0.85;
+
+        const rateRange = document.getElementById('rateRange');
+        utterance.rate = parseFloat(rateRange.value) || 0.9;
+
+        speechSynthesis.speak(utterance);
+    }
+
+    function initCategories() {
+        const categorySelect = document.getElementById('categorySelect');
+        categorySelect.innerHTML = '';
+        for (let category in dictionary) {
+            const option = document.createElement('option');
+            option.value = category;
+            option.textContent = category;
+            categorySelect.appendChild(option);
+        }
+        nextQuestion();
+    }
+
+    function changeCategory() {
+        nextQuestion();
+    }
+
+    function nextQuestion() {
+        isAnswered = false;
+        const categorySelect = document.getElementById('categorySelect');
+        const selectedCategory = categorySelect.value;
+        const words = dictionary[selectedCategory];
+
+        if (!words || words.length === 0) return;
+
+        const randomIndex = Math.floor(Math.random() * words.length);
+        targetWord = words[randomIndex];
+
+        const wrongOptions = getRealDistractors(targetWord, selectedCategory);
+
+        let options = [targetWord, ...wrongOptions];
+        options.sort(() => Math.random() - 0.5);
+
+        const container = document.getElementById('optionsContainer');
+        container.innerHTML = '';
+
+        options.forEach(optionText => {
+            const row = document.createElement('div');
+            row.className = 'option-row';
+
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.textContent = optionText;
+            btn.onclick = () => checkAnswer(btn, optionText);
+
+            const audioBtn = document.createElement('button');
+            audioBtn.className = 'audio-btn';
+            audioBtn.innerHTML = '🔊';
+            audioBtn.title = 'Прослушать вариант';
+            audioBtn.onclick = (e) => {
+                e.stopPropagation();
+                speakWord(optionText);
+            };
+
+            row.appendChild(btn);
+            row.appendChild(audioBtn);
+            container.appendChild(row);
+        });
+
+        setTimeout(() => speakWord(targetWord), 300);
+    }
+
+    function checkAnswer(selectedBtn, selectedText) {
+        if (isAnswered) return;
+        isAnswered = true;
+
+        const allButtons = document.querySelectorAll('.option-btn');
+
+        if (selectedText === targetWord) {
+            selectedBtn.classList.add('correct');
+        } else {
+            selectedBtn.classList.add('wrong');
+            allButtons.forEach(btn => {
+                if (btn.textContent === targetWord) {
+                    btn.classList.add('correct');
+                }
+            });
+        }
+    }
+
+    window.onload = initCategories;
+</script>
+
+</body>
+</html>
