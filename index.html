@@ -204,14 +204,152 @@
             font-weight: bold;
             margin-top: 20px;
         }
+        .stats-row {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        .stat-box {
+            flex: 1;
+            background-color: var(--word-box-bg);
+            border-radius: 8px;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 15px;
+        }
+        .stat-box.correct-stat {
+            color: #28a745;
+        }
+        .stat-box.total-stat {
+            color: var(--option-btn-text);
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+            color: var(--label-color);
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .checkbox-label input[type="checkbox"] {
+            width: auto;
+            padding: 0;
+        }
+        .timer-inputs {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+        .timer-inputs > div {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .timer-inputs label {
+            margin-bottom: 2px;
+            font-size: 12px;
+        }
+        .timer-status-row {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            align-items: center;
+        }
+        .timer-display {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: var(--word-box-bg);
+            font-weight: bold;
+            text-align: center;
+            font-size: 15px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .timer-display.resting {
+            background-color: #ffc107;
+            color: #333333;
+        }
+        .timer-pause-btn {
+            width: auto;
+            flex-shrink: 0;
+            background-color: var(--option-btn-bg);
+            color: var(--option-btn-text);
+            border: 2px solid var(--option-btn-border);
+            font-weight: bold;
+            padding: 10px 14px;
+        }
+        .container.resting-blocked {
+            pointer-events: none;
+            opacity: 0.5;
+        }
+        .rest-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .rest-overlay.hidden {
+            display: none;
+        }
+        .rest-overlay-content {
+            background: var(--card-bg);
+            color: var(--text-color);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .rest-overlay-content .rest-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .rest-overlay-content h2 {
+            margin: 0 0 10px 0;
+            color: var(--text-color);
+        }
+        .rest-overlay-content p {
+            font-size: 18px;
+            margin: 10px 0 20px 0;
+        }
+        .rest-overlay-content button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
+
+<div id="restOverlay" class="rest-overlay hidden">
+    <div class="rest-overlay-content">
+        <div class="rest-icon">☕</div>
+        <h2>Время отдыха</h2>
+        <p>Осталось: <span id="restTimeLeft">10:00</span></p>
+        <button onclick="skipRest()">Продолжить игру сейчас</button>
+    </div>
+</div>
 
 <div class="container">
     <div class="header-row">
         <h1>Слуховая дифференциация</h1>
         <button class="theme-toggle-btn" id="themeBtn" onclick="toggleTheme()">☀️ Светлая</button>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-box correct-stat">✅ Правильно: <span id="correctCount">0</span></div>
+        <div class="stat-box total-stat">📝 Всего: <span id="totalCount">0</span></div>
     </div>
 
     <div class="controls">
@@ -235,6 +373,34 @@
             <div class="slider-container">
                 <input type="range" id="rateRange" min="0.5" max="1.5" step="0.1" value="0.9" oninput="updateRateLabel(this.value)">
                 <span id="rateValue">0.9x</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="checkbox-label" for="timerEnabled">
+                <input type="checkbox" id="timerEnabled" checked onchange="toggleTimerFeature()">
+                Использовать таймер «игра / отдых»
+            </label>
+        </div>
+
+        <div class="control-group" id="timerSettingsGroup">
+            <label>Длительность (минуты):</label>
+            <div class="timer-inputs">
+                <div>
+                    <label for="playMinutes">🎮 Игра</label>
+                    <input type="number" id="playMinutes" min="1" max="60" value="5" onchange="updateTimerSettings()">
+                </div>
+                <div>
+                    <label for="restMinutes">☕ Отдых</label>
+                    <input type="number" id="restMinutes" min="1" max="60" value="10" onchange="updateTimerSettings()">
+                </div>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div class="timer-status-row">
+                <div class="timer-display" id="timerDisplay">🎮 Игра: 05:00</div>
+                <button class="timer-pause-btn" id="timerPauseBtn" onclick="toggleTimerPause()">⏸ Пауза</button>
             </div>
         </div>
     </div>
@@ -353,6 +519,17 @@
     let maleVoices = [];
     let femaleVoices = [];
     let isAnswered = false;
+
+    let correctCount = 0;
+    let totalCount = 0;
+
+    // --- Таймер "игра / отдых" ---
+    let timerEnabled = true;
+    let playSeconds = 5 * 60;
+    let restSeconds = 10 * 60;
+    let remainingSeconds = playSeconds;
+    let timerMode = 'play'; // 'play' | 'rest'
+    let timerPaused = false;
 
     function toggleTheme() {
         const currentTheme = document.documentElement.getAttribute('data-theme');
@@ -505,6 +682,146 @@
         speechSynthesis.speak(utterance);
     }
 
+    function updateStatsDisplay() {
+        const correctEl = document.getElementById('correctCount');
+        const totalEl = document.getElementById('totalCount');
+        if (correctEl) correctEl.textContent = correctCount;
+        if (totalEl) totalEl.textContent = totalCount;
+    }
+
+    function formatTime(totalSec) {
+        const safeSec = Math.max(0, Math.round(totalSec));
+        const m = Math.floor(safeSec / 60).toString().padStart(2, '0');
+        const s = Math.floor(safeSec % 60).toString().padStart(2, '0');
+        return m + ':' + s;
+    }
+
+    function setGameInteractionEnabled(enabled) {
+        const container = document.querySelector('.container');
+        if (container) {
+            container.classList.toggle('resting-blocked', !enabled);
+        }
+    }
+
+    function updateTimerDisplay() {
+        const display = document.getElementById('timerDisplay');
+        if (display) {
+            if (timerMode === 'rest') {
+                display.textContent = '☕ Отдых: ' + formatTime(remainingSeconds);
+                display.classList.add('resting');
+            } else {
+                display.textContent = '🎮 Игра: ' + formatTime(remainingSeconds);
+                display.classList.remove('resting');
+            }
+        }
+
+        const restTimeLeftEl = document.getElementById('restTimeLeft');
+        if (restTimeLeftEl) {
+            restTimeLeftEl.textContent = formatTime(remainingSeconds);
+        }
+    }
+
+    function enterRestMode() {
+        timerMode = 'rest';
+        remainingSeconds = restSeconds;
+
+        if ('speechSynthesis' in window) {
+            speechSynthesis.cancel();
+        }
+
+        setGameInteractionEnabled(false);
+        const overlay = document.getElementById('restOverlay');
+        if (overlay) overlay.classList.remove('hidden');
+
+        updateTimerDisplay();
+    }
+
+    function exitRestMode() {
+        timerMode = 'play';
+        remainingSeconds = playSeconds;
+
+        setGameInteractionEnabled(true);
+        const overlay = document.getElementById('restOverlay');
+        if (overlay) overlay.classList.add('hidden');
+
+        updateTimerDisplay();
+
+        // После перерыва даём свежее слово, чтобы игра продолжилась заново
+        nextQuestion();
+    }
+
+    function skipRest() {
+        if (timerMode === 'rest') {
+            exitRestMode();
+        }
+    }
+
+    function toggleTimerPause() {
+        timerPaused = !timerPaused;
+        const btn = document.getElementById('timerPauseBtn');
+        if (btn) btn.textContent = timerPaused ? '▶ Продолжить' : '⏸ Пауза';
+    }
+
+    function toggleTimerFeature() {
+        const checkbox = document.getElementById('timerEnabled');
+        timerEnabled = checkbox ? checkbox.checked : true;
+
+        const settingsGroup = document.getElementById('timerSettingsGroup');
+        if (settingsGroup) {
+            settingsGroup.style.opacity = timerEnabled ? '1' : '0.5';
+        }
+
+        const pauseBtn = document.getElementById('timerPauseBtn');
+        if (pauseBtn) pauseBtn.disabled = !timerEnabled;
+
+        if (!timerEnabled) {
+            // Выключаем принудительные перерывы, но не трогаем счёт игры
+            if (timerMode === 'rest') {
+                exitRestMode();
+            }
+        } else {
+            timerMode = 'play';
+            remainingSeconds = playSeconds;
+        }
+
+        updateTimerDisplay();
+    }
+
+    function updateTimerSettings() {
+        const playInput = document.getElementById('playMinutes');
+        const restInput = document.getElementById('restMinutes');
+
+        const playMin = playInput ? parseFloat(playInput.value) : 5;
+        const restMin = restInput ? parseFloat(restInput.value) : 10;
+
+        playSeconds = Math.max(1, playMin || 5) * 60;
+        restSeconds = Math.max(1, restMin || 10) * 60;
+
+        // Применяем новую длительность к активному сейчас режиму сразу,
+        // чтобы изменения были понятны без ожидания следующего цикла.
+        remainingSeconds = timerMode === 'rest' ? restSeconds : playSeconds;
+        updateTimerDisplay();
+    }
+
+    function startMasterTimer() {
+        updateTimerDisplay();
+        setInterval(() => {
+            if (!timerEnabled || timerPaused) return;
+
+            remainingSeconds--;
+
+            if (remainingSeconds <= 0) {
+                if (timerMode === 'play') {
+                    enterRestMode();
+                } else {
+                    exitRestMode();
+                }
+            } else {
+                updateTimerDisplay();
+            }
+        }, 1000);
+    }
+
     function initCategories() {
         const categorySelect = document.getElementById('categorySelect');
         categorySelect.innerHTML = '';
@@ -570,9 +887,16 @@
         if (isAnswered) return;
         isAnswered = true;
 
+        totalCount++;
+        const isCorrect = selectedText === targetWord;
+        if (isCorrect) {
+            correctCount++;
+        }
+        updateStatsDisplay();
+
         const allButtons = document.querySelectorAll('.option-btn');
 
-        if (selectedText === targetWord) {
+        if (isCorrect) {
             selectedBtn.classList.add('correct');
         } else {
             selectedBtn.classList.add('wrong');
@@ -584,7 +908,10 @@
         }
     }
 
-    window.onload = initCategories;
+    window.onload = function() {
+        initCategories();
+        startMasterTimer();
+    };
 </script>
 
 </body>
