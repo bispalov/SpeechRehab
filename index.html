@@ -825,12 +825,20 @@
     function initCategories() {
         const categorySelect = document.getElementById('categorySelect');
         categorySelect.innerHTML = '';
+
+        const allOption = document.createElement('option');
+        allOption.value = 'ALL';
+        allOption.textContent = '📚 Все категории (весь словарь)';
+        categorySelect.appendChild(allOption);
+
         for (let category in dictionary) {
             const option = document.createElement('option');
             option.value = category;
             option.textContent = category;
             categorySelect.appendChild(option);
         }
+
+        categorySelect.value = 'ALL';
         nextQuestion();
     }
 
@@ -842,7 +850,18 @@
         isAnswered = false;
         const categorySelect = document.getElementById('categorySelect');
         const selectedCategory = categorySelect.value;
-        const words = dictionary[selectedCategory];
+
+        let words;
+        if (selectedCategory === 'ALL') {
+            const combinedWords = [];
+            for (let cat in dictionary) {
+                combinedWords.push(...dictionary[cat]);
+            }
+            // Убираем дубликаты (некоторые слова встречаются в нескольких категориях)
+            words = [...new Set(combinedWords)];
+        } else {
+            words = dictionary[selectedCategory];
+        }
 
         if (!words || words.length === 0) return;
 
