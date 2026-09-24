@@ -1,0 +1,25 @@
+{
+  "name": "Слуховая дифференциация",
+  "short_name": "Дифференциация",
+  "description": "Речевая игра для реабилитации: слуховая дифференциация слов",
+  "start_url": "./Speech_rehabilitation_game_with_man_voice_and_dark_theme_1.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#141923",
+  "theme_color": "#141923",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
