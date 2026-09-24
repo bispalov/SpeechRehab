@@ -2,7 +2,7 @@
   "name": "Слуховая дифференциация",
   "short_name": "Дифференциация",
   "description": "Речевая игра для реабилитации: слуховая дифференциация слов",
-  "start_url": "./Speech_rehabilitation_game_with_man_voice_and_dark_theme_1.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
