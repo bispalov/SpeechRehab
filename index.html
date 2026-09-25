@@ -446,7 +446,7 @@
 
         <div class="control-group">
             <label for="optionsCountSelect" id="labelOptionsCount">Кількість варіантів відповідей:</label>
-            <select id="optionsCountSelect" onchange="nextQuestion()">
+            <select id="optionsCountSelect" onchange="onOptionsCountChange()">
                 <option value="2" selected id="optEasy">2 варіанти (Легко)</option>
                 <option value="3" id="optMedium">3 варіанти (Середньо)</option>
                 <option value="4" id="optHard">4 варіанти (Складно)</option>
@@ -455,7 +455,7 @@
 
         <div class="control-group">
             <label for="voiceSelect" id="labelVoice">Стать голосу:</label>
-            <select id="voiceSelect">
+            <select id="voiceSelect" onchange="saveSettings()">
                 <option value="male" selected id="optVoiceMale">👨 Чоловічий</option>
                 <option value="female" id="optVoiceFemale">👩 Жіночий</option>
             </select>
@@ -464,7 +464,7 @@
         <div class="control-group">
             <label for="rateRange" id="labelRate">Швидкість мовлення:</label>
             <div class="slider-container">
-                <input type="range" id="rateRange" min="0.5" max="1.5" step="0.1" value="0.9" oninput="updateRateLabel(this.value)">
+                <input type="range" id="rateRange" min="0.5" max="1.5" step="0.1" value="0.9" oninput="updateRateLabel(this.value)" onchange="saveSettings()">
                 <span id="rateValue">0.9x</span>
             </div>
         </div>
@@ -618,7 +618,7 @@
         "21. Дії (Дієслова)": ["Ити", "Сидіти", "Стояти", "Лежати", "Спати", "Їсти", "Пити", "Говорити", "Слухати", "Дивитися", "Читати", "Писати", "Дати", "Взяти", "Мити", "Чистити", "Одягти", "Зняти", "Вiдкрити", "Закрити"],
         "22. Якості (Прикметники)": ["Великий", "Маленький", "Гарячий", "Холодний", "Теплий", "Смачний", "Чистий", "Брудний", "Новий", "Старий", "Добрий", "Хороший", "Поганий", "Швидкий", "Повільний", "Сильний", "Світлий", "Темний", "М'який", "Твердий"],
         "23. Інструменти та Ремонт": ["Молоток", "Цвях", "Гвинт", "Викрутка", "Пила", "Кліщі", "Сокира", "Лопата", "Граблі", "Відро", "Щітка", "Клей", "Фарба", "Пензель", "Дріт"],
-        "24. Відпочинок та Хобі": ["Книга", "Газета", "Музика", "Пісня", "Танець", "Кіно", "Радіо", "Гра", "М'яч", "Прогулянка", "Сад", "Квіти", "Риболовля", "Спорт", "Свято"],
+        "24. Відпочинок та Хобі": ["Книга", "Газета", "Музика", "Пісня", "Танец", "Кіно", "Радіо", "Гра", "М'яч", "Прогулянка", "Сад", "Квіти", "Риболовля", "Спорт", "Свято"],
         "25. Канцелярія та Навчання": ["Ручка", "Олівець", "Зошит", "Блокнот", "Папір", "Гумка", "Лінійка", "Книга", "Сумка", "Конверт", "Папка", "Клей", "Ножиці", "Маркер", "Фарби"]
     };
 
@@ -661,7 +661,7 @@
         "Собака": ["Папір", "Свобода", "Солодощі", "Слуга"],
         "Вовк": ["Шовк", "Толк", "Пол", "Полка"],
         "Лисиця": ["Коса", "Роса", "Оса", "Лист"],
-        "Заєць": ["Палець", "Танець", "Глянець", "Яйце"],
+        "Заєць": ["Палець", "Танець", "Глянец", "Яйце"],
         "Качка": ["Жартушка", "Будка", "Равлик", "Дудка"],
         "Коза": ["Коса", "Роза", "Лоза", "Гроза"],
         "День": ["Тінь", "Пень", "Лень", "Дон"],
@@ -775,6 +775,64 @@
     let timerMode = 'play'; 
     let timerPaused = false;
 
+    // --- Локальне збереження налаштувань ---
+    function saveSettings() {
+        const settings = {
+            lang: currentLang,
+            theme: document.documentElement.getAttribute('data-theme') || 'dark',
+            category: document.getElementById('categorySelect').value,
+            optionsCount: document.getElementById('optionsCountSelect').value,
+            voiceGender: document.getElementById('voiceSelect').value,
+            rate: document.getElementById('rateRange').value,
+            timerEnabled: document.getElementById('timerEnabled').checked,
+            playMinutes: document.getElementById('playMinutes').value,
+            restMinutes: document.getElementById('restMinutes').value
+        };
+        localStorage.setItem('aphasiaGameSettings', JSON.stringify(settings));
+    }
+
+    function loadSettings() {
+        const saved = localStorage.getItem('aphasiaGameSettings');
+        if (!saved) return;
+
+        try {
+            const settings = JSON.parse(saved);
+            
+            if (settings.lang) currentLang = settings.lang;
+            if (settings.theme) {
+                if (settings.theme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                }
+            }
+
+            if (settings.optionsCount) document.getElementById('optionsCountSelect').value = settings.optionsCount;
+            if (settings.voiceGender) document.getElementById('voiceSelect').value = settings.voiceGender;
+            if (settings.rate) {
+                document.getElementById('rateRange').value = settings.rate;
+                updateRateLabel(settings.rate);
+            }
+            if (settings.timerEnabled !== undefined) {
+                document.getElementById('timerEnabled').checked = settings.timerEnabled;
+            }
+            if (settings.playMinutes) document.getElementById('playMinutes').value = settings.playMinutes;
+            if (settings.restMinutes) document.getElementById('restMinutes').value = settings.restMinutes;
+
+            // Таймер
+            timerEnabled = document.getElementById('timerEnabled').checked;
+            playSeconds = Math.max(1, parseFloat(document.getElementById('playMinutes').value) || 5) * 60;
+            restSeconds = Math.max(1, parseFloat(document.getElementById('restMinutes').value) || 10) * 60;
+            remainingSeconds = playSeconds;
+
+            document.getElementById('timerSettingsGroup').style.opacity = timerEnabled ? '1' : '0.5';
+            document.getElementById('timerPauseBtn').disabled = !timerEnabled;
+
+        } catch (e) {
+            console.error("Помилка завантаження налаштувань", e);
+        }
+    }
+
     function getCurrentDict() {
         return currentLang === 'uk' ? dictionaryUk : dictionaryRu;
     }
@@ -788,6 +846,7 @@
         document.documentElement.setAttribute('lang', currentLang);
         updateUI();
         initCategories();
+        saveSettings();
     }
 
     function updateUI() {
@@ -818,6 +877,10 @@
         document.getElementById('restLeftLabel').textContent = t.restLeftLabel;
         document.getElementById('skipRestBtn').textContent = t.skipRestBtn;
 
+        const themeBtn = document.getElementById('themeBtn');
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        themeBtn.innerHTML = currentTheme === 'dark' ? t.themeLight : t.themeDark;
+
         updateTimerDisplay();
     }
 
@@ -833,11 +896,12 @@
             document.documentElement.setAttribute('data-theme', 'dark');
             themeBtn.innerHTML = t.themeLight;
         }
+        saveSettings();
     }
 
     function getRealDistractors(word, currentCategory) {
         const countSelect = document.getElementById('optionsCountSelect');
-        const reqCount = countSelect ? parseInt(countSelect.value) - 1 : 1; // За замовчуванням 1 дистрактор (2 варіанти)
+        const reqCount = countSelect ? parseInt(countSelect.value) - 1 : 1;
 
         const pairs = getCurrentRealPairs();
         if (pairs[word]) {
@@ -871,7 +935,7 @@
     }
 
     const maleVoiceHints = ['pavel', 'dmitry', 'alexander', 'ivan', 'boris', 'vladimir', 'nikolai', 'yuri', 'maxim', 'artem', 'sergey', 'male', 'чоловік', 'муж'];
-    const femaleVoiceHints = ['milena', 'elena', 'irina', 'ekaterina', 'katya', 'anna', 'olga', 'tatiana', 'victoria', 'lesya', 'lesya', 'female', 'жінка', 'жен'];
+    const femaleVoiceHints = ['milena', 'elena', 'irina', 'ekaterina', 'katya', 'anna', 'olga', 'tatiana', 'victoria', 'lesya', 'female', 'жінка', 'жен'];
 
     function classifyVoiceGender(voice) {
         const name = voice.name.toLowerCase();
@@ -886,11 +950,9 @@
         if (!allVoices || allVoices.length === 0) return;
         voices = allVoices;
 
-        // Фільтруємо голоси під поточну мову (uk або ru)
         const langPrefix = currentLang === 'uk' ? 'uk' : 'ru';
         let targetVoices = voices.filter(v => v.lang.toLowerCase().replace('_', '-').startsWith(langPrefix));
 
-        // Якщо немає специфічних голосів для української/російської, беруться доступні
         if (targetVoices.length === 0) targetVoices = voices;
 
         const male = [], female = [], unknown = [];
@@ -974,7 +1036,6 @@
     }
 
     function highlightSyllables(word) {
-        // Базовий поділ на склади для кирилиці
         return word.replace(/([аеєиіїоуюяяАЕЄИІЇОУЮЯ][ьъ]?)(?=[бвгджзйклмнпрстфхцчшщ])/g, '$1-').toUpperCase();
     }
 
@@ -1049,6 +1110,7 @@
         if (!timerEnabled && timerMode === 'rest') exitRestMode();
         else { timerMode = 'play'; remainingSeconds = playSeconds; }
         updateTimerDisplay();
+        saveSettings();
     }
 
     function updateTimerSettings() {
@@ -1058,6 +1120,7 @@
         restSeconds = Math.max(1, restMin) * 60;
         remainingSeconds = timerMode === 'rest' ? restSeconds : playSeconds;
         updateTimerDisplay();
+        saveSettings();
     }
 
     function startMasterTimer() {
@@ -1091,11 +1154,30 @@
             option.textContent = category;
             categorySelect.appendChild(option);
         }
-        categorySelect.value = 'ALL';
+
+        // Відновлюємо збережену категорію, якщо вона існує в цій мові
+        const savedSettings = localStorage.getItem('aphasiaGameSettings');
+        if (savedSettings) {
+            const parsed = JSON.parse(savedSettings);
+            if (parsed.category && (parsed.category === 'ALL' || dict[parsed.category])) {
+                categorySelect.value = parsed.category;
+            } else {
+                categorySelect.value = 'ALL';
+            }
+        } else {
+            categorySelect.value = 'ALL';
+        }
+
         nextQuestion();
     }
 
     function changeCategory() {
+        saveSettings();
+        nextQuestion();
+    }
+
+    function onOptionsCountChange() {
+        saveSettings();
         nextQuestion();
     }
 
@@ -1220,6 +1302,7 @@
     }
 
     window.onload = function() {
+        loadSettings();
         updateUI();
         initCategories();
         startMasterTimer();
