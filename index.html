@@ -404,10 +404,15 @@
             user-select: none;
         }
         .syllable-display {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
             color: #28a745;
             margin-top: 5px;
+            letter-spacing: 1px;
+        }
+        .accent-char {
+            color: #ff9800;
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -520,7 +525,7 @@
 
 <script>
     let currentLang = 'uk'; // 'uk' | 'ru'
-    let accentFixes = {};   // Завантажується з accents.json (містить об'єкти "uk" та "ru")
+    let accentFixes = {};   
 
     const i18n = {
         uk: {
@@ -586,7 +591,7 @@
             recordBtnStart: "🎙 Проговорить и проверить себя",
             recordBtnStop: "⏹ Остановить и прослушать себя",
             labelInstruction: "Выберите слово, которое вы услышали (все варианты — реальные слова):",
-            labelSpellTask: "Соберите слово из букв (для тренировки речи):",
+            labelSpellTask: "Собырите слово из букв (для тренировки речи):",
             syllablePrefix: "Слоги: ",
             nextBtn: "Следующее слово ➔",
             restTitle: "Время отдыха",
@@ -595,7 +600,6 @@
         }
     };
 
-    // Завантаження єдиного файлу accents.json
     async function loadAccents() {
         try {
             const response = await fetch('accents.json');
@@ -620,7 +624,7 @@
         "Стіл": ["Стул", "Ствол", "Стовп", "Стік"],
         "Стул": ["Стіл", "Стук", "Слуг", "Ступ"],
         "Ша-фа": ["Шап-ка", "Шарф", "Штаб", "Шнур"],
-        "Две-рі": ["Звір", "Двів", "День", "Де-ре-во"],
+        "Две-рі": ["Звір", "Двір", "День", "Де-ре-во"],
         "Лож-ка": ["Мош-ка", "Кіш-ка", "Ніж-ка", "До-лонь-ка"],
         "Ви-дел-ка": ["Пил-ка", "Бал-ка", "Пап-ка", "Жил-ка"],
         "Ніж": ["Ї-жак", "Жи-то", "Брех-ня", "Ковш"],
@@ -875,7 +879,6 @@
         let cleanText = stripHyphens(textToSpeak);
         const lowerKey = cleanText.toLowerCase();
 
-        // Пошук виправлень відповідно до поточної мови (uk чи ru)
         if (accentFixes[currentLang] && accentFixes[currentLang][lowerKey]) {
             cleanText = accentFixes[currentLang][lowerKey];
         }
@@ -1159,6 +1162,39 @@
         }
     }
 
+    // Форматування відображення складів із виділенням наголошеної букви
+    function formatSyllablesWithAccent(wordSyllables) {
+        const cleanWord = stripHyphens(wordSyllables).toLowerCase();
+        let accentedSpeak = accentFixes[currentLang] ? accentFixes[currentLang][cleanWord] : null;
+
+        // Якщо слово з одного складу або немає в підказках — повертаємо великі букви без спеціального підкреслення
+        if (!accentedSpeak || !wordSyllables.includes('-')) {
+            return wordSyllables.toUpperCase();
+        }
+
+        // Знаходимо наголошену букву (записану у великому регістрі в accents.json)
+        let upperChars = accentedSpeak.replace(/[^A-ZА-ЯЁІЇЄҐ]/g, '');
+        if (upperChars.length === 0) return wordSyllables.toUpperCase();
+
+        let targetAccentChar = upperChars[0].toUpperCase();
+        let syllablesArr = wordSyllables.split('-');
+        
+        let resultSyllables = syllablesArr.map(syllable => {
+            let upperSyllable = syllable.toUpperCase();
+            // Замінюємо перше входження наголошеної букви на підкреслений/виділений HTML-елемент
+            let charIndex = upperSyllable.indexOf(targetAccentChar);
+            if (charIndex !== -1 && !syllablesArr.accentApplied) {
+                syllablesArr.accentApplied = true;
+                return upperSyllable.slice(0, charIndex) + 
+                       `<span class="accent-char">${targetAccentChar}́</span>` + 
+                       upperSyllable.slice(charIndex + 1);
+            }
+            return upperSyllable;
+        });
+
+        return resultSyllables.join('-');
+    }
+
     function setupSpellBuilder(wordSyllables) {
         const card = document.getElementById('spellBuilderCard');
         const pool = document.getElementById('lettersPool');
@@ -1168,7 +1204,7 @@
 
         pool.innerHTML = '';
         target.innerHTML = '';
-        syllableDisplay.textContent = t.syllablePrefix + wordSyllables.toUpperCase();
+        syllableDisplay.innerHTML = ''; // Очищаємо перед збіркою
         card.classList.remove('hidden');
 
         let cleanWord = stripHyphens(wordSyllables);
@@ -1185,20 +1221,30 @@
                 } else {
                     pool.appendChild(tile);
                 }
-                checkBuiltWord(cleanWord);
+                checkBuiltWord(wordSyllables);
             };
             pool.appendChild(tile);
         });
     }
 
-    function checkBuiltWord(cleanWord) {
+    function checkBuiltWord(wordSyllables) {
         const target = document.getElementById('lettersTarget');
+        const syllableDisplay = document.getElementById('syllableDisplay');
+        const t = i18n[currentLang];
+        let cleanWord = stripHyphens(wordSyllables);
+
         const built = Array.from(target.children).map(c => c.textContent).join('');
         if (built.toLowerCase() === cleanWord.toLowerCase()) {
             target.style.borderColor = '#28a745';
+            
+            // Відображаємо склади з підкресленим наголосом після правильної збірки
+            const formattedSyllables = formatSyllablesWithAccent(wordSyllables);
+            syllableDisplay.innerHTML = t.syllablePrefix + formattedSyllables;
+            
             speakWord(cleanWord);
         } else {
             target.style.borderColor = 'var(--option-btn-border)';
+            syllableDisplay.innerHTML = '';
         }
     }
 
