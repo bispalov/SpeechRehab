@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru" data-theme="dark">
+<html lang="uk" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Слуховая дифференциация и Речевой тренажёр</title>
+    <title>Слухова диференціація та Речевий тренажер</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#141923">
     <link rel="icon" href="icon-192.png">
@@ -66,23 +66,31 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
+            gap: 10px;
+            flex-wrap: wrap;
         }
         h1 {
             color: var(--text-color);
-            font-size: 20px;
+            font-size: 18px;
             margin: 0;
+            text-align: left;
+            flex-grow: 1;
         }
-        .theme-toggle-btn {
+        .header-btns {
+            display: flex;
+            gap: 8px;
+        }
+        .theme-toggle-btn, .lang-toggle-btn {
             background: none;
             border: 1px solid var(--input-border);
             color: var(--text-color);
-            padding: 6px 12px;
+            padding: 6px 10px;
             border-radius: 20px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
             width: auto;
         }
         .controls {
@@ -156,7 +164,6 @@
             font-weight: bold;
             font-size: 15px;
             padding: 10px;
-
         }
         .record-btn.recording {
             background-color: #dc3545;
@@ -353,7 +360,6 @@
             cursor: pointer;
         }
 
-        /* Тренажер сборки слова */
         .spell-builder-card {
             margin-top: 15px;
             padding: 15px;
@@ -410,50 +416,53 @@
 <div id="restOverlay" class="rest-overlay hidden">
     <div class="rest-overlay-content">
         <div class="rest-icon">☕</div>
-        <h2>Время отдыха</h2>
-        <p>Осталось: <span id="restTimeLeft">10:00</span></p>
-        <button onclick="skipRest()">Продолжить игру сейчас</button>
+        <h2 id="restTitle">Час відпочинку</h2>
+        <p><span id="restLeftLabel">Залишилося:</span> <span id="restTimeLeft">10:00</span></p>
+        <button id="skipRestBtn" onclick="skipRest()">Продовжити гру зараз</button>
     </div>
 </div>
 
 <div class="container">
     <div class="header-row">
-        <h1>Слуховая дифференциация + Тренажёр</h1>
-        <button class="theme-toggle-btn" id="themeBtn" onclick="toggleTheme()">☀️ Светлая</button>
+        <h1 id="appTitle">Слухова диференціація</h1>
+        <div class="header-btns">
+            <button class="lang-toggle-btn" id="langBtn" onclick="toggleLanguage()">🌐 UA / RU</button>
+            <button class="theme-toggle-btn" id="themeBtn" onclick="toggleTheme()">☀️ Світла</button>
+        </div>
     </div>
 
     <div class="stats-row">
-        <div class="stat-box correct-stat">✅ Правильно: <span id="correctCount">0</span></div>
-        <div class="stat-box total-stat">📝 Всего: <span id="totalCount">0</span></div>
+        <div class="stat-box correct-stat"><span id="statCorrectLabel">✅ Правильно:</span> <span id="correctCount">0</span></div>
+        <div class="stat-box total-stat"><span id="statTotalLabel">📝 Всього:</span> <span id="totalCount">0</span></div>
     </div>
 
     <div class="controls">
         <div class="control-group">
-            <label for="categorySelect">Выберите категорию:</label>
+            <label for="categorySelect" id="labelCategory">Оберіть категорію:</label>
             <select id="categorySelect" onchange="changeCategory()">
-                <!-- Категории загружаются автоматически -->
+                <!-- Категорії завантажуються JS -->
             </select>
         </div>
 
         <div class="control-group">
-            <label for="optionsCountSelect">Количество вариантов ответов:</label>
+            <label for="optionsCountSelect" id="labelOptionsCount">Кількість варіантів відповідей:</label>
             <select id="optionsCountSelect" onchange="nextQuestion()">
-                <option value="2">2 варианта (Легко)</option>
-                <option value="3">3 варианта (Средне)</option>
-                <option value="4" selected>4 варианта (Сложно)</option>
+                <option value="2" selected id="optEasy">2 варіанти (Легко)</option>
+                <option value="3" id="optMedium">3 варіанти (Середньо)</option>
+                <option value="4" id="optHard">4 варіанти (Складно)</option>
             </select>
         </div>
 
         <div class="control-group">
-            <label for="voiceSelect">Пол голоса (Русский):</label>
+            <label for="voiceSelect" id="labelVoice">Стать голосу:</label>
             <select id="voiceSelect">
-                <option value="male" selected>👨 Мужской</option>
-                <option value="female">👩 Женский</option>
+                <option value="male" selected id="optVoiceMale">👨 Чоловічий</option>
+                <option value="female" id="optVoiceFemale">👩 Жіночий</option>
             </select>
         </div>
 
         <div class="control-group">
-            <label for="rateRange">Скорость речи:</label>
+            <label for="rateRange" id="labelRate">Швидкість мовлення:</label>
             <div class="slider-container">
                 <input type="range" id="rateRange" min="0.5" max="1.5" step="0.1" value="0.9" oninput="updateRateLabel(this.value)">
                 <span id="rateValue">0.9x</span>
@@ -463,19 +472,19 @@
         <div class="control-group">
             <label class="checkbox-label" for="timerEnabled">
                 <input type="checkbox" id="timerEnabled" checked onchange="toggleTimerFeature()">
-                Использовать таймер «игра / отдых»
+                <span id="labelTimerEnable">Використовувати таймер «гра / відпочинок»</span>
             </label>
         </div>
 
         <div class="control-group" id="timerSettingsGroup">
-            <label>Длительность (минуты):</label>
+            <label id="labelTimerDuration">Тривалість (хвилини):</label>
             <div class="timer-inputs">
                 <div>
-                    <label for="playMinutes">🎮 Игра</label>
+                    <label for="playMinutes" id="labelPlayMin">🎮 Гра</label>
                     <input type="number" id="playMinutes" min="1" max="60" value="5" onchange="updateTimerSettings()">
                 </div>
                 <div>
-                    <label for="restMinutes">☕ Отдых</label>
+                    <label for="restMinutes" id="labelRestMin">☕ Відпочинок</label>
                     <input type="number" id="restMinutes" min="1" max="60" value="10" onchange="updateTimerSettings()">
                 </div>
             </div>
@@ -483,35 +492,204 @@
 
         <div class="control-group">
             <div class="timer-status-row">
-                <div class="timer-display" id="timerDisplay">🎮 Игра: 05:00</div>
+                <div class="timer-display" id="timerDisplay">🎮 Гра: 05:00</div>
                 <button class="timer-pause-btn" id="timerPauseBtn" onclick="toggleTimerPause()">⏸ Пауза</button>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <button class="speak-main-btn" onclick="speakWord(targetWord)">🔊 Прослушать загаданное слово</button>
-        <button class="record-btn" id="recordBtn" onclick="toggleRecording()">🎙 Проговорить и проверить себя</button>
+        <button class="speak-main-btn" id="speakMainBtn" onclick="speakWord(targetWord)">🔊 Прослухати загадане слово</button>
+        <button class="record-btn" id="recordBtn" onclick="toggleRecording()">🎙 Проговорити і перевірити себе</button>
     </div>
 
-    <label>Выберите слово, которое вы услышали (все варианты — реальные слова):</label>
+    <label id="labelInstruction">Оберіть слово, яке ви почули (усі варіанти — реальні слова):</label>
     <div class="options-grid" id="optionsContainer">
-        <!-- Варианты ответов загружаются автоматически -->
+        <!-- Варіанти відповідей -->
     </div>
 
-    <!-- Конструктор сборки слова из букв -->
     <div class="spell-builder-card hidden" id="spellBuilderCard">
-        <label>Соберите слово из букв (для тренировки речи):</label>
+        <label id="labelSpellTask">Зберіть слово з букв (для тренування мовлення):</label>
         <div class="letters-target" id="lettersTarget"></div>
         <div class="letters-pool" id="lettersPool"></div>
         <div class="syllable-display" id="syllableDisplay"></div>
     </div>
 
-    <button class="next-btn" onclick="nextQuestion()">Следующее слово ➔</button>
+    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Наступне слово ➔</button>
 </div>
 
 <script>
-    const dictionary = {
+    let currentLang = 'uk'; // 'uk' | 'ru'
+
+    const i18n = {
+        uk: {
+            appTitle: "Слухова диференціація",
+            themeLight: "☀️ Світла",
+            themeDark: "🌙 Темна",
+            statCorrect: "✅ Правильно:",
+            statTotal: "📝 Всього:",
+            labelCategory: "Оберіть категорію:",
+            allCategories: "📚 Усі категорії (весь словник)",
+            labelOptionsCount: "Кількість варіантів відповідей:",
+            optEasy: "2 варіанти (Легко)",
+            optMedium: "3 варіанти (Середньо)",
+            optHard: "4 варіанти (Складно)",
+            labelVoice: "Стать голосу:",
+            voiceMale: "👨 Чоловічий",
+            voiceFemale: "👩 Жіночий",
+            labelRate: "Швидкість мовлення:",
+            labelTimerEnable: "Використовувати таймер «гра / відпочинок»",
+            labelTimerDuration: "Тривалість (хвилини):",
+            labelPlayMin: "🎮 Гра",
+            labelRestMin: "☕ Відпочинок",
+            timerPlayPrefix: "🎮 Гра: ",
+            timerRestPrefix: "☕ Відпочинок: ",
+            timerPause: "⏸ Пауза",
+            timerResume: "▶ Продовжити",
+            speakMainBtn: "🔊 Прослухати загадане слово",
+            recordBtnStart: "🎙 Проговорити і перевірити себе",
+            recordBtnStop: "⏹ Зупинити і прослухати себе",
+            labelInstruction: "Оберіть слово, яке ви почули (усі варіанти — реальні слова):",
+            labelSpellTask: "Зберіть слово з букв (для тренування мовлення):",
+            syllablePrefix: "Склади: ",
+            nextBtn: "Наступне слово ➔",
+            restTitle: "Час відпочинку",
+            restLeftLabel: "Залишилося:",
+            skipRestBtn: "Продовжити гру зараз"
+        },
+        ru: {
+            appTitle: "Слуховая дифференциация",
+            themeLight: "☀️ Светлая",
+            themeDark: "🌙 Темная",
+            statCorrect: "✅ Правильно:",
+            statTotal: "📝 Всего:",
+            labelCategory: "Выберите категорию:",
+            allCategories: "📚 Все категории (весь словарь)",
+            labelOptionsCount: "Количество вариантов ответов:",
+            optEasy: "2 варианта (Легко)",
+            optMedium: "3 варианта (Средне)",
+            optHard: "4 варианта (Сложно)",
+            labelVoice: "Пол голоса:",
+            voiceMale: "👨 Мужской",
+            voiceFemale: "👩 Женский",
+            labelRate: "Скорость речи:",
+            labelTimerEnable: "Использовать таймер «игра / отдых»",
+            labelTimerDuration: "Длительность (минуты):",
+            labelPlayMin: "🎮 Игра",
+            labelRestMin: "☕ Отдых",
+            timerPlayPrefix: "🎮 Игра: ",
+            timerRestPrefix: "☕ Отдых: ",
+            timerPause: "⏸ Пауза",
+            timerResume: "▶ Продолжить",
+            speakMainBtn: "🔊 Прослушать загаданное слово",
+            recordBtnStart: "🎙 Проговорить и проверить себя",
+            recordBtnStop: "⏹ Остановить и прослушать себя",
+            labelInstruction: "Выберите слово, которое вы услышали (все варианты — реальные слова):",
+            labelSpellTask: "Соберите слово из букв (для тренировки речи):",
+            syllablePrefix: "Слоги: ",
+            nextBtn: "Следующее слово ➔",
+            restTitle: "Время отдыха",
+            restLeftLabel: "Осталось:",
+            skipRestBtn: "Продолжить игру сейчас"
+        }
+    };
+
+    const dictionaryUk = {
+        "1. Побут та Меблі": ["Дім", "Ліжко", "Стіл", "Стілець", "Шафа", "Диван", "Крісло", "Вікно", "Двері", "Дзеркало", "Полиця", "Килим", "Лампа", "Подушка", "Ковдра", "Простирадло", "Телевізор", "Годинник", "Ключ", "Замок", "Стіна", "Підлога", "Стеля", "Балкон", "Штора", "Батарея", "Люстра", "Ваза", "Картина", "Карниз", "Вішалка", "Тумба", "Матрац", "Плед", "Скатертина", "Жалюзі", "Ящик", "Поріг", "Ручка", "Розетка"],
+        "2. Посуд та Кухня": ["Ложка", "Виделка", "Ніж", "Тарілка", "Чашка", "Стакан", "Каструля", "Пательня", "Чайник", "Глечик", "Миска", "Блюдце", "Черпак", "Лопатка", "Тертка", "Дошка", "Піднос", "Сільничка", "Цукорниця", "Маслянка", "Хлібниця", "Духовка", "Плита", "Холодильник", "Мікрохвильовка", "Міксер", "Блендер", "Фільтр", "Губка", "Рушник", "Раковина", "Кран", "Качалка", "Сито", "Дуршлаг", "Банка", "Пляшка", "Затор", "Фольга", "Пергамент"],
+        "3. Здоров'я та Тіло": ["Лікар", "Лікарня", "Аптека", "Ліки", "Таблетка", "Термометр", "Укол", "Бинт", "Вата", "Пластир", "Мазь", "Краплі", "Біль", "Серце", "Голова", "Рука", "Нога", "Палець", "Спина", "Живіт", "Груди", "Шия", "Обличчя", "Око", "Вухо", "Ніс", "Рот", "Зуб", "Язик", "Коліно", "Лікоть", "Плече", "Кров", "Пульс", "Тиск", "Температура", "Кашель", "Нежить", "Сон"],
+        "4. Спілкування та Емоції": ["Привіт", "Дякую", "Будь ласка", "Так", "Ні", "Добре", "Погано", "Допоможи", "Як справи", "До побачення", "Вітаю", "Вибачте", "Люблю", "Радість", "Сум", "Усмішка", "Сміх", "Сльози", "Добро", "Мир", "Дружба", "Турбота", "Ласка", "Поцілунок", "Обійми", "Спокій", "Страх", "Здивування", "Надія", "Віра", "Згоден", "Не хочу", "Буду", "Не буду", "Дай", "На", "Іди", "Стій", "Слухай", "Дивись"],
+        "5. Одяг та Взуття": ["Сорочка", "Штани", "Джинси", "Сукня", "Спідниця", "Футболка", "Светр", "Кофта", "Куртка", "Пальто", "Плащ", "Шапка", "Шарф", "Рукавиці", "Варежки", "Шкарпетки", "Колготки", "Білизна", "Піжама", "Халат", "Черевики", "Чоботи", "Туфлі", "Кросівки", "Капці", "Сандалі", "Ремінь", "Ґудзик", "Блискавка", "Кишеня", "Комір", "Рукав", "Капюшон", "Шнурки", "Капелюх", "Панама", "Жілет", "Костюм", "Жакет"],
+        "6. Продукти та Їжа": ["Хліб", "Масло", "Сир", "Молоко", "М'ясо", "Риба", "Яйце", "Суп", "Каша", "Салат", "Сіль", "Цукор", "Перець", "Соус", "Макарони", "Крупа", "Рис", "Гречка", "Локшина", "Пиріг", "Торт", "Печиво", "Цукерка", "Шоколад", "Мед", "Варення", "Сметана", "Сир кисломолочний", "Кефір", "Йогурт", "Ковбаса", "Сосиски", "Котлета", "Вареники", "Млинці", "Сендвіч", "Борошно", "Дріжджі", "Оцет", "Гірчиця"],
+        "7. Напої": ["Вода", "Чай", "Кава", "Сік", "Молоко", "Компот", "Морс", "Кисіль", "Лимонад", "Квас", "Коктейль", "Какао", "Мінералка", "Відвар", "Напій", "Нектар", "Еспресо", "Капучино", "Смузі", "Тонік"],
+        "8. Фрукти та Ягоди": ["Яблуко", "Груша", "Банан", "Апельсин", "Лимон", "Мандарин", "Персик", "Абрикос", "Слива", "Виноград", "Полуниця", "Малина", "Суниця", "Вишня", "Черешня", "Чорниця", "Смородина", "Кавун", "Диня", "Ананас", "Ківі", "Манго", "Гранат", "Інжир", "Хурма", "Алича", "Ожина", "Журавлина", "Брусниця", "Обліпиха"],
+        "9. Овочі та Зелень": ["Картопля", "Морква", "Буряк", "Цибуля", "Часник", "Огірок", "Помідор", "Капуста", "Перець", "Кабачок", "Баклажан", "Гарбуз", "Горох", "Квасоля", "Кукурудза", "Редиска", "Ріпа", "Зелень", "Кріп", "Петрушка", "Салат", "Шпинат", "Щавель", "Селера", "Базилік"],
+        "10. Гігієна та Догляд": ["Мило", "Шампунь", "Паста", "Щітка", "Вода", "Рушник", "Гребінець", "Ножиці", "Дзеркало", "Крем", "Серветка", "Папір", "Мочалка", "Піна", "Гель", "Парфуми", "Дезодорант", "Бритва", "Вата", "Пемза"],
+        "11. Сім'я та Люди": ["Мама", "Тато", "Син", "Донька", "Бабуся", "Дідусь", "Брат", "Сестра", "Онук", "Онука", "Дядько", "Тітка", "Чоловік", "Дружина", "Дитина", "Друг", "Сусід", "Гість", "Людина", "Малюк"],
+        "12. Професії": ["Лікар", "Вчитель", "Кухар", "Водій", "Продавець", "Будівельник", "Пожежник", "Поліцейський", "Поштар", "Перукар", "Швачка", "Сантехнік", "Електрик", "Інженер", "Пілот"],
+        "13. Місто та Транспорт": ["Місто", "Вулиця", "Будинок", "Дорога", "Машина", "Автобус", "Трамвай", "Тролейбус", "Метро", "Потяг", "Літак", "Таксі", "Зупинка", "Магазин", "Парк", "Аптека", "Міст", "Світлофор", "Тротуар", "Площа"],
+        "14. Природа та Погода": ["Сонце", "Небо", "Хмара", "Дощ", "Сніг", "Вітер", "Гроза", "Веселка", "Зірка", "Місяць", "День", "Ніч", "Ранок", "Вечір", "Ліс", "Річка", "Озеро", "Море", "Гора", "Поле"],
+        "15. Час та Календар": ["Час", "Година", "Хвилина", "Секунда", "День", "Тиждень", "Місяць", "Рік", "Учора", "Сьогодні", "Завтра", "Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця", "Субота", "Неділя", "Зима", "Весна", "Літо", "Осінь"],
+        "16. Тварини Свійські": ["Кішка", "Собака", "Корова", "Кінь", "Свиня", "Вівця", "Коза", "Кролик", "Кіт", "Цуценя", "Кошеня", "Теля", "Лоша", "Осел", "Хом'як"],
+        "17. Тварини Дикі": ["Вовк", "Лисиця", "Ведмідь", "Заєць", "Їжак", "Білка", "Олень", "Лось", "Лев", "Тигр", "Слон", "Мавпа", "Жираф", "Бегемот", "Крокодил"],
+        "18. Птахи": ["Птах", "Горобець", "Ворона", "Голуб", "Синиця", "Дятел", "Качка", "Гуска", "Курка", "Півень", "Індичка", "Сова", "Орел", "Лелека", "Ластівка"],
+        "19. Кольори": ["Білий", "Чорний", "Червоний", "Синій", "Зелений", "Жовтий", "Помаранчевий", "Фіолетовий", "Рожевий", "Коричневий", "Сірий", "Блакитний", "Бежевий", "Бордовий", "Салатовий"],
+        "20. Числа та Лічба": ["Один", "Два", "Три", "Чотири", "П'ять", "Шість", "Сім", "Вісім", "Дев'ять", "Десять", "Сто", "Тисяча", "Перший", "Другий", "Третій", "Багато", "Мало", "Половина", "Нуль", "Пара"],
+        "21. Дії (Дієслова)": ["Ити", "Сидіти", "Стояти", "Лежати", "Спати", "Їсти", "Пити", "Говорити", "Слухати", "Дивитися", "Читати", "Писати", "Дати", "Взяти", "Мити", "Чистити", "Одягти", "Зняти", "Вiдкрити", "Закрити"],
+        "22. Якості (Прикметники)": ["Великий", "Маленький", "Гарячий", "Холодний", "Теплий", "Смачний", "Чистий", "Брудний", "Новий", "Старий", "Добрий", "Хороший", "Поганий", "Швидкий", "Повільний", "Сильний", "Світлий", "Темний", "М'який", "Твердий"],
+        "23. Інструменти та Ремонт": ["Молоток", "Цвях", "Гвинт", "Викрутка", "Пила", "Кліщі", "Сокира", "Лопата", "Граблі", "Відро", "Щітка", "Клей", "Фарба", "Пензель", "Дріт"],
+        "24. Відпочинок та Хобі": ["Книга", "Газета", "Музика", "Пісня", "Танець", "Кіно", "Радіо", "Гра", "М'яч", "Прогулянка", "Сад", "Квіти", "Риболовля", "Спорт", "Свято"],
+        "25. Канцелярія та Навчання": ["Ручка", "Олівець", "Зошит", "Блокнот", "Папір", "Гумка", "Лінійка", "Книга", "Сумка", "Конверт", "Папка", "Клей", "Ножиці", "Маркер", "Фарби"]
+    };
+
+    const realWordPairsUk = {
+        "Дім": ["Дим", "Том", "Ком", "Лом", "Док"],
+        "Стіл": ["Стул", "Ствол", "Стовп", "Стік"],
+        "Стул": ["Стіл", "Стук", "Слуг", "Ступ"],
+        "Шафа": ["Шапка", "Шарф", "Штаб", "Шнур"],
+        "Підлога": ["Полиця", "Поле", "Прапор", "Вода"],
+        "Балкон": ["Барон", "Флакон", "Балон", "Дракон"],
+        "Двері": ["Звір", "Двір", "День", "Дерево"],
+        "Замок": ["Закон", "Залог", "Комок", "Самок"],
+        "Полиця": ["Палка", "Голка", "Вовк", "Полька"],
+        "Ложка": ["Мошка", "Кішка", "Ніжка", "Долонька"],
+        "Виделка": ["Пилка", "Балка", "Папка", "Жилка"],
+        "Ніж": ["Їжак", "Жито", "Брехня", "Ковш"],
+        "Банка": ["Манка", "Ранка", "Санка", "Палка"],
+        "Чашка": ["Кашка", "Шашка", "Чаща", "Ручка"],
+        "Кран": ["Клан", "Храм", "Крик", "Край"],
+        "Миска": ["Кицька", "Маска", "Диск", "Леска"],
+        "Сіль": ["Біль", "Моль", "Роль", "Толь"],
+        "Голова": ["Голос", "Голуб", "Гора", "Голод"],
+        "Рот": ["Кіт", "Кріт", "Пліт", "Рік"],
+        "Зуб": ["Дуб", "Суп", "Сруб", "Чуб"],
+        "Ніс": ["Пес", "Ніс", "Трос", "Віз"],
+        "Вухо": ["Ехо", "Муха", "Пух", "Уха"],
+        "Рука": ["Ріка", "Мука", "Ручей", "Сука"],
+        "Нога": ["Нуга", "Тайга", "Дуга", "Нора"],
+        "Біль": ["Моль", "Сіль", "Нуль", "Биль"],
+        "Сир": ["Син", "Сор", "Сiр", "Пир"],
+        "Суп": ["Зуб", "Дуб", "Сноп", "Соп"],
+        "Каша": ["Чаша", "Наша", "Маша", "Даша"],
+        "Сік": ["Ток", "Бок", "Рок", "Сон"],
+        "Чай": ["Май", "Лай", "Час", "Чайник"],
+        "Крупа": ["Група", "Труба", "Круг", "Кружка"],
+        "Мука": ["Рука", "Муха", "Лука", "Штука"],
+        "Рис": ["Рись", "Лис", "Трос", "Пис"],
+        "Кіт": ["Кріт", "Рот", "Код", "Рік"],
+        "Кішка": ["Ложка", "Мошка", "Кришка", "Сошка"],
+        "Собака": ["Папір", "Свобода", "Солодощі", "Слуга"],
+        "Вовк": ["Шовк", "Толк", "Пол", "Полка"],
+        "Лисиця": ["Коса", "Роса", "Оса", "Лист"],
+        "Заєць": ["Палець", "Танець", "Глянець", "Яйце"],
+        "Качка": ["Жартушка", "Будка", "Равлик", "Дудка"],
+        "Коза": ["Коса", "Роза", "Лоза", "Гроза"],
+        "День": ["Тінь", "Пень", "Лень", "Дон"],
+        "Ніч": ["Дочка", "Піч", "Меч", "Геть"],
+        "Ліс": ["Вага", "Біс", "Лев", "Ліска"],
+        "Річка": ["Рука", "Мука", "Ріпка", "Річка"],
+        "Гора": ["Нора", "Кора", "Пора", "Гроза"],
+        "Дощ": ["Вождь", "Цвях", "Дрож", "Донька"],
+        "Сніг": ["Слід", "Сміх", "Світ", "Снігур"],
+        "Гроза": ["Троянда", "Лоза", "Коза", "Очі"],
+        "Лікар": ["Грач", "Плач", "М'яч", "Ворог"],
+        "Тато": ["Лапа", "Капа", "Пара", "Папка"],
+        "Мама": ["Рама", "Дама", "Яма", "Маска"],
+        "Син": ["Сир", "Сон", "Син", "Син"],
+        "Донька": ["Ніч", "Піч", "Дич", "Дрож"],
+        "Брат": ["Брад", "Брак", "Ворог", "Град"],
+        "Бик": ["Бок", "Бак", "Бук", "Рик"],
+        "Риба": ["Липа", "Лапа", "Роба", "Рибалка"],
+        "Цибуля": ["Люлька", "Сук", "Бук", "Жук"],
+        "Мак": ["Рак", "Бак", "Лак", "Так"],
+        "Книга": ["Фіго", "Ліга", "Мить", "Крик"],
+        "Пісня": ["Пеня", "Перст", "Піч", "Перо"],
+        "Мило": ["Шило", "Мило", "Крейда", "Муло"],
+        "Сад": ["Суд", "Зад", "Град", "Лад"],
+        "Квіти": ["Кущі", "Листи", "Мости", "Риси"]
+    };
+
+    const dictionaryRu = {
         "1. Быт и Мебель": ["Дом", "Кровать", "Стол", "Стул", "Шкаф", "Диван", "Кресло", "Окно", "Дверь", "Зеркало", "Полка", "Ковер", "Лампа", "Подушка", "Одеяло", "Простыня", "Телевизор", "Часы", "Ключ", "Замок", "Стена", "Пол", "Потолок", "Балкон", "Штора", "Батарея", "Люстра", "Ваза", "Картина", "Карниз", "Вешалка", "Тумба", "Матрас", "Плед", "Скатерть", "Жалюзи", "Ящик", "Порог", "Ручка", "Розетка"],
         "2. Посуда и Кухня": ["Ложка", "Вилка", "Нож", "Тарелка", "Чашка", "Стакан", "Кастрюля", "Сковорода", "Чайник", "Кувшин", "Миска", "Блюдце", "Половник", "Лопатка", "Тёрка", "Доска", "Поднос", "Солонка", "Сахарница", "Масленка", "Хлебница", "Духовка", "Плита", "Холодильник", "Микроволновка", "Миксер", "Блендер", "Фильтр", "Губка", "Полотенце", "Раковина", "Кран", "Скалка", "Ситечко", "Дуршлаг", "Банка", "Бутылка", "Пробка", "Фольга", "Пергамент"],
         "3. Здоровье и Тело": ["Врач", "Больница", "Аптека", "Лекарство", "Таблетка", "Градусник", "Укол", "Бинт", "Вата", "Пластырь", "Мазь", "Капли", "Боль", "Сердце", "Голова", "Рука", "Нога", "Палец", "Спина", "Живот", "Грудь", "Шея", "Лицо", "Глаз", "Ухо", "Нос", "Рот", "Зуб", "Язык", "Колено", "Локоть", "Плечо", "Кровь", "Пульс", "Давление", "Температура", "Кашель", "Насморк", "Сон"],
@@ -539,7 +717,7 @@
         "25. Канцелярия и Учеба": ["Ручка", "Карандаш", "Тетрадь", "Блокнот", "Бумага", "Ластик", "Линейка", "Книга", "Сумка", "Конверт", "Папка", "Клей", "Ножницы", "Маркер", "Краски"]
     };
 
-    const realWordPairs = {
+    const realWordPairsRu = {
         "Дом": ["Дым", "Том", "Ком", "Лом", "Док"],
         "Стол": ["Стул", "Ствол", "Столб", "Сток"],
         "Стул": ["Стол", "Стук", "Слуг", "Ступ"],
@@ -548,63 +726,33 @@
         "Балкон": ["Барон", "Флакон", "Баллон", "Дракон"],
         "Дверь": ["Зверь", "Тверь", "Двор", "День"],
         "Замок": ["Закон", "Залог", "Комок", "Самок"],
-        "Рама": ["Дама", "Рана", "Яма", "Лама"],
         "Полка": ["Палка", "Иголка", "Волк", "Полька"],
         "Ложка": ["Мошка", "Кошка", "Ножка", "Ладошка"],
         "Вилка": ["Жилка", "Пилка", "Балка", "Папка"],
         "Нож": ["Еж", "Рожь", "Ложь", "Ковш", "Муж"],
-        "Банка": ["Манка", "Ранка", "Санка", "Палка"],
-        "Чашка": ["Кашка", "Шашка", "Чаща", "Ручка"],
-        "Кран": ["Клан", "Храм", "Крик", "Край"],
-        "Миска": ["Киска", "Маска", "Диск", "Леска"],
         "Соль": ["Моль", "Боль", "Роль", "Толь"],
         "Голова": ["Голос", "Голубь", "Гора", "Голод"],
         "Рот": ["Кот", "Крот", "Плот", "Год", "Рог"],
         "Зуб": ["Дуб", "Суп", "Сруб", "Чуб"],
         "Нос": ["Пёс", "Нёс", "Трос", "Воз"],
-        "Ухо": ["Эхо", "Муха", "Пух", "Уха"],
         "Рука": ["Река", "Мука", "Ручей", "Сука"],
         "Нога": ["Нуга", "Тайга", "Дуга", "Нора"],
-        "Боль": ["Моль", "Соль", "Ноль", "Быль"],
         "Сыр": ["Сор", "Сын", "Сэр", "Пир", "Мир"],
-        "Суп": ["Зуб", "Дуб", "Сноп", "Соп"],
-        "Каша": ["Чаша", "Наша", "Маша", "Даша"],
         "Сок": ["Ток", "Бок", "Рок", "Сук", "Сон"],
         "Чай": ["Май", "Лай", "Час", "Чайник"],
-        "Крупа": ["Группа", "Труба", "Круг", "Кружка"],
-        "Мука": ["Рука", "Муха", "Лука", "Штука"],
-        "Рис": ["Рысь", "Лис", "Трос", "Пис"],
         "Кот": ["Крот", "Рот", "Код", "Год"],
         "Кошка": ["Ложка", "Мошка", "Крошка", "Сошка"],
-        "Собака": ["Бумага", "Свобода", "Сладость", "Слуга"],
-        "Волк": ["Шелк", "Толк", "Пол", "Полка"],
-        "Лиса": ["Коса", "Роса", "Оса", "Лист"],
-        "Заяц": ["Палец", "Танец", "Глянец", "Яйцо"],
-        "Утка": ["Шутка", "Будка", "Улитка", "Дудка"],
-        "Коза": ["Коса", "Роза", "Лоза", "Гроза"],
         "День": ["Тень", "Пень", "Лень", "Дон"],
         "Ночь": ["Дочь", "Печь", "Мечь", "Прочь"],
         "Лес": ["Вес", "Бес", "Лев", "Леска"],
-        "Река": ["Рука", "Мука", "Репка", "Речка"],
         "Гора": ["Нора", "Кора", "Пора", "Гроза"],
-        "Дождь": ["Вождь", "Гвоздь", "Дрожь", "Дочь"],
         "Снег": ["След", "Смех", "Свет", "Снегирь"],
-        "Гроза": ["Роза", "Лоза", "Коза", "Глаза"],
         "Врач": ["Грач", "Плач", "Мяч", "Враг"],
         "Папа": ["Лапа", "Капа", "Пара", "Папка"],
         "Мама": ["Рама", "Дама", "Яма", "Маска"],
         "Сын": ["Сыр", "Сон", "Син", "Сын"],
-        "Дочь": ["Ночь", "Печь", "Дичь", "Дрожь"],
-        "Брат": ["Брад", "Брак", "Враг", "Град"],
         "Бык": ["Бок", "Бак", "Бук", "Рык"],
-        "Рыба": ["Липа", "Лапа", "Рыбачка", "Роба"],
-        "Лук": ["Люк", "Сук", "Бук", "Жук"],
-        "Мак": ["Рак", "Бак", "Лак", "Так"],
-        "Книга": ["Фига", "Лига", "Миг", "Крик"],
-        "Песня": ["Пеня", "Перст", "Перья", "Печь"],
-        "Мыло": ["Шило", "Мило", "Мел", "Муло"],
-        "Сад": ["Суд", "Зад", "Град", "Лад"],
-        "Цветы": ["Кусты", "Листы", "Мосты", "Черты"]
+        "Мак": ["Рак", "Бак", "Лак", "Так"]
     };
 
     let targetWord = "";
@@ -616,12 +764,10 @@
     let correctCount = 0;
     let totalCount = 0;
 
-    // --- Запись голоса ---
     let mediaRecorder = null;
     let audioChunks = [];
     let isRecording = false;
 
-    // --- Таймер "игра / отдых" ---
     let timerEnabled = true;
     let playSeconds = 5 * 60;
     let restSeconds = 10 * 60;
@@ -629,32 +775,81 @@
     let timerMode = 'play'; 
     let timerPaused = false;
 
+    function getCurrentDict() {
+        return currentLang === 'uk' ? dictionaryUk : dictionaryRu;
+    }
+
+    function getCurrentRealPairs() {
+        return currentLang === 'uk' ? realWordPairsUk : realWordPairsRu;
+    }
+
+    function toggleLanguage() {
+        currentLang = currentLang === 'uk' ? 'ru' : 'uk';
+        document.documentElement.setAttribute('lang', currentLang);
+        updateUI();
+        initCategories();
+    }
+
+    function updateUI() {
+        const t = i18n[currentLang];
+        document.getElementById('appTitle').textContent = t.appTitle;
+        document.getElementById('statCorrectLabel').textContent = t.statCorrect;
+        document.getElementById('statTotalLabel').textContent = t.statTotal;
+        document.getElementById('labelCategory').textContent = t.labelCategory;
+        document.getElementById('labelOptionsCount').textContent = t.labelOptionsCount;
+        document.getElementById('optEasy').textContent = t.optEasy;
+        document.getElementById('optMedium').textContent = t.optMedium;
+        document.getElementById('optHard').textContent = t.optHard;
+        document.getElementById('labelVoice').textContent = t.labelVoice;
+        document.getElementById('optVoiceMale').textContent = t.voiceMale;
+        document.getElementById('optVoiceFemale').textContent = t.voiceFemale;
+        document.getElementById('labelRate').textContent = t.labelRate;
+        document.getElementById('labelTimerEnable').textContent = t.labelTimerEnable;
+        document.getElementById('labelTimerDuration').textContent = t.labelTimerDuration;
+        document.getElementById('labelPlayMin').textContent = t.labelPlayMin;
+        document.getElementById('labelRestMin').textContent = t.labelRestMin;
+        document.getElementById('timerPauseBtn').textContent = timerPaused ? t.timerResume : t.timerPause;
+        document.getElementById('speakMainBtn').textContent = t.speakMainBtn;
+        document.getElementById('recordBtn').textContent = isRecording ? t.recordBtnStop : t.recordBtnStart;
+        document.getElementById('labelInstruction').textContent = t.labelInstruction;
+        document.getElementById('labelSpellTask').textContent = t.labelSpellTask;
+        document.getElementById('nextBtn').textContent = t.nextBtn;
+        document.getElementById('restTitle').textContent = t.restTitle;
+        document.getElementById('restLeftLabel').textContent = t.restLeftLabel;
+        document.getElementById('skipRestBtn').textContent = t.skipRestBtn;
+
+        updateTimerDisplay();
+    }
+
     function toggleTheme() {
         const currentTheme = document.documentElement.getAttribute('data-theme');
         const themeBtn = document.getElementById('themeBtn');
+        const t = i18n[currentLang];
 
         if (currentTheme === 'dark') {
             document.documentElement.removeAttribute('data-theme');
-            themeBtn.innerHTML = '🌙 Темная';
+            themeBtn.innerHTML = t.themeDark;
         } else {
             document.documentElement.setAttribute('data-theme', 'dark');
-            themeBtn.innerHTML = '☀️ Светлая';
+            themeBtn.innerHTML = t.themeLight;
         }
     }
 
     function getRealDistractors(word, currentCategory) {
         const countSelect = document.getElementById('optionsCountSelect');
-        const reqCount = countSelect ? parseInt(countSelect.value) - 1 : 3;
+        const reqCount = countSelect ? parseInt(countSelect.value) - 1 : 1; // За замовчуванням 1 дистрактор (2 варіанти)
 
-        if (realWordPairs[word]) {
-            let pool = [...realWordPairs[word]];
+        const pairs = getCurrentRealPairs();
+        if (pairs[word]) {
+            let pool = [...pairs[word]];
             pool.sort(() => Math.random() - 0.5);
             return pool.slice(0, reqCount);
         }
 
         let allWords = [];
-        for (let cat in dictionary) {
-            allWords.push(...dictionary[cat]);
+        const dict = getCurrentDict();
+        for (let cat in dict) {
+            allWords.push(...dict[cat]);
         }
 
         let candidates = allWords.filter(w => 
@@ -675,8 +870,8 @@
         document.getElementById('rateValue').textContent = val + 'x';
     }
 
-    const maleVoiceHints = ['pavel', 'dmitry', 'alexander', 'ivan', 'boris', 'vladimir', 'nikolai', 'yuri', 'maxim', 'artem', 'sergey', 'male', 'муж'];
-    const femaleVoiceHints = ['milena', 'elena', 'irina', 'ekaterina', 'katya', 'anna', 'olga', 'tatiana', 'victoria', 'female', 'жен'];
+    const maleVoiceHints = ['pavel', 'dmitry', 'alexander', 'ivan', 'boris', 'vladimir', 'nikolai', 'yuri', 'maxim', 'artem', 'sergey', 'male', 'чоловік', 'муж'];
+    const femaleVoiceHints = ['milena', 'elena', 'irina', 'ekaterina', 'katya', 'anna', 'olga', 'tatiana', 'victoria', 'lesya', 'lesya', 'female', 'жінка', 'жен'];
 
     function classifyVoiceGender(voice) {
         const name = voice.name.toLowerCase();
@@ -691,18 +886,23 @@
         if (!allVoices || allVoices.length === 0) return;
         voices = allVoices;
 
-        const ruVoices = voices.filter(voice => voice.lang.toLowerCase().replace('_', '-').startsWith('ru'));
-        const male = [], female = [], unknown = [];
+        // Фільтруємо голоси під поточну мову (uk або ru)
+        const langPrefix = currentLang === 'uk' ? 'uk' : 'ru';
+        let targetVoices = voices.filter(v => v.lang.toLowerCase().replace('_', '-').startsWith(langPrefix));
 
-        ruVoices.forEach(voice => {
+        // Якщо немає специфічних голосів для української/російської, беруться доступні
+        if (targetVoices.length === 0) targetVoices = voices;
+
+        const male = [], female = [], unknown = [];
+        targetVoices.forEach(voice => {
             const gender = classifyVoiceGender(voice);
             if (gender === 'male') male.push(voice);
             else if (gender === 'female') female.push(voice);
             else unknown.push(voice);
         });
 
-        maleVoices = male.length ? male : (unknown.length ? [unknown[0]] : ruVoices.slice(0, 1));
-        femaleVoices = female.length ? female : (unknown.length ? [unknown[unknown.length - 1]] : ruVoices.slice(0, 1));
+        maleVoices = male.length ? male : (unknown.length ? [unknown[0]] : targetVoices.slice(0, 1));
+        femaleVoices = female.length ? female : (unknown.length ? [unknown[unknown.length - 1]] : targetVoices.slice(0, 1));
     }
 
     populateVoiceList();
@@ -716,8 +916,10 @@
         if (!textToSpeak || !('speechSynthesis' in window)) return;
         speechSynthesis.cancel();
 
+        populateVoiceList();
+
         const utterance = new SpeechSynthesisUtterance(textToSpeak);
-        utterance.lang = 'ru-RU';
+        utterance.lang = currentLang === 'uk' ? 'uk-UA' : 'ru-RU';
 
         const voiceSelect = document.getElementById('voiceSelect');
         const gender = voiceSelect ? voiceSelect.value : 'male';
@@ -734,12 +936,13 @@
         speechSynthesis.speak(utterance);
     }
 
-    // --- Запись речи диктофоном для самопроверки ---
     async function toggleRecording() {
         const btn = document.getElementById('recordBtn');
+        const t = i18n[currentLang];
+
         if (!isRecording) {
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                alert("Ваш браузер не поддерживает запись аудио.");
+                alert(currentLang === 'uk' ? "Ваш браузер не підтримує запис аудіо." : "Ваш браузер не поддерживает запись аудио.");
                 return;
             }
             try {
@@ -755,23 +958,24 @@
                 };
                 mediaRecorder.start();
                 isRecording = true;
-                btn.textContent = "⏹ Остановить и прослушать себя";
+                btn.textContent = t.recordBtnStop;
                 btn.classList.add('recording');
             } catch (err) {
-                alert("Ошибка доступа к микрофону.");
+                alert(currentLang === 'uk' ? "Помилка доступу до мікрофона." : "Ошибка доступа к микрофону.");
             }
         } else {
             if (mediaRecorder && mediaRecorder.state === "recording") {
                 mediaRecorder.stop();
             }
             isRecording = false;
-            btn.textContent = "🎙 Проговорить и проверить себя";
+            btn.textContent = t.recordBtnStart;
             btn.classList.remove('recording');
         }
     }
 
     function highlightSyllables(word) {
-        return word.replace(/([аеёиоуыэюяАЕЁИОУЫЭЮЯ][ьъ]?)(?=[бвгджзйклмнпрстфхцчшщ])/g, '$1-').toUpperCase();
+        // Базовий поділ на склади для кирилиці
+        return word.replace(/([аеєиіїоуюяяАЕЄИІЇОУЮЯ][ьъ]?)(?=[бвгджзйклмнпрстфхцчшщ])/g, '$1-').toUpperCase();
     }
 
     function updateStatsDisplay() {
@@ -793,12 +997,14 @@
 
     function updateTimerDisplay() {
         const display = document.getElementById('timerDisplay');
+        const t = i18n[currentLang];
+
         if (display) {
             if (timerMode === 'rest') {
-                display.textContent = '☕ Отдых: ' + formatTime(remainingSeconds);
+                display.textContent = t.timerRestPrefix + formatTime(remainingSeconds);
                 display.classList.add('resting');
             } else {
-                display.textContent = '🎮 Игра: ' + formatTime(remainingSeconds);
+                display.textContent = t.timerPlayPrefix + formatTime(remainingSeconds);
                 display.classList.remove('resting');
             }
         }
@@ -830,7 +1036,8 @@
 
     function toggleTimerPause() {
         timerPaused = !timerPaused;
-        document.getElementById('timerPauseBtn').textContent = timerPaused ? '▶ Продолжить' : '⏸ Пауза';
+        const t = i18n[currentLang];
+        document.getElementById('timerPauseBtn').textContent = timerPaused ? t.timerResume : t.timerPause;
     }
 
     function toggleTimerFeature() {
@@ -870,13 +1077,15 @@
     function initCategories() {
         const categorySelect = document.getElementById('categorySelect');
         categorySelect.innerHTML = '';
+        const dict = getCurrentDict();
+        const t = i18n[currentLang];
 
         const allOption = document.createElement('option');
         allOption.value = 'ALL';
-        allOption.textContent = '📚 Все категории (весь словарь)';
+        allOption.textContent = t.allCategories;
         categorySelect.appendChild(allOption);
 
-        for (let category in dictionary) {
+        for (let category in dict) {
             const option = document.createElement('option');
             option.value = category;
             option.textContent = category;
@@ -896,14 +1105,15 @@
 
         const categorySelect = document.getElementById('categorySelect');
         const selectedCategory = categorySelect.value;
+        const dict = getCurrentDict();
 
         let words;
         if (selectedCategory === 'ALL') {
             const combinedWords = [];
-            for (let cat in dictionary) combinedWords.push(...dictionary[cat]);
+            for (let cat in dict) combinedWords.push(...dict[cat]);
             words = [...new Set(combinedWords)];
         } else {
-            words = dictionary[selectedCategory];
+            words = dict[selectedCategory];
         }
 
         if (!words || words.length === 0) return;
@@ -929,7 +1139,7 @@
             const audioBtn = document.createElement('button');
             audioBtn.className = 'audio-btn';
             audioBtn.innerHTML = '🔊';
-            audioBtn.title = 'Прослушать вариант';
+            audioBtn.title = currentLang === 'uk' ? 'Прослухати варіант' : 'Прослушать вариант';
             audioBtn.onclick = (e) => {
                 e.stopPropagation();
                 speakWord(optionText);
@@ -967,16 +1177,16 @@
         }
     }
 
-    // --- Настройка буквенного тренажёра ---
     function setupSpellBuilder(word) {
         const card = document.getElementById('spellBuilderCard');
         const pool = document.getElementById('lettersPool');
         const target = document.getElementById('lettersTarget');
         const syllableDisplay = document.getElementById('syllableDisplay');
+        const t = i18n[currentLang];
 
         pool.innerHTML = '';
         target.innerHTML = '';
-        syllableDisplay.textContent = 'Слоги: ' + highlightSyllables(word);
+        syllableDisplay.textContent = t.syllablePrefix + highlightSyllables(word);
         card.classList.remove('hidden');
 
         let letters = word.toUpperCase().split('');
@@ -1010,6 +1220,7 @@
     }
 
     window.onload = function() {
+        updateUI();
         initCategories();
         startMasterTimer();
     };
