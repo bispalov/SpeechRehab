@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="uk" data-theme="dark">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Слухова диференціація та Речевий тренажер</title>
+    <title>Auditory Differentiation & Speech Trainer</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#141923">
     <link rel="icon" href="icon-192.png">
@@ -466,51 +466,51 @@
 <div id="restOverlay" class="rest-overlay hidden">
     <div class="rest-overlay-content">
         <div class="rest-icon">☕</div>
-        <h2 id="restTitle">Час відпочинку</h2>
-        <p><span id="restLeftLabel">Залишилося:</span> <span id="restTimeLeft">10:00</span></p>
-        <button id="skipRestBtn" onclick="skipRest()">Продовжити гру зараз</button>
+        <h2 id="restTitle">Rest Time</h2>
+        <p><span id="restLeftLabel">Remaining:</span> <span id="restTimeLeft">10:00</span></p>
+        <button id="skipRestBtn" onclick="skipRest()">Resume Game Now</button>
     </div>
 </div>
 
 <div class="container">
     <div class="header-row">
-        <h1 id="appTitle">Слухова диференціація</h1>
+        <h1 id="appTitle">Auditory Differentiation</h1>
         <div class="header-btns">
-            <button class="settings-toggle-btn" id="settingsBtn" onclick="toggleSettingsPanel()">⚙️ Налаштування</button>
+            <button class="settings-toggle-btn" id="settingsBtn" onclick="toggleSettingsPanel()">⚙️ Settings</button>
         </div>
     </div>
 
-    <!-- Панель налаштувань -->
+    <!-- Panel Settings -->
     <div class="settings-panel hidden" id="settingsPanel">
         <div class="control-group">
-            <label id="labelLang">Мова інтерфейсу / Язык:</label>
-            <button class="lang-toggle-btn" id="langBtn" onclick="toggleLanguage()">🌐 UA / RU</button>
+            <label id="labelLang">Language / Мова / Язык:</label>
+            <button class="lang-toggle-btn" id="langBtn" onclick="toggleLanguage()">🌐 EN</button>
         </div>
 
         <div class="control-group">
-            <label id="labelTheme">Тема оформлення / Тема:</label>
-            <button class="theme-toggle-btn" id="themeBtn" onclick="toggleTheme()">☀️ Світла</button>
+            <label id="labelTheme">Theme:</label>
+            <button class="theme-toggle-btn" id="themeBtn" onclick="toggleTheme()">☀️ Light</button>
         </div>
 
         <div class="control-group">
-            <label for="optionsCountSelect" id="labelOptionsCount">Кількість варіантів відповідей:</label>
+            <label for="optionsCountSelect" id="labelOptionsCount">Number of Answer Options:</label>
             <select id="optionsCountSelect" onchange="onOptionsCountChange()">
-                <option value="2" selected id="optEasy">2 варіанти (Легко)</option>
-                <option value="3" id="optMedium">3 варіанти (Середньо)</option>
-                <option value="4" id="optHard">4 варіанти (Складно)</option>
+                <option value="2" selected id="optEasy">2 options (Easy)</option>
+                <option value="3" id="optMedium">3 options (Medium)</option>
+                <option value="4" id="optHard">4 options (Hard)</option>
             </select>
         </div>
 
         <div class="control-group">
-            <label for="voiceSelect" id="labelVoice">Стать голосу:</label>
+            <label for="voiceSelect" id="labelVoice">Voice Gender:</label>
             <select id="voiceSelect" onchange="saveSettings()">
-                <option value="male" selected id="optVoiceMale">👨 Чоловічий</option>
-                <option value="female" id="optVoiceFemale">👩 Жіночий</option>
+                <option value="male" selected id="optVoiceMale">👨 Male</option>
+                <option value="female" id="optVoiceFemale">👩 Female</option>
             </select>
         </div>
 
         <div class="control-group">
-            <label for="rateRange" id="labelRate">Швидкість мовлення:</label>
+            <label for="rateRange" id="labelRate">Speech Speed:</label>
             <div class="slider-container">
                 <input type="range" id="rateRange" min="0.5" max="1.5" step="0.1" value="0.9" oninput="updateRateLabel(this.value)" onchange="saveSettings()">
                 <span id="rateValue">0.9x</span>
@@ -520,19 +520,19 @@
         <div class="control-group">
             <label class="checkbox-label" for="timerEnabled">
                 <input type="checkbox" id="timerEnabled" checked onchange="toggleTimerFeature()">
-                <span id="labelTimerEnable">Використовувати таймер «гра / відпочинок»</span>
+                <span id="labelTimerEnable">Use "Play / Rest" timer</span>
             </label>
         </div>
 
         <div class="control-group" id="timerSettingsGroup">
-            <label id="labelTimerDuration">Тривалість (хвилини):</label>
+            <label id="labelTimerDuration">Duration (minutes):</label>
             <div class="timer-inputs">
                 <div>
-                    <label for="playMinutes" id="labelPlayMin">🎮 Гра</label>
+                    <label for="playMinutes" id="labelPlayMin">🎮 Play</label>
                     <input type="number" id="playMinutes" min="1" max="60" value="5" onchange="updateTimerSettings()">
                 </div>
                 <div>
-                    <label for="restMinutes" id="labelRestMin">☕ Відпочинок</label>
+                    <label for="restMinutes" id="labelRestMin">☕ Rest</label>
                     <input type="number" id="restMinutes" min="1" max="60" value="10" onchange="updateTimerSettings()">
                 </div>
             </div>
@@ -540,52 +540,109 @@
     </div>
 
     <div class="stats-row">
-        <div class="stat-box correct-stat"><span id="statCorrectLabel">✅ Правильно:</span> <span id="correctCount">0</span></div>
-        <div class="stat-box total-stat"><span id="statTotalLabel">📝 Всього:</span> <span id="totalCount">0</span></div>
+        <div class="stat-box correct-stat"><span id="statCorrectLabel">✅ Correct:</span> <span id="correctCount">0</span></div>
+        <div class="stat-box total-stat"><span id="statTotalLabel">📝 Total:</span> <span id="totalCount">0</span></div>
     </div>
 
     <div class="controls">
         <div class="control-group">
-            <label for="categorySelect" id="labelCategory">Оберіть категорію:</label>
+            <label for="categorySelect" id="labelCategory">Select Category:</label>
             <select id="categorySelect" onchange="changeCategory()">
-                <!-- Категорії -->
+                <!-- Categories -->
             </select>
         </div>
 
         <div class="control-group">
             <div class="timer-status-row">
-                <div class="timer-display" id="timerDisplay">🎮 Гра: 05:00</div>
-                <button class="timer-pause-btn" id="timerPauseBtn" onclick="toggleTimerPause()">⏸ Пауза</button>
+                <div class="timer-display" id="timerDisplay">🎮 Play: 05:00</div>
+                <button class="timer-pause-btn" id="timerPauseBtn" onclick="toggleTimerPause()">⏸ Pause</button>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <button class="speak-main-btn" id="speakMainBtn" onclick="speakWord(targetWordSyllables)">🔊 Прослухати загадане слово</button>
-        <button class="record-btn" id="recordBtn" onclick="toggleRecording()">🎙 Проговорити і перевірити себе</button>
+        <button class="speak-main-btn" id="speakMainBtn" onclick="speakWord(targetWordSyllables)">🔊 Listen to the target word</button>
+        <button class="record-btn" id="recordBtn" onclick="toggleRecording()">🎙 Pronounce and check yourself</button>
         <div id="speechResultBox" class="speech-result-box"></div>
     </div>
 
-    <label id="labelInstruction">Оберіть слово, яке ви почули (усі варіанти — реальні слова):</label>
+    <label id="labelInstruction">Select the word you heard (all options are real words):</label>
     <div class="options-grid" id="optionsContainer">
-        <!-- Варіанти відповідей -->
+        <!-- Answer options -->
     </div>
 
     <div class="spell-builder-card hidden" id="spellBuilderCard">
-        <label id="labelSpellTask">Зберіть слово з букв (для тренування мовлення):</label>
+        <label id="labelSpellTask">Assemble the word from letters (for speech training):</label>
         <div class="letters-target" id="lettersTarget"></div>
         <div class="letters-pool" id="lettersPool"></div>
         <div class="syllable-display" id="syllableDisplay"></div>
     </div>
 
-    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Наступне слово ➔</button>
+    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Next word ➔</button>
 </div>
 
 <script>
-    let currentLang = 'uk'; 
+    function getDefaultLanguage() {
+        const savedLang = localStorage.getItem('app_lang');
+        if (savedLang && ['uk', 'ru', 'en'].includes(savedLang)) {
+            return savedLang;
+        }
+        const sysLang = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+        if (sysLang.startsWith('uk')) {
+            return 'uk';
+        } else if (sysLang.startsWith('ru')) {
+            return 'ru';
+        } else {
+            return 'en';
+        }
+    }
+
+    let currentLang = getDefaultLanguage(); 
     let accentFixes = {};   
 
     const i18n = {
+        en: {
+            appTitle: "Auditory Differentiation",
+            settingsBtnText: "⚙️ Settings",
+            labelLang: "Interface Language:",
+            labelTheme: "Theme:",
+            themeLight: "☀️ Light",
+            themeDark: "🌙 Dark",
+            statCorrect: "✅ Correct:",
+            statTotal: "📝 Total:",
+            labelCategory: "Select Category:",
+            allCategories: "📚 All Categories (Whole Dictionary)",
+            labelOptionsCount: "Number of Answer Options:",
+            optEasy: "2 options (Easy)",
+            optMedium: "3 options (Medium)",
+            optHard: "4 options (Hard)",
+            labelVoice: "Voice Gender:",
+            voiceMale: "👨 Male",
+            voiceFemale: "👩 Female",
+            labelRate: "Speech Speed:",
+            labelTimerEnable: "Use \"Play / Rest\" timer",
+            labelTimerDuration: "Duration (minutes):",
+            labelPlayMin: "🎮 Play",
+            labelRestMin: "☕ Rest",
+            timerPlayPrefix: "🎮 Play: ",
+            timerRestPrefix: "☕ Rest: ",
+            timerPause: "⏸ Pause",
+            timerResume: "▶ Resume",
+            speakMainBtn: "🔊 Listen to the target word",
+            recordBtnStart: "🎙 Pronounce and check yourself",
+            recordBtnStop: "⏹ Listening...",
+            speechYouSaid: "You said: ",
+            speechCorrect: "✓ Correctly pronounced word!",
+            speechIncorrect: "✗ Pronounced incorrectly, try again",
+            speechRecordedPlay: "🎧 Recording played. Compare with the model!",
+            labelInstruction: "Select the word you heard (all options are real words):",
+            labelSpellTask: "Assemble the word from letters (for speech training):",
+            syllablePrefix: "Syllables: ",
+            nextBtn: "Next word ➔",
+            restTitle: "Rest Time",
+            restLeftLabel: "Remaining:",
+            skipRestBtn: "Resume Game Now"
+        },
         uk: {
             appTitle: "Слухова диференціація",
             settingsBtnText: "⚙️ Налаштування",
@@ -679,9 +736,48 @@
                 accentFixes = await response.json();
             }
         } catch (e) {
-            console.warn("Не вдалося завантажити accents.json", e);
+            console.warn("Could not load accents.json", e);
         }
     }
+
+    const dictionaryEn = {
+        "1. Household & Furniture": ["House", "Bed", "Ta-ble", "Chair", "Clos-et", "So-fa", "Arm-chair", "Win-dow", "Door", "Mir-ror", "Shelf", "Car-pet", "Lamp", "Pil-low", "Blan-ket", "Sheet", "Tel-e-vi-sion", "Clock", "Key", "Lock", "Wall", "Floor", "Ceil-ing", "Bal-co-ny", "Cur-tain", "Ra-di-a-tor", "Chan-de-lier", "Vase", "Pic-ture", "Cur-tain rod", "Hang-er", "Night-stand", "Mat-tress", "Plaid", "Ta-ble-cloth", "Blinds", "Draw-er", "Thresh-old", "Han-dle", "Sock-et"],
+        "2. Dishes & Kitchen": ["Spoon", "Fork", "Knife", "Plate", "Cup", "Glass", "Pot", "Fry-ing pan", "Ket-tle", "Pitch-er", "Bowl", "Sau-cer", "La-dle", "Spat-u-la", "Grat-er", "Cut-ting board", "Tray", "Salt sha-ker", "Su-gar bowl", "But-ter dish", "Bread box", "Ov-en", "Stove", "Re-frig-er-a-tor", "Mi-cro-wave", "Mix-er", "Blen-der", "Fil-ter", "Sponge", "Tow-el", "Sink", "Fau-cet", "Roll-ing pin", "Sieve", "Col-an-der", "Jar", "Bot-tle", "Cork", "Foil", "Parch-ment"],
+        "3. Health & Body": ["Doc-tor", "Hos-pi-tal", "Phar-ma-cy", "Med-i-cine", "Pill", "Ther-mom-e-ter", "In-jec-tion", "Ban-dage", "Cot-ton wool", "Patch", "Oint-ment", "Drops", "Pain", "Heart", "Head", "Arm", "Leg", "Fin-ger", "Back", "Stom-ach", "Chest", "Neck", "Face", "Eye", "Ear", "Nose", "Mouth", "Tooth", "Tongue", "Knee", "El-bow", "Shoul-der", "Blood", "Pulse", "Pres-sure", "Tem-per-a-ture", "Cough", "Run-ny nose", "Sleep"],
+        "4. Communication & Emotions": ["Hel-lo", "Thank you", "Please", "Yes", "No", "Good", "Bad", "Help me", "How are you", "Good-bye", "Wel-come", "Sor-ry", "Love", "Joy", "Sad-ness", "Smile", "Laugh-ter", "Tears", "Kind-ness", "Peace", "Friend-ship", "Care", "Ten-der-ness", "Kiss", "Hug", "Calm", "Fear", "Sur-prise", "Hope", "Faith", "A-gree", "Don't want", "Will", "Won't", "Give", "Here", "Go", "Stop", "Lis-ten", "Look"],
+        "5. Clothes & Shoes": ["Shirt", "Pants", "Jeans", "Dress", "Skirt", "T-shirt", "Sweat-er", "Car-di-gan", "Jack-et", "Coat", "Rain-coat", "Hat", "Scarf", "Gloves", "Mit-tens", "Socks", "Tights", "Un-der-wear", "Pa-ja-mas", "Robe", "Boots", "Shoes", "Sneak-ers", "Slip-pers", "San-dals", "Belt", "But-ton", "Zip-per", "Pock-et", "Col-lar", "Sleeve", "Hood", "Shoe-la-ces", "Cap", "Vest", "Suit"],
+        "6. Food & Grocery": ["Bread", "But-ter", "Cheese", "Milk", "Meat", "Fish", "Egg", "Soup", "Por-ridge", "Sal-ad", "Salt", "Su-gar", "Pep-per", "Sauce", "Pas-ta", "Ce-re-al", "Rice", "Buck-wheat", "Noo-dles", "Pie", "Cake", "Cook-ie", "Can-dy", "Choc-o-late", "Hon-ey", "Jam", "Sour cream", "Cot-tage cheese", "Ke-fir", "Yo-gurt", "Sau-sage", "Sau-sa-ges", "Cut-let", "Dump-lings", "Pan-cakes", "Sand-wich", "Flour", "Yeast", "Vin-e-gar", "Mus-tard"],
+        "7. Drinks": ["Wa-ter", "Tea", "Cof-fee", "Juice", "Milk", "Com-pote", "Fruit drink", "Jel-ly", "Lem-on-ade", "Kvass", "Cock-tail", "Co-coa", "Min-er-al wa-ter", "De-coc-tion", "Drink", "Nec-tar", "Es-pres-so", "Cap-puc-ci-no", "Smooth-ie", "Ton-ic"],
+        "8. Fruits & Berries": ["Ap-ple", "Pear", "Ba-nan-a", "Or-ange", "Lem-on", "Tan-ger-ine", "Peach", "A-pri-cot", "Plum", "Grapes", "Straw-ber-ry", "Rasp-ber-ry", "Wild straw-ber-ry", "Cher-ry", "Sweet cher-ry", "Blue-ber-ry", "Cur-rant", "Wa-ter-mel-on", "Mel-on", "Pine-ap-ple", "Ki-wi", "Man-go", "Pome-gran-ate", "Fig", "Per-sim-mon", "Cher-ry plum", "Black-ber-ry", "Cran-ber-ry", "Lin-gon-ber-ry", "Sea buck-thorn"],
+        "9. Vegetables & Greens": ["Po-ta-to", "Car-rot", "Beet-root", "On-ion", "Gar-lic", "Cu-cum-ber", "To-ma-to", "Cab-bage", "Pep-per", "Zuc-chi-ni", "Egg-plant", "Pump-kin", "Peas", "Beans", "Corn", "Rad-ish", "Tur-nip", "Greens", "Dill", "Pars-ley", "Sal-ad", "Spin-ach", "Sor-rel", "Cel-e-ry", "Ba-sil"],
+        "10. Hygiene & Personal Care": ["Soap", "Sham-poo", "Tooth-paste", "Brush", "Wa-ter", "Tow-el", "Comb", "Scis-sors", "Mir-ror", "Cream", "Nap-kin", "Pa-per", "Wash-cloth", "Foam", "Gel", "Per-fume", "De-od-o-rant", "Ra-zor", "Cot-ton wool", "Pum-ice"],
+        "11. Family & People": ["Mom", "Dad", "Son", "Daugh-ter", "Grand-moth-er", "Grand-fa-ther", "Broth-er", "Sis-ter", "Grand-son", "Grand-daugh-ter", "Un-cle", "Aunt", "Hus-band", "Wife", "Child", "Friend", "Neigh-bor", "Guest", "Per-son", "Ba-by"],
+        "12. Professions": ["Doc-tor", "Teach-er", "Cook", "Driv-er", "Sell-er", "Build-er", "Fire-fight-er", "Po-lice of-fi-cer", "Post-man", "Hair-dress-er", "Seam-stress", "Plumb-er", "E-lec-tri-cian", "En-gi-neer", "Pi-lot"],
+        "13. City & Transport": ["Cit-y", "Street", "House", "Road", "Car", "Bus", "Tram", "Trol-ley-bus", "Sub-way", "Train", "Air-plane", "Tax-i", "Bus stop", "Store", "Park", "Phar-ma-cy", "Bridge", "Traf-fic light", "Side-walk", "Square"],
+        "14. Nature & Weather": ["Sun", "Sky", "Cloud", "Rain", "Snow", "Wind", "Thun-der-storm", "Rain-bow", "Star", "Moon", "Day", "Night", "Morn-ing", "Eve-ning", "For-est", "Riv-er", "Lake", "Sea", "Moun-tain", "Field"],
+        "15. Time & Calendar": ["Time", "Hour", "Min-ute", "Sec-ond", "Day", "Week", "Month", "Year", "Yes-ter-day", "To-day", "To-mor-row", "Mon-day", "Tues-day", "Wednes-day", "Thurs-day", "Fri-day", "Sat-ur-day", "Sun-day", "Win-ter", "Spring", "Sum-mer", "Au-tumn"],
+        "16. Domestic Animals": ["Cat", "Dog", "Cow", "Horse", "Pig", "Sheep", "Goat", "Rab-bit", "Pup-py", "Kit-ten", "Calf", "Foal", "Don-key", "Ham-ster"],
+        "17. Wild Animals": ["Wolf", "Fox", "Bear", "Hare", "Hedge-hog", "Squir-rel", "Deer", "Elk", "Lion", "Ti-ger", "El-e-phant", "Mon-key", "Gi-raffe", "Hip-po", "Croc-o-dile"],
+        "18. Birds": ["Bird", "Spar-row", "Crow", "Pig-eon", "Tit", "Wood-peck-er", "Duck", "Goose", "Chick-en", "Roost-er", "Tur-key", "Owl", "Ea-gle", "Stork", "Swal-low"],
+        "19. Colors": ["White", "Black", "Red", "Blue", "Green", "Yel-low", "Or-ange", "Pur-ple", "Pink", "Brown", "Gray", "Light blue", "Beige", "Bur-gun-dy", "Lime"],
+        "20. Numbers & Counting": ["One", "Two", "Three", "Four", "Five", "Six", "Sev-en", "Eight", "Nine", "Ten", "Hun-dred", "Thou-sand", "First", "Sec-ond", "Third", "Ma-ny", "Few", "Half", "Ze-ro", "Pair"],
+        "21. Actions (Verbs)": ["Walk", "Sit", "Stand", "Lie", "Eat", "Drink", "Speak", "Read", "Write", "Take", "Wash", "Clean", "Dress", "Re-move", "O-pen", "Close"],
+        "22. Qualities (Adjectives)": ["Big", "Small", "Hot", "Cold", "Warm", "Tas-ty", "Dirty", "New", "Old", "Kind", "Fast", "Slow", "Strong", "Light", "Dark", "Soft", "Hard"],
+        "23. Tools & Repair": ["Ham-mer", "Nail", "Screw", "Screw-dri-ver", "Saw", "Pli-ers", "Axe", "Shov-el", "Rake", "Buck-et", "Brush", "Glue", "Paint", "Wire"],
+        "24. Rest & Hobbies": ["Book", "News-pa-per", "Mu-sic", "Song", "Dance", "Cin-e-ma", "Ra-di-o", "Game", "Ball", "Gar-den", "Flow-ers", "Fish-ing", "Sport", "Hol-i-day"],
+        "25. Stationery & Learning": ["Pen", "Pen-cil", "Note-book", "Note-pad", "Pa-per", "E-ras-er", "Rul-er", "Book", "Bag", "En-ve-lope", "Fold-er", "Glue", "Scis-sors", "Mar-ker", "Paints"]
+    };
+
+    const realWordPairsEn = {
+        "House": ["Mouse", "Horse", "Blouse", "Hose", "Spouse"],
+        "Chair": ["Hair", "Pair", "Bear", "Stair", "Fair"],
+        "Cat": ["Hat", "Bat", "Rat", "Mat", "Cap"],
+        "Dog": ["Log", "Fog", "Frog", "Dig", "Dot"],
+        "Sun": ["Fun", "Run", "Gun", "Son", "Bun"],
+        "Bed": ["Red", "Bad", "Beg", "Bell", "Bet"],
+        "Pen": ["Pin", "Pan", "Pet", "Peg", "Ten"],
+        "Book": ["Look", "Cook", "Hook", "Boot", "Box"]
+    };
 
     const dictionaryUk = {
         "1. Побут та Меблі": ["Дім", "Ліж-ко", "Стіл", "Сті-лець", "Ша-фа", "Ди-ван", "Кріс-ло", "Вік-но", "Две-рі", "Дзер-ка-ло", "По-ли-ця", "Ки-лим", "Лам-па", "По-душ-ка", "Ковд-ра", "Прос-ти-рад-ло", "Те-ле-ві-зор", "Го-дин-ник", "Ключ", "За-мок", "Сті-на", "Під-ло-га", "Сте-ля", "Бал-кон", "Што-ра", "Ба-та-ре-я", "Люст-ра", "Ва-за", "Кар-ти-на", "Кар-низ", "Ві-шал-ка", "Тум-ба", "Ма-трац", "Плед", "Ска-тер-ти-на", "Жа-лю-зі", "Я-щик", "По-ріг", "Руч-ка", "Роз-ет-ка"],
@@ -745,11 +841,11 @@
         "17. Животные Дикие": ["Волк", "Ли-са", "Мед-ведь", "За-яц", "Еж", "Бел-ка", "О-лень", "Лось", "Лев", "Тигр", "Слон", "О-без-ья-на", "Жи-раф", "Бе-ге-мот", "Кро-ко-дил"],
         "18. Птицы": ["Пти-ца", "Во-ро-бей", "Во-ро-на", "Го-лубь", "Си-ни-ца", "Дя-тел", "Ут-ка", "Гусь", "Ку-ри-ца", "Пе-тух", "Ин-дюк", "Со-ва", "О-рел", "А-ист", "Лас-точ-ка"],
         "19. Цвета": ["Бе-лый", "Чер-ный", "Крас-ный", "Си-ний", "Зе-ле-ный", "Жел-тый", "О-ран-же-вый", "Фи-о-ле-то-вый", "Ро-зо-вый", "Ко-рич-не-вый", "Се-рый", "Го-лу-бой", "Бе-же-вый", "Бор-до-вый", "Са-ла-то-вый"],
-        "20. Числа и Счет": ["О-дин", "Два", "Три", "Че-ты-ре", "Пять", "Шесть", "Семь", "Во-семь", "Де-вять", "Де-сять", "Сто", "Ты-ся-ча", "Пер-вый", "Вто-рой", "Тре-тий", "Мно-го", "Ма-ло", "По-ло-ви-на", "Ноль", "Па-ра"],
-        "21. Действия (Глаголы)": ["Ид-ти", "Си-деть", "Сто-ять", "Ле-жать", "Спать", "Есть", "Пить", "Го-во-рить", "Слу-шать", "Смот-реть", "Чи-тать", "Пи-сать", "Дать", "Взять", "Мыть", "Чис-тить", "О-деть", "Снять", "От-крыть", "За-крыть"],
-        "22. Качества (Прилагательные)": ["Боль-шой", "Ма-лень-кий", "Го-ря-чий", "Хо-лод-ный", "Теп-лый", "Вкус-ный", "Чис-тый", "Гряз-ный", "Но-вый", "Ста-рый", "Доб-рый", "Хо-ро-ший", "Пло-хой", "Быст-рый", "Мед-лен-ный", "Силь-ный", "Свет-лый", "Тем-ный", "Мяг-кий", "Твер-дый"],
-        "23. Инструменты и Ремонт": ["Мо-ло-ток", "Гвоздь", "Винт", "От-вер-тка", "Пи-ла", "Кле-щи", "То-пор", "Ло-па-та", "Гра-бли", "Вед-ро", "Щет-ка", "Клей", "Крас-ка", "Кисть", "Про-вод"],
-        "24. Отдых и Увлечения": ["Кни-га", "Га-зе-та", "Му-зы-ка", "Пес-ня", "Та-нец", "Ки-но", "Ра-ди-о", "Иг-ра", "Мяч", "Про-гул-ка", "Сад", "Цве-ты", "Ры-бал-ка", "Спорт", "Празд-ник"],
+        "20. Числа и Счет": ["О-дин", "Два", "Три", "Че-ты-ре", "Пять", "Шесть", "Семь", "Во-семь", "Де-вять", "Де-сять", "Сто", "Ты-ся-ча", "Пер-вый", "Вто-рой", "Тре-тий", "Мно-го", "Ма-ло", "Po-ло-ви-на", "Ноль", "Па-ра"],
+        "21. Действия (Глаголы)": ["Ид-ти", "Си-деть", "Сто-ять", "Ле-жать", "Спать", "Есть", "Пить", "Go-vo-рить", "Слу-шать", "Смот-реть", "Чи-тать", "Пи-сать", "Дать", "Взять", "Мыть", "Чис-тить", "О-деть", "Снять", "От-крыть", "За-крыть"],
+        "22. Качества (Прилагательные)": ["Боль-шой", "Ма-лень-кий", "Go-ря-чий", "Хо-лод-ный", "Теп-лый", "Вкус-ный", "Чис-тый", "Гряз-ный", "Но-вый", "Ста-рый", "Доб-рый", "Хо-ро-ший", "Пло-хой", "Быст-рый", "Мед-лен-ный", "Силь-ный", "Свет-лый", "Тем-ный", "Мяг-кий", "Твер-дый"],
+        "23. Инструменты и Ремонт": ["Mo-ло-ток", "Гвоздь", "Винт", "От-вер-тка", "Пи-ла", "Кле-щи", "То-пор", "Lo-па-та", "Грабли", "Вед-ро", "Щет-ка", "Клей", "Крас-ка", "Кисть", "Про-вод"],
+        "24. Отдых и Хобби": ["Кни-га", "Ga-зе-та", "Му-зы-ка", "Пес-ня", "Ta-нец", "Ки-но", "Ра-ди-о", "Иг-ра", "Мяч", "Про-гул-ка", "Сад", "Цве-ты", "Ры-бал-ка", "Спорт", "Празд-ник"],
         "25. Канцелярия и Учеба": ["Руч-ка", "Ка-ран-даш", "Тет-радь", "Блок-нот", "Бу-ма-га", "Лас-тик", "Ли-ней-ка", "Кни-га", "Сум-ка", "Кон-верт", "Пап-ка", "Клей", "Нож-ни-цы", "Мар-кер", "Крас-ки"]
     };
 
@@ -757,39 +853,110 @@
         "Дом": ["Дым", "Том", "Ком", "Лом", "Док"],
         "Стол": ["Стул", "Ствол", "Столб", "Сток"],
         "Стул": ["Стол", "Стук", "Слуг", "Ступ"],
-        "Шкаф": ["Шарф", "Штаб", "Шнур", "Шаг"],
-        "Дверь": ["Зверь", "Тверь", "Двор", "День"],
-        "Лож-ка": ["Мош-ка", "Кош-ка", "Нож-ка", "Ла-дош-ка"],
-        "Вил-ка": ["Жил-ка", "Пил-ка", "Бал-ка", "Пап-ка"],
-        "Нож": ["Еж", "Рожь", "Ложь", "Ковш", "Муж"],
-        "Тигр": ["Лев", "Слон", "Волк", "За-яц"]
+        "Шкаф": ["Шапка", "Шарф", "Штаб", "Шнур"],
+        "Дверь": ["Зверь", "Двор", "День", "Дерево"],
+        "Ложка": ["Мошка", "Кошка", "Ножка", "Ладошка"],
+        "Вилка": ["Пилка", "Балка", "Папка", "Жилка"],
+        "Нож": ["Еж", "Жито", "Ложь", "Ковш"],
+        "Соль": ["Боль", "Моль", "Роль", "Толь"],
+        "Кот": ["Крот", "Рот", "Код", "Год"],
+        "Тигр": ["Лев", "Слон", "Волк", "Заяц"]
     };
 
-    let targetWordSyllables = ""; 
-    let targetWordClean = "";     
-    let voices = [];
-    let maleVoices = [];
-    let femaleVoices = [];
-    let isAnswered = false;
+    function getActiveDictionary() {
+        if (currentLang === 'uk') return dictionaryUk;
+        if (currentLang === 'ru') return dictionaryRu;
+        return dictionaryEn;
+    }
 
+    function getActiveRealWordPairs() {
+        if (currentLang === 'uk') return realWordPairsUk;
+        if (currentLang === 'ru') return realWordPairsRu;
+        return realWordPairsEn;
+    }
+
+    let targetWordSyllables = "";
+    let targetWordClean = "";
     let correctCount = 0;
     let totalCount = 0;
+    let optionsCount = 2;
+    let isAnswered = false;
 
-    let mediaRecorder = null;
-    let audioChunks = [];
-    let isRecording = false;
     let recognition = null;
-    let lastRecognitionError = null;
+    let isRecording = false;
 
-    let timerEnabled = true;
-    let playSeconds = 5 * 60;
-    let restSeconds = 10 * 60;
-    let remainingSeconds = playSeconds;
-    let timerMode = 'play'; 
-    let timerPaused = false;
+    let timerInterval = null;
+    let isTimerRunning = false;
+    let isTimerPaused = false;
+    let timerMode = 'play'; // 'play' or 'rest'
+    let timerSecondsLeft = 300;
 
-    function stripHyphens(word) {
-        return word.replace(/-/g, '');
+    let selectedLetters = [];
+
+    function updateI18nUI() {
+        const t = i18n[currentLang];
+        document.documentElement.lang = currentLang;
+        document.getElementById('appTitle').innerText = t.appTitle;
+        document.getElementById('settingsBtn').innerText = t.settingsBtnText;
+        document.getElementById('labelLang').innerText = t.labelLang;
+        document.getElementById('labelTheme').innerText = t.labelTheme;
+        
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        document.getElementById('themeBtn').innerText = currentTheme === 'light' ? t.themeLight : t.themeDark;
+        
+        document.getElementById('statCorrectLabel').innerText = t.statCorrect;
+        document.getElementById('statTotalLabel').innerText = t.statTotal;
+        document.getElementById('labelCategory').innerText = t.labelCategory;
+        document.getElementById('labelOptionsCount').innerText = t.labelOptionsCount;
+        document.getElementById('optEasy').innerText = t.optEasy;
+        document.getElementById('optMedium').innerText = t.optMedium;
+        document.getElementById('optHard').innerText = t.optHard;
+        document.getElementById('labelVoice').innerText = t.labelVoice;
+        document.getElementById('optVoiceMale').innerText = t.voiceMale;
+        document.getElementById('optVoiceFemale').innerText = t.voiceFemale;
+        document.getElementById('labelRate').innerText = t.labelRate;
+        document.getElementById('labelTimerEnable').innerText = t.labelTimerEnable;
+        document.getElementById('labelTimerDuration').innerText = t.labelTimerDuration;
+        document.getElementById('labelPlayMin').innerText = t.labelPlayMin;
+        document.getElementById('labelRestMin').innerText = t.labelRestMin;
+        document.getElementById('speakMainBtn').innerText = t.speakMainBtn;
+        
+        if (!isRecording) {
+            document.getElementById('recordBtn').innerText = t.recordBtnStart;
+        } else {
+            document.getElementById('recordBtn').innerText = t.recordBtnStop;
+        }
+
+        document.getElementById('labelInstruction').innerText = t.labelInstruction;
+        document.getElementById('labelSpellTask').innerText = t.labelSpellTask;
+        document.getElementById('nextBtn').innerText = t.nextBtn;
+        document.getElementById('restTitle').innerText = t.restTitle;
+        document.getElementById('restLeftLabel').innerText = t.restLeftLabel;
+        document.getElementById('skipRestBtn').innerText = t.skipRestBtn;
+        
+        const langBtnNames = { uk: "🌐 UA", ru: "🌐 RU", en: "🌐 EN" };
+        document.getElementById('langBtn').innerText = langBtnNames[currentLang];
+
+        updateTimerDisplayUI();
+    }
+
+    function toggleLanguage() {
+        if (currentLang === 'uk') currentLang = 'ru';
+        else if (currentLang === 'ru') currentLang = 'en';
+        else currentLang = 'uk';
+        
+        saveSettings();
+        updateI18nUI();
+        initCategorySelect();
+        nextQuestion();
+    }
+
+    function toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme');
+        const next = current === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', next);
+        saveSettings();
+        updateI18nUI();
     }
 
     function toggleSettingsPanel() {
@@ -797,610 +964,35 @@
         panel.classList.toggle('hidden');
     }
 
-    function saveSettings() {
-        const settings = {
-            lang: currentLang,
-            theme: document.documentElement.getAttribute('data-theme') || 'dark',
-            category: document.getElementById('categorySelect').value,
-            optionsCount: document.getElementById('optionsCountSelect').value,
-            voiceGender: document.getElementById('voiceSelect').value,
-            rate: document.getElementById('rateRange').value,
-            timerEnabled: document.getElementById('timerEnabled').checked,
-            playMinutes: document.getElementById('playMinutes').value,
-            restMinutes: document.getElementById('restMinutes').value
-        };
-        localStorage.setItem('aphasiaGameSettings', JSON.stringify(settings));
-    }
-
-    function loadSettings() {
-        const saved = localStorage.getItem('aphasiaGameSettings');
-        if (!saved) return;
-
-        try {
-            const settings = JSON.parse(saved);
-            if (settings.lang) currentLang = settings.lang;
-            if (settings.theme) {
-                if (settings.theme === 'dark') {
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                } else {
-                    document.documentElement.removeAttribute('data-theme');
-                }
-            }
-            if (settings.optionsCount) document.getElementById('optionsCountSelect').value = settings.optionsCount;
-            if (settings.voiceGender) document.getElementById('voiceSelect').value = settings.voiceGender;
-            if (settings.rate) {
-                document.getElementById('rateRange').value = settings.rate;
-                updateRateLabel(settings.rate);
-            }
-            if (settings.timerEnabled !== undefined) {
-                document.getElementById('timerEnabled').checked = settings.timerEnabled;
-            }
-            if (settings.playMinutes) document.getElementById('playMinutes').value = settings.playMinutes;
-            if (settings.restMinutes) document.getElementById('restMinutes').value = settings.restMinutes;
-
-            timerEnabled = document.getElementById('timerEnabled').checked;
-            playSeconds = Math.max(1, parseFloat(document.getElementById('playMinutes').value) || 5) * 60;
-            restSeconds = Math.max(1, parseFloat(document.getElementById('restMinutes').value) || 10) * 60;
-            remainingSeconds = playSeconds;
-
-            document.getElementById('timerSettingsGroup').style.opacity = timerEnabled ? '1' : '0.5';
-            document.getElementById('timerPauseBtn').disabled = !timerEnabled;
-        } catch (e) {
-            console.error("Помилка завантаження налаштувань", e);
-        }
-    }
-
-    function getCurrentDict() {
-        return currentLang === 'uk' ? dictionaryUk : dictionaryRu;
-    }
-
-    function getCurrentRealPairs() {
-        return currentLang === 'uk' ? realWordPairsUk : realWordPairsRu;
-    }
-
-    function toggleLanguage() {
-        currentLang = currentLang === 'uk' ? 'ru' : 'uk';
-        document.documentElement.setAttribute('lang', currentLang);
-        updateUI();
-        initCategories();
-        saveSettings();
-    }
-
-    function updateUI() {
-        const t = i18n[currentLang];
-        document.getElementById('appTitle').textContent = t.appTitle;
-        document.getElementById('settingsBtn').textContent = t.settingsBtnText;
-        document.getElementById('labelLang').textContent = t.labelLang;
-        document.getElementById('labelTheme').textContent = t.labelTheme;
-        document.getElementById('statCorrectLabel').textContent = t.statCorrect;
-        document.getElementById('statTotalLabel').textContent = t.statTotal;
-        document.getElementById('labelCategory').textContent = t.labelCategory;
-        document.getElementById('labelOptionsCount').textContent = t.labelOptionsCount;
-        document.getElementById('optEasy').textContent = t.optEasy;
-        document.getElementById('optMedium').textContent = t.optMedium;
-        document.getElementById('optHard').textContent = t.optHard;
-        document.getElementById('labelVoice').textContent = t.labelVoice;
-        document.getElementById('optVoiceMale').textContent = t.voiceMale;
-        document.getElementById('optVoiceFemale').textContent = t.voiceFemale;
-        document.getElementById('labelRate').textContent = t.labelRate;
-        document.getElementById('labelTimerEnable').textContent = t.labelTimerEnable;
-        document.getElementById('labelTimerDuration').textContent = t.labelTimerDuration;
-        document.getElementById('labelPlayMin').textContent = t.labelPlayMin;
-        document.getElementById('labelRestMin').textContent = t.labelRestMin;
-        document.getElementById('timerPauseBtn').textContent = timerPaused ? t.timerResume : t.timerPause;
-        document.getElementById('speakMainBtn').textContent = t.speakMainBtn;
-        document.getElementById('recordBtn').textContent = isRecording ? t.recordBtnStop : t.recordBtnStart;
-        document.getElementById('labelInstruction').textContent = t.labelInstruction;
-        document.getElementById('labelSpellTask').textContent = t.labelSpellTask;
-        document.getElementById('nextBtn').textContent = t.nextBtn;
-        document.getElementById('restTitle').textContent = t.restTitle;
-        document.getElementById('restLeftLabel').textContent = t.restLeftLabel;
-        document.getElementById('skipRestBtn').textContent = t.skipRestBtn;
-
-        const themeBtn = document.getElementById('themeBtn');
-        const currentTheme = document.documentElement.getAttribute('data-theme');
-        themeBtn.innerHTML = currentTheme === 'dark' ? t.themeLight : t.themeDark;
-
-        updateTimerDisplay();
-    }
-
-    function toggleTheme() {
-        const currentTheme = document.documentElement.getAttribute('data-theme');
-        const themeBtn = document.getElementById('themeBtn');
-        const t = i18n[currentLang];
-
-        if (currentTheme === 'dark') {
-            document.documentElement.removeAttribute('data-theme');
-            themeBtn.innerHTML = t.themeDark;
-        } else {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            themeBtn.innerHTML = t.themeLight;
-        }
-        saveSettings();
-    }
-
-    function getRealDistractors(wordSyllables, currentCategory) {
-        const countSelect = document.getElementById('optionsCountSelect');
-        const reqCount = countSelect ? parseInt(countSelect.value) - 1 : 1;
-
-        const pairs = getCurrentRealPairs();
-        if (pairs[wordSyllables]) {
-            let pool = [...pairs[wordSyllables]];
-            pool.sort(() => Math.random() - 0.5);
-            return pool.slice(0, reqCount);
-        }
-
-        let allWords = [];
-        const dict = getCurrentDict();
-        for (let cat in dict) {
-            allWords.push(...dict[cat]);
-        }
-
-        let cleanWord = stripHyphens(wordSyllables);
-        let candidates = allWords.filter(w => {
-            let cleanCandidate = stripHyphens(w);
-            return cleanCandidate !== cleanWord && 
-                   Math.abs(cleanCandidate.length - cleanWord.length) <= 2 &&
-                   cleanCandidate.charAt(0).toLowerCase() === cleanWord.charAt(0).toLowerCase();
-        });
-
-        if (candidates.length < reqCount) {
-            candidates = allWords.filter(w => stripHyphens(w) !== cleanWord && Math.abs(stripHyphens(w).length - cleanWord.length) <= 2);
-        }
-
-        candidates.sort(() => Math.random() - 0.5);
-        return candidates.slice(0, reqCount);
-    }
-
     function updateRateLabel(val) {
-        document.getElementById('rateValue').textContent = val + 'x';
+        document.getElementById('rateValue').innerText = val + 'x';
     }
 
-    const maleVoiceHints = ['pavel', 'dmitry', 'alexander', 'ivan', 'boris', 'vladimir', 'nikolai', 'yuri', 'maxim', 'artem', 'sergey', 'male', 'чоловік', 'муж'];
-    const femaleVoiceHints = ['milena', 'elena', 'irina', 'ekaterina', 'katya', 'anna', 'olga', 'tatiana', 'victoria', 'lesya', 'female', 'жінка', 'жен'];
+    function initCategorySelect() {
+        const select = document.getElementById('categorySelect');
+        const currentVal = select.value;
+        select.innerHTML = '';
 
-    function classifyVoiceGender(voice) {
-        const name = voice.name.toLowerCase();
-        if (maleVoiceHints.some(hint => name.includes(hint))) return 'male';
-        if (femaleVoiceHints.some(hint => name.includes(hint))) return 'female';
-        return 'unknown';
-    }
+        const t = i18n[currentLang];
+        const dict = getActiveDictionary();
 
-    function populateVoiceList() {
-        if (!('speechSynthesis' in window)) return;
-        const allVoices = speechSynthesis.getVoices();
-        if (!allVoices || allVoices.length === 0) return;
-        voices = allVoices;
+        const optAll = document.createElement('option');
+        optAll.value = "ALL";
+        optAll.innerText = t.allCategories;
+        select.appendChild(optAll);
 
-        const langPrefix = currentLang === 'uk' ? 'uk' : 'ru';
-        let targetVoices = voices.filter(v => v.lang.toLowerCase().replace('_', '-').startsWith(langPrefix));
-        if (targetVoices.length === 0) targetVoices = voices;
-
-        const male = [], female = [], unknown = [];
-        targetVoices.forEach(voice => {
-            const gender = classifyVoiceGender(voice);
-            if (gender === 'male') male.push(voice);
-            else if (gender === 'female') female.push(voice);
-            else unknown.push(voice);
+        Object.keys(dict).forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat;
+            opt.innerText = cat;
+            select.appendChild(opt);
         });
 
-        maleVoices = male.length ? male : (unknown.length ? [unknown[0]] : targetVoices.slice(0, 1));
-        femaleVoices = female.length ? female : (unknown.length ? [unknown[unknown.length - 1]] : targetVoices.slice(0, 1));
-    }
-
-    populateVoiceList();
-    if ('speechSynthesis' in window) {
-        if (speechSynthesis.onvoiceschanged !== undefined) {
-            speechSynthesis.onvoiceschanged = populateVoiceList;
-        }
-    }
-
-    function speakWord(textToSpeak) {
-        if (!textToSpeak || !('speechSynthesis' in window)) return;
-        speechSynthesis.cancel();
-
-        let cleanText = stripHyphens(textToSpeak);
-        const lowerKey = cleanText.toLowerCase();
-
-        if (accentFixes[currentLang] && accentFixes[currentLang][lowerKey]) {
-            cleanText = accentFixes[currentLang][lowerKey];
-        }
-
-        populateVoiceList();
-
-        const utterance = new SpeechSynthesisUtterance(cleanText);
-        utterance.lang = currentLang === 'uk' ? 'uk-UA' : 'ru-RU';
-
-        const voiceSelect = document.getElementById('voiceSelect');
-        const gender = voiceSelect ? voiceSelect.value : 'male';
-        const voicePool = gender === 'female' ? femaleVoices : maleVoices;
-
-        if (voicePool && voicePool.length > 0) {
-            utterance.voice = voicePool[0];
-        }
-
-        utterance.pitch = gender === 'female' ? 1.25 : 0.85;
-        const rateRange = document.getElementById('rateRange');
-        utterance.rate = parseFloat(rateRange.value) || 0.9;
-
-        speechSynthesis.speak(utterance);
-    }
-
-    // ИСПРАВЛЕННАЯ ФУНКЦИЯ ЗАПИСИ / РАСПОЗНАВАНИЯ ГОЛОСА
-    // Важно: распознавание речи и запись через MediaRecorder НЕ запускаются
-    // одновременно — на многих устройствах (особенно Android) микрофон может
-    // использоваться только одной audio-сессией за раз, и одновременный запуск
-    // обеих ломает распознавание. Поэтому сначала пробуем только распознавание;
-    // запись+воспроизведение включаются лишь если оно правда не сработало —
-    // после того как распознавание полностью освободило микрофон.
-    //
-    // Дополнительно: на некоторых устройствах/браузерах распознавание может
-    // не сработать вообще без единого события (ни onstart, ни onerror, ни
-    // onend) — например, если сервис распознавания молча заблокирован. Без
-    // страховки это выглядит так, будто кнопка вообще ничего не делает.
-    // Поэтому есть таймер-предохранитель: если распознавание за разумное
-    // время никак себя не проявило, оно принудительно прерывается и
-    // включается резервная запись.
-    //
-    // И ещё: каждый шаг теперь показывает видимый статус в speechResultBox,
-    // а любая непредвиденная ошибка тоже выводится на экран (не только в
-    // консоль), чтобы проблему можно было диагностировать без devtools.
-    let usingFallback = false;
-    let recognitionSettled = false;
-    let recognitionTimeoutId = null;
-
-    function showStatus(text, cls) {
-        const resultBox = document.getElementById('speechResultBox');
-        resultBox.style.display = '';
-        resultBox.className = 'speech-result-box ' + (cls || 'info');
-        resultBox.innerHTML = `<div>${text}</div>`;
-    }
-
-    function reportUnexpectedError(e) {
-        console.error('Recording/recognition error:', e);
-        const msg = (e && e.message) ? e.message : String(e);
-        showStatus('⚠️ ' + (currentLang === 'uk' ? 'Технічна помилка' : 'Техническая ошибка') + `: ${msg}`, 'incorrect');
-        stopRecordingUI();
-    }
-
-    async function toggleRecording() {
-        try {
-            if (!isRecording) {
-                const resultBox = document.getElementById('speechResultBox');
-                resultBox.style.display = '';
-                resultBox.className = 'speech-result-box';
-                usingFallback = false;
-                showStatus(currentLang === 'uk' ? '🎙 Слухаю...' : '🎙 Слушаю...');
-                startRecognitionAttempt();
-            } else {
-                stopEverything();
-            }
-        } catch (e) {
-            reportUnexpectedError(e);
-        }
-    }
-
-    function startRecognitionAttempt() {
-        const btn = document.getElementById('recordBtn');
-        const t = i18n[currentLang];
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-        if (!SpeechRecognition) {
-            startFallbackAudioRecording();
-            return;
-        }
-
-        recognitionSettled = false;
-
-        try {
-            recognition = new SpeechRecognition();
-            recognition.lang = currentLang === 'uk' ? 'uk-UA' : 'ru-RU';
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
-
-            recognition.onresult = (event) => {
-                try {
-                    if (recognitionSettled) return;
-                    recognitionSettled = true;
-                    clearTimeout(recognitionTimeoutId);
-                    const transcript = event.results[0][0].transcript.trim();
-                    showRecognizedText(transcript);
-                    stopRecordingUI();
-                } catch (e) {
-                    reportUnexpectedError(e);
-                }
-            };
-
-            recognition.onerror = (event) => {
-                try {
-                    console.warn('Speech recognition error:', event.error);
-                    if (recognitionSettled) return;
-                    recognitionSettled = true;
-                    clearTimeout(recognitionTimeoutId);
-                    lastRecognitionError = event.error;
-                    usingFallback = true;
-                    recognition = null;
-                    showStatus((currentLang === 'uk'
-                        ? '🎙 Розпізнавання не спрацювало, записую голос...'
-                        : '🎙 Распознавание не сработало, записываю голос...'));
-                    // Небольшая пауза перед повторным запросом микрофона — даём
-                    // браузеру/ОС время полностью освободить устройство записи.
-                    setTimeout(startFallbackAudioRecording, 300);
-                } catch (e) {
-                    reportUnexpectedError(e);
-                }
-            };
-
-            recognition.onend = () => {
-                try {
-                    recognition = null;
-                    if (usingFallback || recognitionSettled) return;
-                    recognitionSettled = true;
-                    clearTimeout(recognitionTimeoutId);
-                    stopRecordingUI();
-                } catch (e) {
-                    reportUnexpectedError(e);
-                }
-            };
-
-            recognition.start();
-
-            // Мгновенная обратная связь пользователю, не дожидаясь onstart
-            isRecording = true;
-            btn.textContent = t.recordBtnStop;
-            btn.classList.add('recording');
-
-            // Предохранитель на случай полной тишины со стороны распознавателя
-            recognitionTimeoutId = setTimeout(() => {
-                try {
-                    if (recognitionSettled) return;
-                    recognitionSettled = true;
-                    console.warn('Speech recognition timeout: no response from recognizer');
-                    lastRecognitionError = 'timeout';
-                    usingFallback = true;
-                    try { if (recognition) recognition.abort(); } catch(e2){}
-                    recognition = null;
-                    showStatus(currentLang === 'uk'
-                        ? '🎙 Розпізнавання не відповідає, записую голос...'
-                        : '🎙 Распознавание не отвечает, записываю голос...');
-                    startFallbackAudioRecording();
-                } catch (e) {
-                    reportUnexpectedError(e);
-                }
-            }, 6000);
-        } catch (e) {
-            console.warn("SpeechRecognition не удалось запустить:", e);
-            usingFallback = true;
-            startFallbackAudioRecording();
-        }
-    }
-
-    function showRecognizedText(transcript) {
-        const resultBox = document.getElementById('speechResultBox');
-        const t = i18n[currentLang];
-
-        const cleanSpoken = transcript.toLowerCase().replace(/[^a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9]/g, '');
-        const cleanTarget = (targetWordClean || '').toLowerCase().replace(/[^a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9]/g, '');
-        const isMatch = cleanSpoken.length > 0 && cleanSpoken === cleanTarget;
-
-        resultBox.style.display = '';
-        resultBox.className = 'speech-result-box ' + (isMatch ? 'correct' : 'incorrect');
-        resultBox.innerHTML = `<div>${t.speechYouSaid}<strong>"${transcript}"</strong></div><div style="margin-top:4px; font-size:13px;">${isMatch ? t.speechCorrect : t.speechIncorrect}</div>`;
-
-        // Озвучуємо саме розпізнане слово — навіть якщо воно вимовлене невірно
-        speakWord(transcript);
-    }
-
-    // Резервная запись через микрофон с авто-воспроизведением —
-    // включается только если распознавание речи недоступно/не сработало.
-    async function startFallbackAudioRecording() {
-        const btn = document.getElementById('recordBtn');
-        const t = i18n[currentLang];
-
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            showStatus(currentLang === 'uk' ? "Ваш браузер не підтримує запис аудіо." : "Ваш браузер не поддерживает запись аудио.", 'incorrect');
-            stopRecordingUI();
-            return;
-        }
-
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const supportedType = (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported('audio/webm'))
-                ? 'audio/webm' : '';
-            mediaRecorder = supportedType ? new MediaRecorder(stream, { mimeType: supportedType }) : new MediaRecorder(stream);
-            audioChunks = [];
-
-            mediaRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) audioChunks.push(e.data); };
-            mediaRecorder.onstop = () => {
-                try {
-                    stream.getTracks().forEach(track => track.stop()); // закрываем поток микрофона
-
-                    const resultBox = document.getElementById('speechResultBox');
-                    if (audioChunks.length > 0) {
-                        const blobType = mediaRecorder.mimeType || 'audio/webm';
-                        const audioBlob = new Blob(audioChunks, { type: blobType });
-                        const audioUrl = URL.createObjectURL(audioBlob);
-                        const audio = new Audio(audioUrl);
-                        audio.play().catch(e => console.warn('Playback error:', e));
-
-                        const debugSuffix = lastRecognitionError
-                            ? ` <span style="opacity:0.6; font-size:11px;">(${lastRecognitionError})</span>`
-                            : '';
-                        resultBox.style.display = '';
-                        resultBox.className = 'speech-result-box info';
-                        resultBox.innerHTML = `<div>${t.speechRecordedPlay}${debugSuffix}</div>`;
-                    } else {
-                        showStatus(currentLang === 'uk' ? 'Запис порожній — спробуйте ще раз.' : 'Запись пустая — попробуйте ещё раз.', 'incorrect');
-                    }
-                    stopRecordingUI();
-                } catch (e) {
-                    reportUnexpectedError(e);
-                }
-            };
-
-            mediaRecorder.start();
-            isRecording = true;
-            btn.textContent = t.recordBtnStop;
-            btn.classList.add('recording');
-            showStatus(currentLang === 'uk' ? '🎙 Записую голос...' : '🎙 Записываю голос...');
-        } catch (err) {
-            console.error("Microphone access error:", err);
-            showStatus(currentLang === 'uk' ? "Помилка доступу до мікрофона. Перевірте дозволи в браузері." : "Ошибка доступа к микрофону. Проверьте разрешения в браузере.", 'incorrect');
-            stopRecordingUI();
-        }
-    }
-
-    function stopEverything() {
-        clearTimeout(recognitionTimeoutId);
-        recognitionSettled = true;
-        if (recognition) {
-            try { recognition.stop(); } catch(e){}
-        }
-        if (mediaRecorder && mediaRecorder.state === "recording") {
-            mediaRecorder.stop();
-        }
-        if (!recognition && !(mediaRecorder && mediaRecorder.state === "recording")) {
-            stopRecordingUI();
-        }
-    }
-
-    function stopRecordingUI() {
-        const btn = document.getElementById('recordBtn');
-        const t = i18n[currentLang];
-        isRecording = false;
-        btn.textContent = t.recordBtnStart;
-        btn.classList.remove('recording');
-    }
-
-    function updateStatsDisplay() {
-        document.getElementById('correctCount').textContent = correctCount;
-        document.getElementById('totalCount').textContent = totalCount;
-    }
-
-    function formatTime(totalSec) {
-        const safeSec = Math.max(0, Math.round(totalSec));
-        const m = Math.floor(safeSec / 60).toString().padStart(2, '0');
-        const s = Math.floor(safeSec % 60).toString().padStart(2, '0');
-        return m + ':' + s;
-    }
-
-    function setGameInteractionEnabled(enabled) {
-        const container = document.querySelector('.container');
-        if (container) container.classList.toggle('resting-blocked', !enabled);
-    }
-
-    function updateTimerDisplay() {
-        const display = document.getElementById('timerDisplay');
-        const t = i18n[currentLang];
-
-        if (display) {
-            if (timerMode === 'rest') {
-                display.textContent = t.timerRestPrefix + formatTime(remainingSeconds);
-                display.classList.add('resting');
-            } else {
-                display.textContent = t.timerPlayPrefix + formatTime(remainingSeconds);
-                display.classList.remove('resting');
-            }
-        }
-        const restTimeLeftEl = document.getElementById('restTimeLeft');
-        if (restTimeLeftEl) restTimeLeftEl.textContent = formatTime(remainingSeconds);
-    }
-
-    function enterRestMode() {
-        timerMode = 'rest';
-        remainingSeconds = restSeconds;
-        if ('speechSynthesis' in window) speechSynthesis.cancel();
-        setGameInteractionEnabled(false);
-        document.getElementById('restOverlay').classList.remove('hidden');
-        updateTimerDisplay();
-    }
-
-    function exitRestMode() {
-        timerMode = 'play';
-        remainingSeconds = playSeconds;
-        setGameInteractionEnabled(true);
-        document.getElementById('restOverlay').classList.add('hidden');
-        updateTimerDisplay();
-        nextQuestion();
-    }
-
-    function skipRest() {
-        if (timerMode === 'rest') exitRestMode();
-    }
-
-    function toggleTimerPause() {
-        timerPaused = !timerPaused;
-        const t = i18n[currentLang];
-        document.getElementById('timerPauseBtn').textContent = timerPaused ? t.timerResume : t.timerPause;
-    }
-
-    function toggleTimerFeature() {
-        const checkbox = document.getElementById('timerEnabled');
-        timerEnabled = checkbox ? checkbox.checked : true;
-        document.getElementById('timerSettingsGroup').style.opacity = timerEnabled ? '1' : '0.5';
-        document.getElementById('timerPauseBtn').disabled = !timerEnabled;
-
-        if (!timerEnabled && timerMode === 'rest') exitRestMode();
-        else { timerMode = 'play'; remainingSeconds = playSeconds; }
-        updateTimerDisplay();
-        saveSettings();
-    }
-
-    function updateTimerSettings() {
-        const playMin = parseFloat(document.getElementById('playMinutes').value) || 5;
-        const restMin = parseFloat(document.getElementById('restMinutes').value) || 10;
-        playSeconds = Math.max(1, playMin) * 60;
-        restSeconds = Math.max(1, restMin) * 60;
-        remainingSeconds = timerMode === 'rest' ? restSeconds : playSeconds;
-        updateTimerDisplay();
-        saveSettings();
-    }
-
-    function startMasterTimer() {
-        updateTimerDisplay();
-        setInterval(() => {
-            if (!timerEnabled || timerPaused) return;
-            remainingSeconds--;
-            if (remainingSeconds <= 0) {
-                if (timerMode === 'play') enterRestMode();
-                else exitRestMode();
-            } else {
-                updateTimerDisplay();
-            }
-        }, 1000);
-    }
-
-    function initCategories() {
-        const categorySelect = document.getElementById('categorySelect');
-        categorySelect.innerHTML = '';
-        const dict = getCurrentDict();
-        const t = i18n[currentLang];
-
-        const allOption = document.createElement('option');
-        allOption.value = 'ALL';
-        allOption.textContent = t.allCategories;
-        categorySelect.appendChild(allOption);
-
-        for (let category in dict) {
-            const option = document.createElement('option');
-            option.value = category;
-            option.textContent = category;
-            categorySelect.appendChild(option);
-        }
-
-        const savedSettings = localStorage.getItem('aphasiaGameSettings');
-        if (savedSettings) {
-            const parsed = JSON.parse(savedSettings);
-            if (parsed.category && (parsed.category === 'ALL' || dict[parsed.category])) {
-                categorySelect.value = parsed.category;
-            } else {
-                categorySelect.value = 'ALL';
-            }
+        if (currentVal && Array.from(select.options).some(o => o.value === currentVal)) {
+            select.value = currentVal;
         } else {
-            categorySelect.value = 'ALL';
+            select.value = "ALL";
         }
-
-        nextQuestion();
     }
 
     function changeCategory() {
@@ -1409,196 +1001,518 @@
     }
 
     function onOptionsCountChange() {
+        optionsCount = parseInt(document.getElementById('optionsCountSelect').value, 10);
         saveSettings();
         nextQuestion();
     }
 
-    function nextQuestion() {
-        isAnswered = false;
-        document.getElementById('spellBuilderCard').classList.add('hidden');
-        const resultBox = document.getElementById('speechResultBox');
-        resultBox.style.display = '';
-        resultBox.className = 'speech-result-box';
+    function cleanWord(word) {
+        return word.replace(/-/g, '').trim();
+    }
 
-        const categorySelect = document.getElementById('categorySelect');
-        const selectedCategory = categorySelect.value;
-        const dict = getCurrentDict();
+    function getAllWordsFromDictionary() {
+        const dict = getActiveDictionary();
+        let list = [];
+        Object.values(dict).forEach(arr => {
+            list = list.concat(arr);
+        });
+        return list;
+    }
 
-        let words;
-        if (selectedCategory === 'ALL') {
-            const combinedWords = [];
-            for (let cat in dict) combinedWords.push(...dict[cat]);
-            words = [...new Set(combinedWords)];
-        } else {
-            words = dict[selectedCategory];
+    function getWordsFromCurrentCategory() {
+        const cat = document.getElementById('categorySelect').value;
+        const dict = getActiveDictionary();
+        if (cat === "ALL" || !dict[cat]) {
+            return getAllWordsFromDictionary();
+        }
+        return dict[cat];
+    }
+
+    function getRandomWord() {
+        const pool = getWordsFromCurrentCategory();
+        const randIndex = Math.floor(Math.random() * pool.length);
+        return pool[randIndex];
+    }
+
+    function generateOptions(targetSyllables) {
+        const targetClean = cleanWord(targetSyllables);
+        const options = [targetSyllables];
+        const allPool = getAllWordsFromDictionary();
+        const activePairs = getActiveRealWordPairs();
+
+        if (activePairs[targetClean]) {
+            const pairs = activePairs[targetClean];
+            const shuffledPairs = [...pairs].sort(() => 0.5 - Math.random());
+            for (let w of shuffledPairs) {
+                if (options.length >= optionsCount) break;
+                if (!options.some(o => cleanWord(o).toLowerCase() === cleanWord(w).toLowerCase())) {
+                    options.push(w);
+                }
+            }
         }
 
-        if (!words || words.length === 0) return;
+        let attempts = 0;
+        while (options.length < optionsCount && attempts < 100) {
+            attempts++;
+            const randomSyllables = allPool[Math.floor(Math.random() * allPool.length)];
+            const randomClean = cleanWord(randomSyllables);
+            
+            if (!options.some(o => cleanWord(o).toLowerCase() === randomClean.toLowerCase())) {
+                options.push(randomSyllables);
+            }
+        }
 
-        targetWordSyllables = words[Math.floor(Math.random() * words.length)];
-        targetWordClean = stripHyphens(targetWordSyllables);
+        return options.sort(() => 0.5 - Math.random());
+    }
 
-        const wrongOptionsSyllables = getRealDistractors(targetWordSyllables, selectedCategory);
+    function getPhoneticRepresentation(wordClean) {
+        const key = wordClean.toLowerCase();
+        if (accentFixes[currentLang] && accentFixes[currentLang][key]) {
+            return accentFixes[currentLang][key];
+        }
+        return wordClean;
+    }
 
-        let optionsSyllables = [targetWordSyllables, ...wrongOptionsSyllables];
-        optionsSyllables.sort(() => Math.random() - 0.5);
+    function speakWord(syllableWord) {
+        if (!('speechSynthesis' in window)) {
+            alert("TTS is not supported in this browser.");
+            return;
+        }
 
+        window.speechSynthesis.cancel();
+
+        const wordClean = cleanWord(syllableWord);
+        const phoneticText = getPhoneticRepresentation(wordClean);
+        const utterance = new SpeechSynthesisUtterance(phoneticText);
+
+        if (currentLang === 'uk') utterance.lang = 'uk-UA';
+        else if (currentLang === 'ru') utterance.lang = 'ru-RU';
+        else utterance.lang = 'en-US';
+
+        const rate = parseFloat(document.getElementById('rateRange').value) || 0.9;
+        utterance.rate = rate;
+
+        const gender = document.getElementById('voiceSelect').value;
+        const voices = window.speechSynthesis.getVoices();
+        
+        let targetVoice = null;
+        if (voices.length > 0) {
+            const langVoices = voices.filter(v => v.lang.toLowerCase().startsWith(currentLang));
+            if (langVoices.length > 0) {
+                if (gender === 'female') {
+                    targetVoice = langVoices.find(v => v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('zira') || v.name.toLowerCase().includes('yuri') || v.name.toLowerCase().includes('oksana') || v.name.toLowerCase().includes('samantha')) || langVoices[0];
+                } else {
+                    targetVoice = langVoices.find(v => v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('david') || v.name.toLowerCase().includes('pavel') || v.name.toLowerCase().includes('george')) || langVoices[0];
+                }
+            }
+        }
+
+        if (targetVoice) utterance.voice = targetVoice;
+
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function formatWordWithAccents(syllableWord) {
+        const wordClean = cleanWord(syllableWord);
+        const phonetic = getPhoneticRepresentation(wordClean);
+        
+        let accentIdx = -1;
+        for (let i = 0; i < phonetic.length; i++) {
+            if (phonetic[i] === phonetic[i].toUpperCase() && phonetic[i].toLowerCase() !== phonetic[i].toUpperCase()) {
+                accentIdx = i;
+                break;
+            }
+        }
+
+        if (accentIdx === -1) {
+            return wordClean;
+        }
+
+        let resultHTML = "";
+        let cleanCounter = 0;
+        for (let i = 0; i < wordClean.length; i++) {
+            if (cleanCounter === accentIdx) {
+                resultHTML += `<span class="accent-char">${wordClean[i]}</span>`;
+            } else {
+                resultHTML += wordClean[i];
+            }
+            cleanCounter++;
+        }
+        return resultHTML;
+    }
+
+    function renderOptions(options) {
         const container = document.getElementById('optionsContainer');
         container.innerHTML = '';
 
-        optionsSyllables.forEach(syllableText => {
-            const cleanText = stripHyphens(syllableText);
+        options.forEach(optSyllables => {
             const row = document.createElement('div');
             row.className = 'option-row';
 
             const btn = document.createElement('button');
             btn.className = 'option-btn';
-            btn.textContent = cleanText;
-            btn.onclick = () => checkAnswer(btn, cleanText);
+            btn.innerHTML = formatWordWithAccents(optSyllables);
+            btn.onclick = () => checkAnswer(optSyllables, btn);
 
             const audioBtn = document.createElement('button');
             audioBtn.className = 'audio-btn';
             audioBtn.innerHTML = '🔊';
-            audioBtn.title = currentLang === 'uk' ? 'Прослухати варіант' : 'Прослушать вариант';
+            audioBtn.title = 'Listen option';
             audioBtn.onclick = (e) => {
                 e.stopPropagation();
-                speakWord(cleanText);
+                speakWord(optSyllables);
             };
 
             row.appendChild(btn);
             row.appendChild(audioBtn);
             container.appendChild(row);
         });
-
-        setTimeout(() => speakWord(targetWordClean), 300);
     }
 
-    function checkAnswer(selectedBtn, selectedCleanText) {
+    function checkAnswer(selectedSyllables, btnElement) {
         if (isAnswered) return;
         isAnswered = true;
 
-        speakWord(selectedCleanText);
         totalCount++;
-        const isCorrect = selectedCleanText === targetWordClean;
-        if (isCorrect) correctCount++;
-        updateStatsDisplay();
+        const selectedClean = cleanWord(selectedSyllables).toLowerCase();
+        const targetClean = cleanWord(targetWordSyllables).toLowerCase();
 
-        const allButtons = document.querySelectorAll('.option-btn');
-        if (isCorrect) {
-            selectedBtn.classList.add('correct');
-            setupSpellBuilder(targetWordSyllables);
+        if (selectedClean === targetClean) {
+            correctCount++;
+            btnElement.classList.add('correct');
         } else {
-            selectedBtn.classList.add('wrong');
-            allButtons.forEach(btn => {
-                if (btn.textContent === targetWordClean) {
-                    btn.classList.add('correct');
+            btnElement.classList.add('wrong');
+            const rows = document.querySelectorAll('.option-row');
+            rows.forEach(r => {
+                const b = r.querySelector('.option-btn');
+                if (b && b.innerText.toLowerCase() === targetClean) {
+                    b.classList.add('correct');
                 }
             });
         }
+
+        document.getElementById('correctCount').innerText = correctCount;
+        document.getElementById('totalCount').innerText = totalCount;
+
+        setupSpellBuilder(targetWordSyllables);
     }
 
-    function formatSyllablesWithAccent(wordSyllables) {
-        const cleanWord = stripHyphens(wordSyllables).toLowerCase();
-        let accentedSpeak = accentFixes[currentLang] ? accentFixes[currentLang][cleanWord] : null;
-
-        let upperChars = "";
-        if (accentedSpeak) {
-            upperChars = accentedSpeak.replace(/[^A-ZА-ЯЁІЇЄҐ]/g, '');
-        }
-
-        let targetAccentChar = upperChars.length > 0 ? upperChars[0].toUpperCase() : null;
-        let syllablesArr = wordSyllables.split('-');
-        let accentApplied = false;
-
-        let resultSyllables = syllablesArr.map(syllable => {
-            let upperSyllable = syllable.toUpperCase();
-
-            if (targetAccentChar && !accentApplied) {
-                let charIndex = upperSyllable.indexOf(targetAccentChar);
-                if (charIndex !== -1) {
-                    accentApplied = true;
-                    return upperSyllable.slice(0, charIndex) + 
-                           `<span class="accent-char">${targetAccentChar}́</span>` + 
-                           upperSyllable.slice(charIndex + 1);
-                }
-            }
-
-            if (!targetAccentChar && !accentApplied) {
-                const vowels = 'АЕЄИІЇОУЮЯЫЭЁ';
-                for (let i = 0; i < upperSyllable.length; i++) {
-                    if (vowels.includes(upperSyllable[i])) {
-                        accentApplied = true;
-                        return upperSyllable.slice(0, i) + 
-                               `<span class="accent-char">${upperSyllable[i]}́</span>` + 
-                               upperSyllable.slice(i + 1);
-                    }
-                }
-            }
-
-            return upperSyllable;
-        });
-
-        return resultSyllables.join('-');
-    }
-
-    function setupSpellBuilder(wordSyllables) {
+    function setupSpellBuilder(syllableWord) {
         const card = document.getElementById('spellBuilderCard');
-        const pool = document.getElementById('lettersPool');
-        const target = document.getElementById('lettersTarget');
-        const syllableDisplay = document.getElementById('syllableDisplay');
-
-        pool.innerHTML = '';
-        target.innerHTML = '';
-        syllableDisplay.innerHTML = '';
         card.classList.remove('hidden');
 
-        let cleanWord = stripHyphens(wordSyllables);
-        let letters = cleanWord.toUpperCase().split('');
-        let shuffled = [...letters].sort(() => Math.random() - 0.5);
+        const syllablesArr = syllableWord.split('-');
+        const t = i18n[currentLang];
+        document.getElementById('syllableDisplay').innerText = t.syllablePrefix + syllablesArr.join(' • ');
 
-        shuffled.forEach((char) => {
+        const clean = cleanWord(syllableWord);
+        const letters = clean.split('');
+        const shuffledLetters = [...letters].sort(() => 0.5 - Math.random());
+
+        selectedLetters = [];
+        renderSpellTiles(shuffledLetters);
+    }
+
+    function renderSpellTiles(poolLetters) {
+        const poolContainer = document.getElementById('lettersPool');
+        const targetContainer = document.getElementById('lettersTarget');
+
+        poolContainer.innerHTML = '';
+        targetContainer.innerHTML = '';
+
+        selectedLetters.forEach((char, index) => {
             const tile = document.createElement('div');
             tile.className = 'letter-tile';
-            tile.textContent = char;
+            tile.innerText = char;
             tile.onclick = () => {
-                if (tile.parentElement === pool) {
-                    target.appendChild(tile);
-                } else {
-                    pool.appendChild(tile);
-                }
-                checkBuiltWord(wordSyllables);
+                selectedLetters.splice(index, 1);
+                renderSpellTiles(poolLetters);
             };
-            pool.appendChild(tile);
+            targetContainer.appendChild(tile);
+        });
+
+        poolLetters.forEach((char, index) => {
+            const tile = document.createElement('div');
+            tile.className = 'letter-tile';
+            tile.innerText = char;
+            tile.onclick = () => {
+                selectedLetters.push(char);
+                poolLetters.splice(index, 1);
+                renderSpellTiles(poolLetters);
+                checkSpellResult();
+            };
+            poolContainer.appendChild(tile);
         });
     }
 
-    function checkBuiltWord(wordSyllables) {
-        const target = document.getElementById('lettersTarget');
-        const syllableDisplay = document.getElementById('syllableDisplay');
-        const t = i18n[currentLang];
-        let cleanWord = stripHyphens(wordSyllables);
-
-        const built = Array.from(target.children).map(c => c.textContent).join('');
-        if (built.toLowerCase() === cleanWord.toLowerCase()) {
-            target.style.borderColor = '#28a745';
-            
-            const formattedSyllables = formatSyllablesWithAccent(wordSyllables);
-            syllableDisplay.innerHTML = t.syllablePrefix + formattedSyllables;
-            
-            speakWord(cleanWord);
-        } else {
-            target.style.borderColor = 'var(--option-btn-border)';
-            syllableDisplay.innerHTML = '';
+    function checkSpellResult() {
+        const assembled = selectedLetters.join('');
+        if (assembled.toLowerCase() === targetWordClean.toLowerCase()) {
+            speakWord(targetWordSyllables);
         }
     }
 
-    window.onload = async function() {
-        await loadAccents();
+    function nextQuestion() {
+        isAnswered = false;
+        document.getElementById('speechResultBox').className = 'speech-result-box';
+        document.getElementById('speechResultBox').innerText = '';
+        document.getElementById('spellBuilderCard').classList.add('hidden');
+
+        targetWordSyllables = getRandomWord();
+        targetWordClean = cleanWord(targetWordSyllables);
+
+        const options = generateOptions(targetWordSyllables);
+        renderOptions(options);
+
+        setTimeout(() => {
+            speakWord(targetWordSyllables);
+        }, 300);
+    }
+
+    function initSpeechRecognition() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            const box = document.getElementById('speechResultBox');
+            box.className = 'speech-result-box info';
+            box.innerText = "Speech Recognition API is not supported in this browser.";
+            return;
+        }
+
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onstart = () => {
+            isRecording = true;
+            const btn = document.getElementById('recordBtn');
+            btn.classList.add('recording');
+            btn.innerText = i18n[currentLang].recordBtnStop;
+        };
+
+        recognition.onend = () => {
+            isRecording = false;
+            const btn = document.getElementById('recordBtn');
+            btn.classList.remove('recording');
+            btn.innerText = i18n[currentLang].recordBtnStart;
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript.trim().toLowerCase();
+            const targetClean = targetWordClean.toLowerCase();
+            const box = document.getElementById('speechResultBox');
+            const t = i18n[currentLang];
+
+            if (transcript === targetClean || transcript.includes(targetClean) || targetClean.includes(transcript)) {
+                box.className = 'speech-result-box correct';
+                box.innerText = t.speechYouSaid + `"${transcript}". ` + t.speechCorrect;
+            } else {
+                box.className = 'speech-result-box incorrect';
+                box.innerText = t.speechYouSaid + `"${transcript}". ` + t.speechIncorrect;
+            }
+        };
+
+        recognition.onerror = (event) => {
+            console.warn("Speech recognition error:", event.error);
+            isRecording = false;
+            const btn = document.getElementById('recordBtn');
+            btn.classList.remove('recording');
+            btn.innerText = i18n[currentLang].recordBtnStart;
+        };
+    }
+
+    function toggleRecording() {
+        if (!recognition) {
+            initSpeechRecognition();
+        }
+        if (!recognition) return;
+
+        if (isRecording) {
+            recognition.stop();
+        } else {
+            if (currentLang === 'uk') recognition.lang = 'uk-UA';
+            else if (currentLang === 'ru') recognition.lang = 'ru-RU';
+            else recognition.lang = 'en-US';
+
+            recognition.start();
+        }
+    }
+
+    function toggleTimerFeature() {
+        const enabled = document.getElementById('timerEnabled').checked;
+        const settingsGroup = document.getElementById('timerSettingsGroup');
+        const statusRow = document.querySelector('.timer-status-row');
+
+        if (enabled) {
+            settingsGroup.style.display = 'flex';
+            statusRow.style.display = 'flex';
+            startTimer();
+        } else {
+            settingsGroup.style.display = 'none';
+            statusRow.style.display = 'none';
+            stopTimer();
+        }
+        saveSettings();
+    }
+
+    function updateTimerSettings() {
+        saveSettings();
+        resetTimer();
+    }
+
+    function resetTimer() {
+        stopTimer();
+        timerMode = 'play';
+        const playMins = parseInt(document.getElementById('playMinutes').value, 10) || 5;
+        timerSecondsLeft = playMins * 60;
+        updateTimerDisplayUI();
+        if (document.getElementById('timerEnabled').checked) {
+            startTimer();
+        }
+    }
+
+    function startTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+        isTimerRunning = true;
+        isTimerPaused = false;
+        updateTimerPauseBtnUI();
+
+        timerInterval = setInterval(() => {
+            if (isTimerPaused) return;
+
+            timerSecondsLeft--;
+            if (timerSecondsLeft <= 0) {
+                switchTimerMode();
+            }
+            updateTimerDisplayUI();
+        }, 1000);
+    }
+
+    function stopTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = null;
+        isTimerRunning = false;
+    }
+
+    function toggleTimerPause() {
+        isTimerPaused = !isTimerPaused;
+        updateTimerPauseBtnUI();
+    }
+
+    function updateTimerPauseBtnUI() {
+        const btn = document.getElementById('timerPauseBtn');
+        const t = i18n[currentLang];
+        btn.innerText = isTimerPaused ? t.timerResume : t.timerPause;
+    }
+
+    function switchTimerMode() {
+        const playMins = parseInt(document.getElementById('playMinutes').value, 10) || 5;
+        const restMins = parseInt(document.getElementById('restMinutes').value, 10) || 10;
+
+        if (timerMode === 'play') {
+            timerMode = 'rest';
+            timerSecondsLeft = restMins * 60;
+            showRestOverlay(true);
+        } else {
+            timerMode = 'play';
+            timerSecondsLeft = playMins * 60;
+            showRestOverlay(false);
+        }
+    }
+
+    function skipRest() {
+        const playMins = parseInt(document.getElementById('playMinutes').value, 10) || 5;
+        timerMode = 'play';
+        timerSecondsLeft = playMins * 60;
+        showRestOverlay(false);
+        updateTimerDisplayUI();
+    }
+
+    function showRestOverlay(show) {
+        const overlay = document.getElementById('restOverlay');
+        const container = document.querySelector('.container');
+        if (show) {
+            overlay.classList.remove('hidden');
+            container.classList.add('resting-blocked');
+        } else {
+            overlay.classList.add('hidden');
+            container.classList.remove('resting-blocked');
+        }
+    }
+
+    function updateTimerDisplayUI() {
+        const display = document.getElementById('timerDisplay');
+        const restTimeLeftSpan = document.getElementById('restTimeLeft');
+        const t = i18n[currentLang];
+
+        const mins = Math.floor(timerSecondsLeft / 60);
+        const secs = timerSecondsLeft % 60;
+        const formatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+        if (timerMode === 'play') {
+            display.innerText = t.timerPlayPrefix + formatted;
+            display.classList.remove('resting');
+        } else {
+            display.innerText = t.timerRestPrefix + formatted;
+            display.classList.add('resting');
+            if (restTimeLeftSpan) restTimeLeftSpan.innerText = formatted;
+        }
+    }
+
+    function saveSettings() {
+        const settings = {
+            lang: currentLang,
+            theme: document.documentElement.getAttribute('data-theme') || 'dark',
+            optionsCount: document.getElementById('optionsCountSelect').value,
+            category: document.getElementById('categorySelect').value,
+            voice: document.getElementById('voiceSelect').value,
+            rate: document.getElementById('rateRange').value,
+            timerEnabled: document.getElementById('timerEnabled').checked,
+            playMinutes: document.getElementById('playMinutes').value,
+            restMinutes: document.getElementById('restMinutes').value
+        };
+        localStorage.setItem('app_settings', JSON.stringify(settings));
+        localStorage.setItem('app_lang', currentLang);
+    }
+
+    function loadSettings() {
+        const saved = localStorage.getItem('app_settings');
+        if (saved) {
+            try {
+                const s = JSON.parse(saved);
+                if (s.lang) currentLang = s.lang;
+                if (s.theme) document.documentElement.setAttribute('data-theme', s.theme);
+                if (s.optionsCount) {
+                    document.getElementById('optionsCountSelect').value = s.optionsCount;
+                    optionsCount = parseInt(s.optionsCount, 10);
+                }
+                if (s.voice) document.getElementById('voiceSelect').value = s.voice;
+                if (s.rate) {
+                    document.getElementById('rateRange').value = s.rate;
+                    updateRateLabel(s.rate);
+                }
+                if (s.timerEnabled !== undefined) {
+                    document.getElementById('timerEnabled').checked = s.timerEnabled;
+                }
+                if (s.playMinutes) document.getElementById('playMinutes').value = s.playMinutes;
+                if (s.restMinutes) document.getElementById('restMinutes').value = s.restMinutes;
+            } catch (e) {
+                console.warn("Error parsing saved settings", e);
+            }
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
         loadSettings();
-        updateUI();
-        initCategories();
-        startMasterTimer();
-    };
+        await loadAccents();
+        updateI18nUI();
+        initCategorySelect();
+        
+        loadSettings(); 
+        initCategorySelect();
+
+        toggleTimerFeature();
+        nextQuestion();
+    });
 </script>
 
 </body>
