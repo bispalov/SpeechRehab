@@ -1033,7 +1033,17 @@
     // обеих ломает распознавание. Поэтому сначала пробуем только распознавание;
     // запись+воспроизведение включаются лишь если оно правда не сработало —
     // после того как распознавание полностью освободило микрофон.
+    //
+    // Дополнительно: на некоторых устройствах/браузерах распознавание может
+    // не сработать вообще без единого события (ни onstart, ни onerror, ни
+    // onend) — например, если сервис распознавания молча заблокирован. Без
+    // страховки это выглядит так, будто кнопка вообще ничего не делает.
+    // Поэтому есть таймер-предохранитель: если распознавание за разумное
+    // время никак себя не проявило, оно принудительно прерывается и
+    // включается резервная запись.
     let usingFallback = false;
+    let recognitionSettled = false;
+    let recognitionTimeoutId = null;
 
     async function toggleRecording() {
         if (!isRecording) {
@@ -1057,25 +1067,27 @@
             return;
         }
 
+        recognitionSettled = false;
+
         try {
             recognition = new SpeechRecognition();
             recognition.lang = currentLang === 'uk' ? 'uk-UA' : 'ru-RU';
             recognition.interimResults = false;
             recognition.maxAlternatives = 1;
 
-            recognition.onstart = () => {
-                isRecording = true;
-                btn.textContent = t.recordBtnStop;
-                btn.classList.add('recording');
-            };
-
             recognition.onresult = (event) => {
+                if (recognitionSettled) return;
+                recognitionSettled = true;
+                clearTimeout(recognitionTimeoutId);
                 const transcript = event.results[0][0].transcript.trim();
                 showRecognizedText(transcript);
             };
 
             recognition.onerror = (event) => {
                 console.warn('Speech recognition error:', event.error);
+                if (recognitionSettled) return;
+                recognitionSettled = true;
+                clearTimeout(recognitionTimeoutId);
                 lastRecognitionError = event.error;
                 usingFallback = true;
                 recognition = null;
@@ -1086,11 +1098,30 @@
 
             recognition.onend = () => {
                 recognition = null;
-                if (usingFallback) return; // управление уже перешло к резервной записи
+                if (usingFallback || recognitionSettled) return;
+                recognitionSettled = true;
+                clearTimeout(recognitionTimeoutId);
                 stopRecordingUI();
             };
 
             recognition.start();
+
+            // Мгновенная обратная связь пользователю, не дожидаясь onstart
+            isRecording = true;
+            btn.textContent = t.recordBtnStop;
+            btn.classList.add('recording');
+
+            // Предохранитель на случай полной тишины со стороны распознавателя
+            recognitionTimeoutId = setTimeout(() => {
+                if (recognitionSettled) return;
+                recognitionSettled = true;
+                console.warn('Speech recognition timeout: no response from recognizer');
+                lastRecognitionError = 'timeout';
+                usingFallback = true;
+                try { if (recognition) recognition.abort(); } catch(e){}
+                recognition = null;
+                startFallbackAudioRecording();
+            }, 6000);
         } catch (e) {
             console.warn("SpeechRecognition не удалось запустить:", e);
             usingFallback = true;
@@ -1162,6 +1193,8 @@
     }
 
     function stopEverything() {
+        clearTimeout(recognitionTimeoutId);
+        recognitionSettled = true;
         if (recognition) {
             try { recognition.stop(); } catch(e){}
         }
