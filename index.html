@@ -1041,19 +1041,42 @@
     // Поэтому есть таймер-предохранитель: если распознавание за разумное
     // время никак себя не проявило, оно принудительно прерывается и
     // включается резервная запись.
+    //
+    // И ещё: каждый шаг теперь показывает видимый статус в speechResultBox,
+    // а любая непредвиденная ошибка тоже выводится на экран (не только в
+    // консоль), чтобы проблему можно было диагностировать без devtools.
     let usingFallback = false;
     let recognitionSettled = false;
     let recognitionTimeoutId = null;
 
+    function showStatus(text, cls) {
+        const resultBox = document.getElementById('speechResultBox');
+        resultBox.style.display = '';
+        resultBox.className = 'speech-result-box ' + (cls || 'info');
+        resultBox.innerHTML = `<div>${text}</div>`;
+    }
+
+    function reportUnexpectedError(e) {
+        console.error('Recording/recognition error:', e);
+        const msg = (e && e.message) ? e.message : String(e);
+        showStatus('⚠️ ' + (currentLang === 'uk' ? 'Технічна помилка' : 'Техническая ошибка') + `: ${msg}`, 'incorrect');
+        stopRecordingUI();
+    }
+
     async function toggleRecording() {
-        if (!isRecording) {
-            const resultBox = document.getElementById('speechResultBox');
-            resultBox.style.display = 'none';
-            resultBox.className = 'speech-result-box';
-            usingFallback = false;
-            startRecognitionAttempt();
-        } else {
-            stopEverything();
+        try {
+            if (!isRecording) {
+                const resultBox = document.getElementById('speechResultBox');
+                resultBox.style.display = '';
+                resultBox.className = 'speech-result-box';
+                usingFallback = false;
+                showStatus(currentLang === 'uk' ? '🎙 Слухаю...' : '🎙 Слушаю...');
+                startRecognitionAttempt();
+            } else {
+                stopEverything();
+            }
+        } catch (e) {
+            reportUnexpectedError(e);
         }
     }
 
@@ -1076,32 +1099,48 @@
             recognition.maxAlternatives = 1;
 
             recognition.onresult = (event) => {
-                if (recognitionSettled) return;
-                recognitionSettled = true;
-                clearTimeout(recognitionTimeoutId);
-                const transcript = event.results[0][0].transcript.trim();
-                showRecognizedText(transcript);
+                try {
+                    if (recognitionSettled) return;
+                    recognitionSettled = true;
+                    clearTimeout(recognitionTimeoutId);
+                    const transcript = event.results[0][0].transcript.trim();
+                    showRecognizedText(transcript);
+                    stopRecordingUI();
+                } catch (e) {
+                    reportUnexpectedError(e);
+                }
             };
 
             recognition.onerror = (event) => {
-                console.warn('Speech recognition error:', event.error);
-                if (recognitionSettled) return;
-                recognitionSettled = true;
-                clearTimeout(recognitionTimeoutId);
-                lastRecognitionError = event.error;
-                usingFallback = true;
-                recognition = null;
-                // Небольшая пауза перед повторным запросом микрофона — даём
-                // браузеру/ОС время полностью освободить устройство записи.
-                setTimeout(startFallbackAudioRecording, 250);
+                try {
+                    console.warn('Speech recognition error:', event.error);
+                    if (recognitionSettled) return;
+                    recognitionSettled = true;
+                    clearTimeout(recognitionTimeoutId);
+                    lastRecognitionError = event.error;
+                    usingFallback = true;
+                    recognition = null;
+                    showStatus((currentLang === 'uk'
+                        ? '🎙 Розпізнавання не спрацювало, записую голос...'
+                        : '🎙 Распознавание не сработало, записываю голос...'));
+                    // Небольшая пауза перед повторным запросом микрофона — даём
+                    // браузеру/ОС время полностью освободить устройство записи.
+                    setTimeout(startFallbackAudioRecording, 300);
+                } catch (e) {
+                    reportUnexpectedError(e);
+                }
             };
 
             recognition.onend = () => {
-                recognition = null;
-                if (usingFallback || recognitionSettled) return;
-                recognitionSettled = true;
-                clearTimeout(recognitionTimeoutId);
-                stopRecordingUI();
+                try {
+                    recognition = null;
+                    if (usingFallback || recognitionSettled) return;
+                    recognitionSettled = true;
+                    clearTimeout(recognitionTimeoutId);
+                    stopRecordingUI();
+                } catch (e) {
+                    reportUnexpectedError(e);
+                }
             };
 
             recognition.start();
@@ -1113,14 +1152,21 @@
 
             // Предохранитель на случай полной тишины со стороны распознавателя
             recognitionTimeoutId = setTimeout(() => {
-                if (recognitionSettled) return;
-                recognitionSettled = true;
-                console.warn('Speech recognition timeout: no response from recognizer');
-                lastRecognitionError = 'timeout';
-                usingFallback = true;
-                try { if (recognition) recognition.abort(); } catch(e){}
-                recognition = null;
-                startFallbackAudioRecording();
+                try {
+                    if (recognitionSettled) return;
+                    recognitionSettled = true;
+                    console.warn('Speech recognition timeout: no response from recognizer');
+                    lastRecognitionError = 'timeout';
+                    usingFallback = true;
+                    try { if (recognition) recognition.abort(); } catch(e2){}
+                    recognition = null;
+                    showStatus(currentLang === 'uk'
+                        ? '🎙 Розпізнавання не відповідає, записую голос...'
+                        : '🎙 Распознавание не отвечает, записываю голос...');
+                    startFallbackAudioRecording();
+                } catch (e) {
+                    reportUnexpectedError(e);
+                }
             }, 6000);
         } catch (e) {
             console.warn("SpeechRecognition не удалось запустить:", e);
@@ -1137,19 +1183,22 @@
         const cleanTarget = (targetWordClean || '').toLowerCase().replace(/[^a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9]/g, '');
         const isMatch = cleanSpoken.length > 0 && cleanSpoken === cleanTarget;
 
+        resultBox.style.display = '';
         resultBox.className = 'speech-result-box ' + (isMatch ? 'correct' : 'incorrect');
         resultBox.innerHTML = `<div>${t.speechYouSaid}<strong>"${transcript}"</strong></div><div style="margin-top:4px; font-size:13px;">${isMatch ? t.speechCorrect : t.speechIncorrect}</div>`;
+
+        // Озвучуємо саме розпізнане слово — навіть якщо воно вимовлене невірно
+        speakWord(transcript);
     }
 
     // Резервная запись через микрофон с авто-воспроизведением —
     // включается только если распознавание речи недоступно/не сработало.
     async function startFallbackAudioRecording() {
         const btn = document.getElementById('recordBtn');
-        const resultBox = document.getElementById('speechResultBox');
         const t = i18n[currentLang];
 
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            alert(currentLang === 'uk' ? "Ваш браузер не підтримує запис аудіо." : "Ваш браузер не поддерживает запись аудио.");
+            showStatus(currentLang === 'uk' ? "Ваш браузер не підтримує запис аудіо." : "Ваш браузер не поддерживает запись аудио.", 'incorrect');
             stopRecordingUI();
             return;
         }
@@ -1163,31 +1212,40 @@
 
             mediaRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) audioChunks.push(e.data); };
             mediaRecorder.onstop = () => {
-                stream.getTracks().forEach(track => track.stop()); // закрываем поток микрофона
+                try {
+                    stream.getTracks().forEach(track => track.stop()); // закрываем поток микрофона
 
-                if (audioChunks.length > 0) {
-                    const blobType = mediaRecorder.mimeType || 'audio/webm';
-                    const audioBlob = new Blob(audioChunks, { type: blobType });
-                    const audioUrl = URL.createObjectURL(audioBlob);
-                    const audio = new Audio(audioUrl);
-                    audio.play().catch(e => console.warn('Playback error:', e));
+                    const resultBox = document.getElementById('speechResultBox');
+                    if (audioChunks.length > 0) {
+                        const blobType = mediaRecorder.mimeType || 'audio/webm';
+                        const audioBlob = new Blob(audioChunks, { type: blobType });
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        const audio = new Audio(audioUrl);
+                        audio.play().catch(e => console.warn('Playback error:', e));
 
-                    const debugSuffix = lastRecognitionError
-                        ? ` <span style="opacity:0.6; font-size:11px;">(${lastRecognitionError})</span>`
-                        : '';
-                    resultBox.className = 'speech-result-box info';
-                    resultBox.innerHTML = `<div>${t.speechRecordedPlay}${debugSuffix}</div>`;
+                        const debugSuffix = lastRecognitionError
+                            ? ` <span style="opacity:0.6; font-size:11px;">(${lastRecognitionError})</span>`
+                            : '';
+                        resultBox.style.display = '';
+                        resultBox.className = 'speech-result-box info';
+                        resultBox.innerHTML = `<div>${t.speechRecordedPlay}${debugSuffix}</div>`;
+                    } else {
+                        showStatus(currentLang === 'uk' ? 'Запис порожній — спробуйте ще раз.' : 'Запись пустая — попробуйте ещё раз.', 'incorrect');
+                    }
+                    stopRecordingUI();
+                } catch (e) {
+                    reportUnexpectedError(e);
                 }
-                stopRecordingUI();
             };
 
             mediaRecorder.start();
             isRecording = true;
             btn.textContent = t.recordBtnStop;
             btn.classList.add('recording');
+            showStatus(currentLang === 'uk' ? '🎙 Записую голос...' : '🎙 Записываю голос...');
         } catch (err) {
             console.error("Microphone access error:", err);
-            alert(currentLang === 'uk' ? "Помилка доступу до мікрофона. Перевірте дозволи в браузері." : "Ошибка доступа к микрофону. Проверьте разрешения в браузере.");
+            showStatus(currentLang === 'uk' ? "Помилка доступу до мікрофона. Перевірте дозволи в браузері." : "Ошибка доступа к микрофону. Проверьте разрешения в браузере.", 'incorrect');
             stopRecordingUI();
         }
     }
@@ -1359,7 +1417,7 @@
         isAnswered = false;
         document.getElementById('spellBuilderCard').classList.add('hidden');
         const resultBox = document.getElementById('speechResultBox');
-        resultBox.style.display = 'none';
+        resultBox.style.display = '';
         resultBox.className = 'speech-result-box';
 
         const categorySelect = document.getElementById('categorySelect');
