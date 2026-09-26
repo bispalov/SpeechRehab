@@ -212,6 +212,12 @@
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
+        .speech-result-box.info {
+            display: block;
+            background-color: #e2e3e5;
+            color: #383d41;
+            border: 1px solid #d6d8db;
+        }
         .options-grid {
             display: flex;
             flex-direction: column;
@@ -613,6 +619,7 @@
             speechYouSaid: "Ви сказали: ",
             speechCorrect: "✓ Правильно вимовлене слово!",
             speechIncorrect: "✗ Вимовлено невірно, спробуйте ще раз",
+            speechRecordedPlay: "🎧 Запис відтворено. Порівняйте із зразком!",
             labelInstruction: "Оберіть слово, яке ви почули (усі варіанти — реальні слова):",
             labelSpellTask: "Зберіть слово з букв (для тренування мовлення):",
             syllablePrefix: "Склади: ",
@@ -654,6 +661,7 @@
             speechYouSaid: "Вы сказали: ",
             speechCorrect: "✓ Правильно произнесенное слово!",
             speechIncorrect: "✗ Произнесено неверно, попробуйте еще раз",
+            speechRecordedPlay: "🎧 Запись воспроизведена. Сравните с образцом!",
             labelInstruction: "Выберите слово, которое вы услышали (все варианты — реальные слова):",
             labelSpellTask: "Соберите слово из букв (для тренировки речи):",
             syllablePrefix: "Слоги: ",
@@ -1017,89 +1025,137 @@
         speechSynthesis.speak(utterance);
     }
 
+    // ИСПРАВЛЕННАЯ ФУНКЦИЯ ЗАПИСИ / РАСПОЗНАВАНИЯ ГОЛОСА
+    // Запись аудио и распознавание речи запускаются вместе. Если распознавание
+    // сработало — показываем текст (даже если слово произнесено с ошибкой).
+    // Если распознавание на устройстве невозможно или не дало результата —
+    // просто воспроизводим записанный голос.
+    let recognitionSucceeded = false;
+
     async function toggleRecording() {
+        if (!isRecording) {
+            const resultBox = document.getElementById('speechResultBox');
+            resultBox.style.display = 'none';
+            resultBox.className = 'speech-result-box';
+            await startRecordingSession();
+        } else {
+            stopRecordingSession();
+        }
+    }
+
+    async function startRecordingSession() {
         const btn = document.getElementById('recordBtn');
+        const t = i18n[currentLang];
+
+        recognitionSucceeded = false;
+        audioChunks = [];
+        mediaRecorder = null;
+        recognition = null;
+
+        // 1) Запускаем запись аудио (нужна для воспроизведения, если распознавание недоступно)
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const supportedType = (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported('audio/webm'))
+                    ? 'audio/webm' : '';
+                mediaRecorder = supportedType ? new MediaRecorder(stream, { mimeType: supportedType }) : new MediaRecorder(stream);
+
+                mediaRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) audioChunks.push(e.data); };
+                mediaRecorder.onstop = () => {
+                    stream.getTracks().forEach(track => track.stop()); // закрываем поток микрофона
+
+                    // Воспроизводим запись только если распознать речь не удалось/не вышло
+                    if (!recognitionSucceeded && audioChunks.length > 0) {
+                        const blobType = mediaRecorder.mimeType || 'audio/webm';
+                        const audioBlob = new Blob(audioChunks, { type: blobType });
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        const audio = new Audio(audioUrl);
+                        audio.play().catch(e => console.warn('Playback error:', e));
+
+                        const resultBox = document.getElementById('speechResultBox');
+                        resultBox.className = 'speech-result-box info';
+                        resultBox.innerHTML = `<div>${t.speechRecordedPlay}</div>`;
+                    }
+                };
+
+                mediaRecorder.start();
+            } catch (err) {
+                console.warn("Microphone access error:", err);
+                mediaRecorder = null;
+            }
+        }
+
+        // 2) Запускаем распознавание речи, если оно поддерживается устройством/браузером
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            try {
+                recognition = new SpeechRecognition();
+                recognition.lang = currentLang === 'uk' ? 'uk-UA' : 'ru-RU';
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 1;
+
+                recognition.onresult = (event) => {
+                    recognitionSucceeded = true;
+                    const transcript = event.results[0][0].transcript.trim();
+                    showRecognizedText(transcript);
+                };
+
+                recognition.onerror = (event) => {
+                    console.warn('Speech recognition error:', event.error);
+                    // Ничего не делаем: сработает onend, а он остановит запись —
+                    // и если аудио было записано, оно будет воспроизведено.
+                };
+
+                recognition.onend = () => {
+                    recognition = null;
+                    stopRecordingSession();
+                };
+
+                recognition.start();
+            } catch (e) {
+                console.warn("SpeechRecognition не удалось запустить:", e);
+                recognition = null;
+            }
+        }
+
+        if (!mediaRecorder && !recognition) {
+            alert(currentLang === 'uk'
+                ? "Цей пристрій не підтримує ні розпізнавання мовлення, ні запис аудіо."
+                : "Это устройство не поддерживает ни распознавание речи, ни запись аудио.");
+            return;
+        }
+
+        isRecording = true;
+        btn.textContent = t.recordBtnStop;
+        btn.classList.add('recording');
+    }
+
+    function showRecognizedText(transcript) {
         const resultBox = document.getElementById('speechResultBox');
         const t = i18n[currentLang];
 
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const cleanSpoken = transcript.toLowerCase().replace(/[^a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9]/g, '');
+        const cleanTarget = (targetWordClean || '').toLowerCase().replace(/[^a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9]/g, '');
+        const isMatch = cleanSpoken.length > 0 && cleanSpoken === cleanTarget;
 
-        if (SpeechRecognition) {
-            if (!isRecording) {
-                try {
-                    recognition = new SpeechRecognition();
-                    recognition.lang = currentLang === 'uk' ? 'uk-UA' : 'ru-RU';
-                    recognition.interimResults = false;
-                    recognition.maxAlternatives = 1;
+        resultBox.className = 'speech-result-box ' + (isMatch ? 'correct' : 'incorrect');
+        resultBox.innerHTML = `<div>${t.speechYouSaid}<strong>"${transcript}"</strong></div><div style="margin-top:4px; font-size:13px;">${isMatch ? t.speechCorrect : t.speechIncorrect}</div>`;
+    }
 
-                    recognition.onstart = () => {
-                        isRecording = true;
-                        btn.textContent = t.recordBtnStop;
-                        btn.classList.add('recording');
-                        resultBox.style.display = 'none';
-                        resultBox.className = 'speech-result-box';
-                    };
+    function stopRecordingSession() {
+        const btn = document.getElementById('recordBtn');
+        const t = i18n[currentLang];
 
-                    recognition.onresult = (event) => {
-                        const transcript = event.results[0][0].transcript.trim();
-                        const cleanSpoken = transcript.toLowerCase().replace(/[^a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9]/g, '');
-                        const cleanTarget = targetWordClean.toLowerCase().replace(/[^a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9]/g, '');
-
-                        const isMatch = cleanSpoken === cleanTarget;
-                        resultBox.className = 'speech-result-box ' + (isMatch ? 'correct' : 'incorrect');
-                        resultBox.innerHTML = `<div>${t.speechYouSaid}<strong>"${transcript}"</strong></div><div style="margin-top:4px; font-size:13px;">${isMatch ? t.speechCorrect : t.speechIncorrect}</div>`;
-                    };
-
-                    recognition.onerror = (event) => {
-                        console.error('Speech recognition error', event.error);
-                    };
-
-                    recognition.onend = () => {
-                        isRecording = false;
-                        btn.textContent = t.recordBtnStart;
-                        btn.classList.remove('recording');
-                    };
-
-                    recognition.start();
-                } catch (e) {
-                    console.error(e);
-                }
-            } else {
-                if (recognition) recognition.stop();
-            }
-        } else {
-            if (!isRecording) {
-                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    alert(currentLang === 'uk' ? "Ваш браузер не підтримує запис або розпізнавання аудіо." : "Ваш браузер не поддерживает запись или распознавание аудио.");
-                    return;
-                }
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(stream);
-                    audioChunks = [];
-                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                    mediaRecorder.onstop = () => {
-                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                        const audioUrl = URL.createObjectURL(audioBlob);
-                        const audio = new Audio(audioUrl);
-                        audio.play();
-                    };
-                    mediaRecorder.start();
-                    isRecording = true;
-                    btn.textContent = t.recordBtnStop;
-                    btn.classList.add('recording');
-                } catch (err) {
-                    alert(currentLang === 'uk' ? "Помилка доступу до мікрофона." : "Ошибка доступа к микрофону.");
-                }
-            } else {
-                if (mediaRecorder && mediaRecorder.state === "recording") {
-                    mediaRecorder.stop();
-                }
-                isRecording = false;
-                btn.textContent = t.recordBtnStart;
-                btn.classList.remove('recording');
-            }
+        if (recognition) {
+            try { recognition.stop(); } catch(e){}
         }
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+            mediaRecorder.stop();
+        }
+
+        isRecording = false;
+        btn.textContent = t.recordBtnStart;
+        btn.classList.remove('recording');
     }
 
     function updateStatsDisplay() {
