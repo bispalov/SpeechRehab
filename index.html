@@ -502,10 +502,9 @@
         </div>
 
         <div class="control-group">
-            <label for="voiceSelect" id="labelVoice">Voice Gender:</label>
+            <label for="voiceSelect" id="labelVoice">Voice / Голос:</label>
             <select id="voiceSelect" onchange="saveSettings()">
-                <option value="male" selected id="optVoiceMale">👨 Male</option>
-                <option value="female" id="optVoiceFemale">👩 Female</option>
+                <!-- Populated dynamically based on device voices -->
             </select>
         </div>
 
@@ -616,9 +615,7 @@
             optEasy: "2 options (Easy)",
             optMedium: "3 options (Medium)",
             optHard: "4 options (Hard)",
-            labelVoice: "Voice Gender:",
-            voiceMale: "👨 Male",
-            voiceFemale: "👩 Female",
+            labelVoice: "Voice / Голос:",
             labelRate: "Speech Speed:",
             labelTimerEnable: "Use \"Play / Rest\" timer",
             labelTimerDuration: "Duration (minutes):",
@@ -658,9 +655,7 @@
             optEasy: "2 варіанти (Легко)",
             optMedium: "3 варіанти (Середньо)",
             optHard: "4 варіанти (Складно)",
-            labelVoice: "Стать голосу:",
-            voiceMale: "👨 Чоловічий",
-            voiceFemale: "👩 Жіночий",
+            labelVoice: "Голос озвучення:",
             labelRate: "Швидкість мовлення:",
             labelTimerEnable: "Використовувати таймер «гра / відпочинок»",
             labelTimerDuration: "Тривалість (хвилини):",
@@ -700,9 +695,7 @@
             optEasy: "2 варианта (Легко)",
             optMedium: "3 варианта (Средне)",
             optHard: "4 варианта (Сложно)",
-            labelVoice: "Пол голоса:",
-            voiceMale: "👨 Мужской",
-            voiceFemale: "👩 Женский",
+            labelVoice: "Голос озвучки:",
             labelRate: "Скорость речи:",
             labelTimerEnable: "Использовать таймер «игра / отдых»",
             labelTimerDuration: "Длительность (минуты):",
@@ -893,6 +886,45 @@
 
     let selectedLetters = [];
 
+    function populateVoiceList() {
+        if (!('speechSynthesis' in window)) return;
+
+        const voiceSelect = document.getElementById('voiceSelect');
+        const savedVoiceURI = localStorage.getItem('app_voice');
+        const voices = window.speechSynthesis.getVoices();
+
+        voiceSelect.innerHTML = '';
+
+        const langVoices = voices.filter(v => v.lang.toLowerCase().replace('_', '-').startsWith(currentLang));
+
+        if (langVoices.length === 0) {
+            const opt = document.createElement('option');
+            opt.value = "";
+            opt.innerText = "Default System Voice";
+            voiceSelect.appendChild(opt);
+            return;
+        }
+
+        langVoices.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.voiceURI;
+            opt.innerText = `${v.name} (${v.lang})`;
+            voiceSelect.appendChild(opt);
+        });
+
+        if (savedVoiceURI && Array.from(voiceSelect.options).some(o => o.value === savedVoiceURI)) {
+            voiceSelect.value = savedVoiceURI;
+        } else {
+            voiceSelect.value = langVoices[0].voiceURI;
+        }
+    }
+
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = () => {
+            populateVoiceList();
+        };
+    }
+
     function updateI18nUI() {
         const t = i18n[currentLang];
         document.documentElement.lang = currentLang;
@@ -912,8 +944,6 @@
         document.getElementById('optMedium').innerText = t.optMedium;
         document.getElementById('optHard').innerText = t.optHard;
         document.getElementById('labelVoice').innerText = t.labelVoice;
-        document.getElementById('optVoiceMale').innerText = t.voiceMale;
-        document.getElementById('optVoiceFemale').innerText = t.voiceFemale;
         document.getElementById('labelRate').innerText = t.labelRate;
         document.getElementById('labelTimerEnable').innerText = t.labelTimerEnable;
         document.getElementById('labelTimerDuration').innerText = t.labelTimerDuration;
@@ -937,6 +967,7 @@
         const langBtnNames = { uk: "🌐 UA", ru: "🌐 RU", en: "🌐 EN" };
         document.getElementById('langBtn').innerText = langBtnNames[currentLang];
 
+        populateVoiceList();
         updateTimerDisplayUI();
     }
 
@@ -1092,22 +1123,16 @@
         const rate = parseFloat(document.getElementById('rateRange').value) || 0.9;
         utterance.rate = rate;
 
-        const gender = document.getElementById('voiceSelect').value;
+        const selectedVoiceURI = document.getElementById('voiceSelect').value;
         const voices = window.speechSynthesis.getVoices();
         
-        let targetVoice = null;
         if (voices.length > 0) {
-            const langVoices = voices.filter(v => v.lang.toLowerCase().startsWith(currentLang));
-            if (langVoices.length > 0) {
-                if (gender === 'female') {
-                    targetVoice = langVoices.find(v => v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('zira') || v.name.toLowerCase().includes('yuri') || v.name.toLowerCase().includes('oksana') || v.name.toLowerCase().includes('samantha')) || langVoices[0];
-                } else {
-                    targetVoice = langVoices.find(v => v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('david') || v.name.toLowerCase().includes('pavel') || v.name.toLowerCase().includes('george')) || langVoices[0];
-                }
+            let targetVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
+            if (!targetVoice) {
+                targetVoice = voices.find(v => v.lang.toLowerCase().replace('_', '-').startsWith(currentLang));
             }
+            if (targetVoice) utterance.voice = targetVoice;
         }
-
-        if (targetVoice) utterance.voice = targetVoice;
 
         window.speechSynthesis.speak(utterance);
     }
@@ -1507,9 +1532,6 @@
             optionsCount = parseInt(savedOptionsCount, 10);
             document.getElementById('optionsCountSelect').value = optionsCount;
         }
-
-        const savedVoice = localStorage.getItem('app_voice');
-        if (savedVoice) document.getElementById('voiceSelect').value = savedVoice;
 
         const savedRate = localStorage.getItem('app_rate');
         if (savedRate) {
