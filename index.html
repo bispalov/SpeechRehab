@@ -886,12 +886,25 @@
 
     let selectedLetters = [];
 
-    function populateVoiceList() {
+    let voiceListRetryTimer = null;
+
+    function populateVoiceList(attemptsLeft) {
         if (!('speechSynthesis' in window)) return;
+        if (attemptsLeft === undefined) attemptsLeft = 10;
 
         const voiceSelect = document.getElementById('voiceSelect');
         const savedVoiceURI = localStorage.getItem('app_voice');
         const voices = window.speechSynthesis.getVoices();
+
+        // На многих мобильных браузерах голоса подгружаются с задержкой,
+        // а событие onvoiceschanged не всегда срабатывает. Поэтому вместо
+        // того, чтобы полагаться только на это событие, повторяем попытку
+        // ещё несколько раз с небольшой паузой.
+        if (voices.length === 0 && attemptsLeft > 0) {
+            clearTimeout(voiceListRetryTimer);
+            voiceListRetryTimer = setTimeout(() => populateVoiceList(attemptsLeft - 1), 250);
+            return;
+        }
 
         voiceSelect.innerHTML = '';
 
@@ -1559,7 +1572,42 @@
         if (savedRestMins) document.getElementById('restMinutes').value = savedRestMins;
     }
 
+    // Пере-синхронізація мови/словника з localStorage при поверненні до
+    // сторінки. На смартфонах повторне «відкриття» гри часто є не повним
+    // перезавантаженням, а відновленням замороженої вкладки (bfcache) або
+    // поверненням із фону — window.onload при цьому вдруге не спрацьовує,
+    // і сторінка може показувати застарілий стан, що не відповідає тому,
+    // що реально збережено в налаштуваннях.
+    function resyncLanguageAndUI() {
+        const storedLang = localStorage.getItem('app_lang');
+        if (storedLang && ['uk', 'ru', 'en'].includes(storedLang) && storedLang !== currentLang) {
+            currentLang = storedLang;
+            updateI18nUI();
+            initCategorySelect();
+            nextQuestion();
+        }
+    }
+
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted) {
+            resyncLanguageAndUI();
+        }
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            resyncLanguageAndUI();
+        }
+    });
+
     window.onload = async () => {
+        // Запитуємо стійке (persistent) сховище, щоб зменшити ризик того,
+        // що мобільна ОС/браузер очистить localStorage із налаштуваннями
+        // мови/голосу при нестачі місця чи довгій відсутності активності.
+        if (navigator.storage && navigator.storage.persist) {
+            navigator.storage.persist().catch(() => {});
+        }
+
         await loadAccents();
         loadSettings();
         updateI18nUI();
