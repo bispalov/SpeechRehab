@@ -80,25 +80,40 @@
             display: flex;
             gap: 8px;
         }
-        .theme-toggle-btn, .lang-toggle-btn {
-            background: none;
-            border: 1px solid var(--input-border);
-            color: var(--text-color);
-            padding: 6px 10px;
+        .settings-toggle-btn {
+            background: var(--option-btn-bg);
+            border: 1px solid var(--option-btn-border);
+            color: var(--option-btn-text);
+            padding: 6px 12px;
             border-radius: 20px;
             cursor: pointer;
             font-size: 13px;
+            font-weight: bold;
             display: flex;
             align-items: center;
             gap: 4px;
             width: auto;
         }
         .controls {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             display: flex;
             flex-direction: column;
             gap: 12px;
             align-items: center;
+        }
+        .settings-panel {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background-color: var(--word-box-bg);
+            padding: 15px;
+            border-radius: 8px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+        .settings-panel.hidden {
+            display: none;
         }
         .control-group {
             width: 100%;
@@ -173,6 +188,29 @@
             0% { opacity: 1; }
             50% { opacity: 0.6; }
             100% { opacity: 1; }
+        }
+        .speech-result-box {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            box-sizing: border-box;
+            margin-top: 5px;
+            display: none;
+            word-break: break-word;
+        }
+        .speech-result-box.correct {
+            display: block;
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .speech-result-box.incorrect {
+            display: block;
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
         .options-grid {
             display: flex;
@@ -413,6 +451,7 @@
         .accent-char {
             color: #ff9800;
             text-decoration: underline;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -431,22 +470,20 @@
     <div class="header-row">
         <h1 id="appTitle">Слухова диференціація</h1>
         <div class="header-btns">
-            <button class="lang-toggle-btn" id="langBtn" onclick="toggleLanguage()">🌐 UA / RU</button>
-            <button class="theme-toggle-btn" id="themeBtn" onclick="toggleTheme()">☀️ Світла</button>
+            <button class="settings-toggle-btn" id="settingsBtn" onclick="toggleSettingsPanel()">⚙️ Налаштування</button>
         </div>
     </div>
 
-    <div class="stats-row">
-        <div class="stat-box correct-stat"><span id="statCorrectLabel">✅ Правильно:</span> <span id="correctCount">0</span></div>
-        <div class="stat-box total-stat"><span id="statTotalLabel">📝 Всього:</span> <span id="totalCount">0</span></div>
-    </div>
-
-    <div class="controls">
+    <!-- Панель налаштувань -->
+    <div class="settings-panel hidden" id="settingsPanel">
         <div class="control-group">
-            <label for="categorySelect" id="labelCategory">Оберіть категорію:</label>
-            <select id="categorySelect" onchange="changeCategory()">
-                <!-- Категорії завантажуються JS -->
-            </select>
+            <label id="labelLang">Мова інтерфейсу / Язык:</label>
+            <button class="lang-toggle-btn" id="langBtn" onclick="toggleLanguage()">🌐 UA / RU</button>
+        </div>
+
+        <div class="control-group">
+            <label id="labelTheme">Тема оформлення / Тема:</label>
+            <button class="theme-toggle-btn" id="themeBtn" onclick="toggleTheme()">☀️ Світла</button>
         </div>
 
         <div class="control-group">
@@ -494,6 +531,20 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-box correct-stat"><span id="statCorrectLabel">✅ Правильно:</span> <span id="correctCount">0</span></div>
+        <div class="stat-box total-stat"><span id="statTotalLabel">📝 Всього:</span> <span id="totalCount">0</span></div>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <label for="categorySelect" id="labelCategory">Оберіть категорію:</label>
+            <select id="categorySelect" onchange="changeCategory()">
+                <!-- Категорії -->
+            </select>
+        </div>
 
         <div class="control-group">
             <div class="timer-status-row">
@@ -506,6 +557,7 @@
     <div class="card">
         <button class="speak-main-btn" id="speakMainBtn" onclick="speakWord(targetWordSyllables)">🔊 Прослухати загадане слово</button>
         <button class="record-btn" id="recordBtn" onclick="toggleRecording()">🎙 Проговорити і перевірити себе</button>
+        <div id="speechResultBox" class="speech-result-box"></div>
     </div>
 
     <label id="labelInstruction">Оберіть слово, яке ви почули (усі варіанти — реальні слова):</label>
@@ -530,6 +582,9 @@
     const i18n = {
         uk: {
             appTitle: "Слухова диференціація",
+            settingsBtnText: "⚙️ Налаштування",
+            labelLang: "Мова інтерфейсу:",
+            labelTheme: "Тема оформлення:",
             themeLight: "☀️ Світла",
             themeDark: "🌙 Темна",
             statCorrect: "✅ Правильно:",
@@ -554,7 +609,10 @@
             timerResume: "▶ Продовжити",
             speakMainBtn: "🔊 Прослухати загадане слово",
             recordBtnStart: "🎙 Проговорити і перевірити себе",
-            recordBtnStop: "⏹ Зупинити і прослухати себе",
+            recordBtnStop: "⏹ Слухаю...",
+            speechYouSaid: "Ви сказали: ",
+            speechCorrect: "✓ Правильно вимовлене слово!",
+            speechIncorrect: "✗ Вимовлено невірно, спробуйте ще раз",
             labelInstruction: "Оберіть слово, яке ви почули (усі варіанти — реальні слова):",
             labelSpellTask: "Зберіть слово з букв (для тренування мовлення):",
             syllablePrefix: "Склади: ",
@@ -565,6 +623,9 @@
         },
         ru: {
             appTitle: "Слуховая дифференциация",
+            settingsBtnText: "⚙️ Настройки",
+            labelLang: "Язык интерфейса:",
+            labelTheme: "Тема оформления:",
             themeLight: "☀️ Светлая",
             themeDark: "🌙 Темная",
             statCorrect: "✅ Правильно:",
@@ -589,9 +650,12 @@
             timerResume: "▶ Продолжить",
             speakMainBtn: "🔊 Прослушать загаданное слово",
             recordBtnStart: "🎙 Проговорить и проверить себя",
-            recordBtnStop: "⏹ Остановить и прослушать себя",
+            recordBtnStop: "⏹ Слушаю...",
+            speechYouSaid: "Вы сказали: ",
+            speechCorrect: "✓ Правильно произнесенное слово!",
+            speechIncorrect: "✗ Произнесено неверно, попробуйте еще раз",
             labelInstruction: "Выберите слово, которое вы услышали (все варианты — реальные слова):",
-            labelSpellTask: "Собырите слово из букв (для тренировки речи):",
+            labelSpellTask: "Соберите слово из букв (для тренировки речи):",
             syllablePrefix: "Слоги: ",
             nextBtn: "Следующее слово ➔",
             restTitle: "Время отдыха",
@@ -619,7 +683,7 @@
         "5. Одяг та Взуття": ["Со-роч-ка", "Шта-ни", "Джин-си", "Сук-ня", "Спід-ни-ця", "Фут-бол-ка", "Све-тр", "Коф-та", "Курт-ка", "Паль-то", "Плащ", "Шап-ка", "Шарф", "Ру-ка-ви-ці", "Ва-реж-ки", "Шкар-пет-ки", "Кол-гот-ки", "Бі-лиз-на", "Пі-жа-ма", "Ха-лат", "Че-ре-ви-ки", "Чо-бо-ти", "Туф-лі", "Кро-сів-ки", "Кап-ці", "Сан-да-лі", "Ре-мінь", "Ґуд-зик", "Блис-кав-ка", "Ки-ше-ня", "Ко-мір", "Ру-кав", "Ка-пю-шон", "Шнур-ки", "Ка-пе-люх", "Па-на-ма", "Жи-лет", "Кос-тюм", "Жа-кет"],
         "6. Продукти та Їжа": ["Хліб", "Мас-ло", "Сир", "Мо-ло-ко", "М'я-со", "Ри-ба", "Яй-це", "Суп", "Ка-ша", "Са-лат", "Сіль", "Цу-кор", "Пе-рець", "Со-ус", "Ма-ка-ро-ни", "Кру-па", "Рис", "Греч-ка", "Лок-ши-на", "Пи-ріг", "Торт", "Пе-чи-во", "Цу-кер-ка", "Шо-ко-лад", "Мед", "Ва-рен-ня", "Сме-та-на", "Сир кис-ло-мо-лоч-ний", "Ке-фір", "Йо-гурт", "Ков-ба-са", "Со-сис-ки", "Кот-ле-та", "Ва-ре-ни-ки", "Млин-ці", "Сенд-віч", "Бо-рош-но", "Дріж-джі", "О-цет", "Гір-чи-ця"],
         "7. Напої": ["Во-да", "Чай", "Ка-ва", "Сік", "Мо-ло-ко", "Ком-пот", "Морс", "Ки-сіль", "Ли-мо-над", "Квас", "Кок-тейль", "Ка-ка-о", "Ми-не-рал-ка", "Від-вар", "На-пій", "Нек-тар", "Ес-пре-со", "Ка-пу-чи-но", "Сму-зи", "То-нік"],
-        "8. Фрукти та Ягоди": ["Яб-лу-ко", "Гру-ша", "Ба-нан", "А-пель-син", "Ли-мон", "Ман-да-рин", "Пер-сик", "Аб-ри-кос", "Сли-ва", "Ви-но-град", "По-лу-ни-ця", "Ма-ли-на", "Су-ни-ця", "Виш-ня", "Че-реш-ня", "Чор-ни-ця", "Смо-ро-ди-на", "Ка-вун", "Ди-ня", "А-на-нас", "Кі-ві", "Ман-го", "Гра-нат", "Ін-жир", "Хур-ма", "А-ли-ча", "О-жи-на", "Жу-рав-ли-ця", "Брус-ни-ця", "Об-лі-пи-ха"],
+        "8. Фрукты та Ягоди": ["Яб-лу-ко", "Гру-ша", "Ба-нан", "А-пель-син", "Ли-мон", "Ман-да-рин", "Пер-сик", "Аб-ри-кос", "Сли-ва", "Ви-но-град", "По-лу-ни-ця", "Ма-ли-на", "Су-ни-ця", "Виш-ня", "Че-реш-ня", "Чор-ни-ця", "Смо-ро-ди-на", "Ка-вун", "Ди-ня", "А-на-нас", "Кі-ві", "Ман-го", "Гра-нат", "Ін-жир", "Хур-ма", "А-ли-ча", "О-жи-на", "Жу-рав-ли-ця", "Брус-ни-ця", "Об-лі-пи-ха"],
         "9. Овочі та Зелень": ["Кар-топ-ля", "Мор-ква", "Бу-ряк", "Ци-бу-ля", "Час-ник", "О-гі-рок", "По-мі-дор", "Ка-пус-та", "Пе-рець", "Ка-ба-чок", "Бак-ла-жан", "Гар-буз", "Го-рох", "Ква-со-ля", "Ку-ку-руд-за", "Ре-дис-ка", "Рі-па", "Зе-лень", "Кріп", "Пет-руш-ка", "Са-лат", "Шпи-нат", "Ща-вель", "Се-ле-ра", "Ба-зи-лік"],
         "10. Гігієна та Догляд": ["Ми-ло", "Шам-пунь", "Пас-та", "Щіт-ка", "Во-да", "Руш-ник", "Гре-бі-нець", "Но-жи-ці", "Дзер-ка-ло", "Крем", "Сер-вет-ка", "Па-пір", "Мо-чал-ка", "Пі-на", "Гель", "Пар-фу-ми", "Де-зо-до-рант", "Брит-ва", "Ва-та", "Пем-за"],
         "11. Сім'я та Люди": ["Ма-ма", "Та-то", "Син", "Донь-ка", "Ба-бу-ся", "Ді-дусь", "Брат", "Сес-тра", "О-нук", "О-ну-ка", "Дядь-ко", "Тіт-ка", "Чо-ло-вік", "Дру-жи-на", "Ди-ти-на", "Друг", "Су-сід", "Гість", "Лю-ди-на", "Ма-люк"],
@@ -629,7 +693,7 @@
         "15. Час та Календар": ["Час", "Го-ди-на", "Хви-ли-на", "Се-кун-да", "День", "Тиж-день", "Мі-сяць", "Рік", "У-чо-ра", "Сьо-год-ні", "Зав-тра", "По-не-ді-лок", "Вів-то-рок", "Се-ре-да", "Чет-вер", "П'ят-ни-ця", "Су-бо-та", "Не-ді-ля", "Зи-ма", "Вес-на", "Лі-то", "О-сінь"],
         "16. Тварини Свійські": ["Кіш-ка", "Со-ба-ка", "Ко-ро-ва", "Кінь", "Сви-ня", "Вів-ця", "Ко-за", "Кро-лик", "Кіт", "Цу-цен-я", "Ко-шен-я", "Те-ля", "Ло-ша", "О-сел", "Хом'як"],
         "17. Тварини Дикі": ["Вовк", "Ли-си-ця", "Вед-мідь", "За-єць", "Ї-жак", "Біл-ка", "О-лень", "Лось", "Лев", "Тигр", "Слон", "Мав-па", "Жи-раф", "Бе-ге-мот", "Кро-ко-дил"],
-        "18. Птахи": ["Птах", "Го-ро-бець", "Во-ро-на", "Го-луб", "Си-ни-ця", "Дя-тел", "Кач-ка", "Гус-ка", "Кур-ка", "Пів-ень", "Ін-дич-ка", "Со-ва", "О-рел", "Ле-ле-ка", "Лас-тів-ка"],
+        "18. Птахи": ["Птах", "Го-ро-бець", "Во-ро-на", "Го-люб", "Си-ни-ця", "Дя-тел", "Кач-ка", "Гус-ка", "Кур-ка", "Пів-ень", "Ін-дич-ка", "Со-ва", "О-рел", "Ле-ле-ка", "Лас-тів-ка"],
         "19. Кольори": ["Бі-лий", "Чор-ний", "Чер-во-ний", "Си-ній", "Зе-ле-ний", "Жов-тий", "По-ма-ран-че-вий", "Фі-о-ле-то-вий", "Ро-же-вий", "Ко-рич-не-вий", "Сі-рий", "Бла-кит-ний", "Бе-же-вий", "Бор-до-вий", "Са-ла-то-вий"],
         "20. Числа та Лічба": ["О-дин", "Два", "Три", "Чо-ти-ри", "П'ять", "Шість", "Сім", "Ві-сім", "Дев'ять", "Де-сять", "Сто", "Ти-ся-ча", "Пер-ший", "Дру-гий", "Тре-тій", "Ба-га-то", "Ма-ло", "По-ло-ви-на", "Нуль", "Па-ра"],
         "21. Дії (Дієслова)": ["И-ти", "Си-ді-ти", "Сто-я-ти", "Ле-жа-ти", "Спа-ти", "Їс-ти", "Пи-ти", "Го-во-ри-ти", "Слу-ха-ти", "Ди-ви-ти-ся", "Чи-та-ти", "Пи-са-ти", "Да-ти", "Взя-ти", "Ми-ти", "Чис-ти-ти", "О-дяг-ти", "Зня-ти", "Вiд-кри-ти", "За-кри-ти"],
@@ -659,26 +723,26 @@
         "3. Здоровье и Тело": ["Врач", "Боль-ни-ца", "Ап-те-ка", "Ле-кар-ство", "Таб-лет-ка", "Гра-дус-ник", "У-кол", "Бинт", "Ва-та", "Плас-тырь", "Мазь", "Кап-ли", "Боль", "Серд-це", "Го-ло-ва", "Ру-ка", "Но-га", "Па-лец", "Спи-на", "Жи-вот", "Грудь", "Ше-я", "Ли-цо", "Глаз", "У-хо", "Нос", "Рот", "Зуб", "Я-зык", "Ко-ле-но", "Ло-коть", "Пле-чо", "Кровь", "Пульс", "Дав-ле-ние", "Тем-пе-ра-ту-ра", "Ка-шель", "Нас-морк", "Сон"],
         "4. Общение и Эмоции": ["При-вет", "Спа-си-бо", "По-жа-луй-ста", "Да", "Нет", "Хо-ро-шо", "Пло-хо", "По-мо-ги", "Как де-ла", "До сви-да-ния", "Здрав-ствуй-те", "Прос-ти-те", "Люб-лю", "Ра-дость", "Грусть", "У-лыб-ка", "Смех", "Сле-зы", "Доб-ро", "Мир", "Друж-ба", "За-бо-та", "Лас-ка", "По-це-луй", "Об-ъя-тия", "По-кой", "Страх", "У-див-ле-ние", "На-деж-да", "Ве-ра", "Сог-ла-сен", "Не хо-чу", "Бу-ду", "Не бу-ду", "Дай", "На", "И-ди", "Стой", "Слу-шай", "Смот-ри"],
         "5. Одежда и Обувь": ["Ру-баш-ка", "Брю-ки", "Джин-сы", "Плать-е", "Юб-ка", "Фут-бол-ка", "Сви-тер", "Коф-та", "Курт-ка", "Паль-то", "Плащ", "Шап-ка", "Шарф", "Пер-чат-ки", "Ва-реж-ки", "Нос-ки", "Кол-гот-ки", "Бель-е", "Пи-жа-ма", "Ха-лат", "Бо-тин-ки", "Са-по-ги", "Туф-ли", "Крос-сов-ки", "Та-поч-ки", "Сан-да-лии", "Ре-мень", "Пу-го-ви-ца", "Мол-ния", "Кар-ман", "Во-рот-ник", "Ру-кав", "Ка-пю-шон", "Шнур-ки", "Шля-па", "Па-нам-ка", "Жи-лет", "Кос-тюм", "Жа-кет"],
-        "6. Продукты и Еда": ["Хлеб", "Мас-ло", "Сыр", "Мо-ло-ко", "Мя-со", "Ры-ба", "Яй-цо", "Суп", "Ка-ша", "Са-лат", "Соль", "Са-хар", "Пе-рец", "Со-ус", "Ма-ка-ро-ны", "Кру-па", "Рис", "Греч-ка", "Лап-ша", "Пи-рог", "Торт", "Пе-чень-е", "Кон-фе-та", "Шо-ко-лад", "Мед", "Va-рен-ье", "Сме-та-на", "Тво-рог", "Ке-фир", "Йо-гурт", "Кол-ба-са", "Со-сис-ки", "Кот-ле-та", "Пель-ме-ни", "Бли-ны", "Сэнд-вич", "Му-ка", "Дрож-жи", "Ук-сус", "Гор-чи-ца"],
+        "6. Продукты и Еда": ["Хлеб", "Мас-ло", "Сыр", "Мо-ло-ко", "Мя-со", "Ры-ба", "Яй-цо", "Суп", "Ка-ша", "Са-лат", "Соль", "Са-хар", "Пе-рец", "Со-ус", "Ма-ка-ро-ны", "Кру-па", "Рис", "Греч-ка", "Лап-ша", "Пи-рог", "Торт", "Пе-чень-е", "Кон-фе-та", "Шо-ко-лад", "Мед", "Ва-рен-ье", "Сме-та-на", "Тво-рог", "Ке-фир", "Йо-гурт", "Кол-ба-са", "Со-сис-ки", "Кот-ле-та", "Пель-ме-ни", "Бли-ны", "Сэнд-вич", "Му-ка", "Дрож-жи", "Ук-сус", "Гор-чи-ца"],
         "7. Напитки": ["Во-да", "Чай", "Ко-фе", "Сок", "Мо-ло-ко", "Ком-пот", "Морс", "Ки-сель", "Ли-мо-над", "Квас", "Кок-тейль", "Ка-ка-о", "Ми-не-рал-ка", "От-вар", "На-пи-ток", "Нек-тар", "Эс-прес-со", "Ка-пу-чи-но", "Сму-зи", "То-ник"],
         "8. Фрукты и Ягоды": ["Яб-ло-ко", "Гру-ша", "Ба-нан", "А-пель-син", "Ли-мон", "Ман-да-рин", "Пер-сик", "Аб-ри-кос", "Сли-ва", "Ви-но-град", "Клуб-ни-ка", "Ма-ли-на", "Зем-ля-ни-ка", "Виш-ня", "Че-реш-ня", "Чер-ни-ка", "Смо-ро-ди-на", "Ар-буз", "Ды-ня", "А-на-нас", "Ки-ви", "Ман-го", "Гра-нат", "Ин-жир", "Хур-ма", "А-лы-ча", "Е-же-ви-ка", "Клюк-ва", "Брус-ни-ка", "Об-ле-пи-ха"],
         "9. Овощи и Зелень": ["Кар-то-фель", "Мор-ковь", "Свек-ла", "Лук", "Чес-нок", "О-гу-рец", "По-ми-дор", "Ка-пус-та", "Пе-рец", "Ка-ба-чок", "Бак-ла-жан", "Тык-ва", "Го-рох", "Фа-соль", "Ку-ку-ру-за", "Ре-дис", "Ре-па", "Зе-лень", "У-кроп", "Пет-руш-ка", "Са-лат", "Шпи-нат", "Ща-вель", "Сель-де-рей", "Ба-зи-лик"],
         "10. Гигиена и Уход": ["Мы-ло", "Шам-пунь", "Пас-та", "Щет-ка", "Во-да", "По-ло-тен-це", "Рас-чес-ка", "Нож-ни-цы", "Зер-ка-ло", "Крем", "Сал-фет-ка", "Бу-ма-га", "Мо-чал-ка", "Пе-на", "Гель", "Ду-хи", "Де-зо-до-рант", "Брит-ва", "Ва-та", "Пем-за"],
         "11. Семья и Люди": ["Ма-ма", "Па-па", "Сын", "Дочь", "Ба-буш-ка", "Де-душ-ка", "Брат", "Сес-тра", "Внук", "Внуч-ка", "Дя-дя", "Те-тя", "Муж", "Же-на", "Ре-бе-нок", "Друг", "Со-сед", "Гость", "Че-ло-век", "Ма-лыш"],
         "12. Профессии": ["Врач", "У-чи-тель", "По-вар", "Во-ди-тель", "Про-да-вец", "Стро-и-тель", "По-жар-ный", "По-ли-цей-ский", "Поч-та-льон", "Па-рик-ма-хер", "Шве-я", "Сан-тех-ник", "Э-лек-трик", "Ин-же-нер", "Пи-лот"],
-        "13. Город и Транспорт": ["Го-род", "У-ли-ца", "Дом", "До-ро-га", "Ma-ши-на", "Ав-то-бус", "Трам-вай", "Трол-лей-бус", "Мет-ро", "По-езд", "Са-мо-лет", "Так-си", "Ос-та-нов-ка", "Ma-га-зин", "Парк", "Ап-те-ка", "Мост", "Све-то-фор", "Тро-ту-ар", "Пло-щадь"],
-        "14. Природа и Погода": ["Солн-це", "Не-бо", "Об-ла-ко", "Дождь", "Снег", "Ве-тер", "Гро-за", "Ра-ду-га", "Звез-да", "Лу-на", "День", "Ночь", "Ут-ро", "Ве-чер", "Лес", "Ре-ка", "О-зе-ро", "Mo-ре", "Го-ра", "По-ле"],
-        "15. Время и Календарь": ["Вре-мя", "Час", "Mi-ну-та", "Се-кун-да", "День", "Не-де-ля", "Ме-сяц", "Год", "Вче-ра", "Се-год-ня", "Зав-тра", "По-не-дель-ник", "Втор-ник", "Сре-да", "Чет-верг", "Пят-ни-ца", "Суб-бо-та", "Вос-кре-се-нье", "Зи-ма", "Вес-на", "Ле-то", "О-сень"],
+        "13. Город и Транспорт": ["Го-род", "У-ли-ца", "Дом", "До-ро-га", "Ма-ши-на", "Ав-то-бус", "Трам-вай", "Трол-лей-бус", "Мет-ро", "По-езд", "Са-мо-лет", "Так-си", "Ос-та-нов-ка", "Ма-га-зин", "Парк", "Ап-те-ка", "Мост", "Све-то-фор", "Тро-ту-ар", "Пло-щадь"],
+        "14. Природа и Погода": ["Солн-це", "Не-бо", "Об-ла-ко", "Дождь", "Снег", "Ве-тер", "Гро-за", "Ра-ду-га", "Звез-да", "Лу-на", "День", "Ночь", "Ут-ро", "Ве-чер", "Лес", "Ре-ка", "О-зе-ро", "Мо-ре", "Го-ра", "По-ле"],
+        "15. Время и Календарь": ["Вре-мя", "Час", "Ми-ну-та", "Се-кун-да", "День", "Не-де-ля", "Ме-сяц", "Год", "Вче-ра", "Се-год-ня", "Зав-тра", "По-не-дель-ник", "Втор-ник", "Сре-да", "Чет-верг", "Пят-ни-ца", "Суб-бо-та", "Вос-кре-се-нье", "Зи-ма", "Вес-на", "Ле-то", "О-сень"],
         "16. Животные Домашние": ["Кош-ка", "Со-ба-ка", "Ко-ро-ва", "Ло-шадь", "Свин-ья", "Ов-ца", "Ко-за", "Кро-лик", "Кот", "Ще-нок", "Ко-те-нок", "Те-ле-нок", "Же-ре-бе-нок", "О-сел", "Хо-мяк"],
         "17. Животные Дикие": ["Волк", "Ли-са", "Мед-ведь", "За-яц", "Еж", "Бел-ка", "О-лень", "Лось", "Лев", "Тигр", "Слон", "О-без-ья-на", "Жи-раф", "Бе-ге-мот", "Кро-ко-дил"],
         "18. Птицы": ["Пти-ца", "Во-ро-бей", "Во-ро-на", "Го-лубь", "Си-ни-ца", "Дя-тел", "Ут-ка", "Гусь", "Ку-ри-ца", "Пе-тух", "Ин-дюк", "Со-ва", "О-рел", "А-ист", "Лас-точ-ка"],
         "19. Цвета": ["Бе-лый", "Чер-ный", "Крас-ный", "Си-ний", "Зе-ле-ный", "Жел-тый", "О-ран-же-вый", "Фи-о-ле-то-вый", "Ро-зо-вый", "Ко-рич-не-вый", "Се-рый", "Го-лу-бой", "Бе-же-вый", "Бор-до-вый", "Са-ла-то-вый"],
-        "20. Числа и Счет": ["О-дин", "Два", "Три", "Че-ты-ре", "Пять", "Шесть", "Семь", "Во-семь", "Де-вять", "Де-сять", "Сто", "Ты-ся-ча", "Пер-вый", "Вто-рой", "Тре-тий", "Mно-го", "Ma-ло", "По-ло-ви-на", "Ноль", "Па-ра"],
-        "21. Действия (Глаголы)": ["Ид-ти", "Си-деть", "Сто-ять", "Ле-жать", "Спать", "Есть", "Пить", "Go-во-рить", "Слу-шать", "Смот-реть", "Чи-тать", "Пи-сать", "Дать", "Взять", "Мыть", "Чис-тить", "О-деть", "Снять", "От-крыть", "За-крыть"],
-        "22. Качества (Прилагательные)": ["Боль-шой", "Ma-лень-кий", "Go-ря-чий", "Хо-лод-ный", "Теп-лый", "Вкус-ный", "Чис-тый", "Гряз-ный", "Но-вый", "Ста-рый", "Доб-рый", "Хо-ро-ший", "Пло-хой", "Быст-рый", "Мед-лен-ный", "Силь-ный", "Свет-лый", "Тем-ный", "Мяг-кий", "Твер-дый"],
-        "23. Инструменты и Ремонт": ["Mo-ло-ток", "Гвоздь", "Винт", "От-вер-тка", "Пи-ла", "Кле-щи", "То-пор", "Lo-па-та", "Гра-бли", "Вед-ро", "Щет-ка", "Клей", "Крас-ка", "Кисть", "Про-вод"],
-        "24. Отдых и Увлечения": ["Кни-га", "Га-зе-та", "My-зы-ка", "Пес-ня", "Ta-нец", "Ки-но", "Ра-ди-о", "Иг-ра", "Мяч", "Про-гул-ка", "Сад", "Цве-ты", "Ры-бал-ка", "Спорт", "Празд-ник"],
-        "25. Канцелярия и Учеба": ["Руч-ка", "Ka-ран-даш", "Тет-радь", "Блок-нот", "Бу-ма-га", "Лас-тик", "Li-ней-ка", "Кни-га", "Сум-ка", "Кон-верт", "Пап-ка", "Клей", "Нож-ни-цы", "Мар-кер", "Крас-ки"]
+        "20. Числа и Счет": ["О-дин", "Два", "Три", "Че-ты-ре", "Пять", "Шесть", "Семь", "Во-семь", "Де-вять", "Де-сять", "Сто", "Ты-ся-ча", "Пер-вый", "Вто-рой", "Тре-тий", "Мно-го", "Ма-ло", "По-ло-ви-на", "Ноль", "Па-ра"],
+        "21. Действия (Глаголы)": ["Ид-ти", "Си-деть", "Сто-ять", "Ле-жать", "Спать", "Есть", "Пить", "Го-во-рить", "Слу-шать", "Смот-реть", "Чи-тать", "Пи-сать", "Дать", "Взять", "Мыть", "Чис-тить", "О-деть", "Снять", "От-крыть", "За-крыть"],
+        "22. Качества (Прилагательные)": ["Боль-шой", "Ма-лень-кий", "Го-ря-чий", "Хо-лод-ный", "Теп-лый", "Вкус-ный", "Чис-тый", "Гряз-ный", "Но-вый", "Ста-рый", "Доб-рый", "Хо-ро-ший", "Пло-хой", "Быст-рый", "Мед-лен-ный", "Силь-ный", "Свет-лый", "Тем-ный", "Мяг-кий", "Твер-дый"],
+        "23. Инструменты и Ремонт": ["Мо-ло-ток", "Гвоздь", "Винт", "От-вер-тка", "Пи-ла", "Кле-щи", "То-пор", "Ло-па-та", "Гра-бли", "Вед-ро", "Щет-ка", "Клей", "Крас-ка", "Кисть", "Про-вод"],
+        "24. Отдых и Увлечения": ["Кни-га", "Га-зе-та", "Му-зы-ка", "Пес-ня", "Та-нец", "Ки-но", "Ра-ди-о", "Иг-ра", "Мяч", "Про-гул-ка", "Сад", "Цве-ты", "Ры-бал-ка", "Спорт", "Празд-ник"],
+        "25. Канцелярия и Учеба": ["Руч-ка", "Ка-ран-даш", "Тет-радь", "Блок-нот", "Бу-ма-га", "Лас-тик", "Ли-ней-ка", "Кни-га", "Сум-ка", "Кон-верт", "Пап-ка", "Клей", "Нож-ни-цы", "Мар-кер", "Крас-ки"]
     };
 
     const realWordPairsRu = {
@@ -706,6 +770,7 @@
     let mediaRecorder = null;
     let audioChunks = [];
     let isRecording = false;
+    let recognition = null;
 
     let timerEnabled = true;
     let playSeconds = 5 * 60;
@@ -716,6 +781,11 @@
 
     function stripHyphens(word) {
         return word.replace(/-/g, '');
+    }
+
+    function toggleSettingsPanel() {
+        const panel = document.getElementById('settingsPanel');
+        panel.classList.toggle('hidden');
     }
 
     function saveSettings() {
@@ -790,6 +860,9 @@
     function updateUI() {
         const t = i18n[currentLang];
         document.getElementById('appTitle').textContent = t.appTitle;
+        document.getElementById('settingsBtn').textContent = t.settingsBtnText;
+        document.getElementById('labelLang').textContent = t.labelLang;
+        document.getElementById('labelTheme').textContent = t.labelTheme;
         document.getElementById('statCorrectLabel').textContent = t.statCorrect;
         document.getElementById('statTotalLabel').textContent = t.statTotal;
         document.getElementById('labelCategory').textContent = t.labelCategory;
@@ -946,38 +1019,86 @@
 
     async function toggleRecording() {
         const btn = document.getElementById('recordBtn');
+        const resultBox = document.getElementById('speechResultBox');
         const t = i18n[currentLang];
 
-        if (!isRecording) {
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                alert(currentLang === 'uk' ? "Ваш браузер не підтримує запис аудіо." : "Ваш браузер не поддерживает запись аудио.");
-                return;
-            }
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                    const audioUrl = URL.createObjectURL(audioBlob);
-                    const audio = new Audio(audioUrl);
-                    audio.play();
-                };
-                mediaRecorder.start();
-                isRecording = true;
-                btn.textContent = t.recordBtnStop;
-                btn.classList.add('recording');
-            } catch (err) {
-                alert(currentLang === 'uk' ? "Помилка доступу до мікрофона." : "Ошибка доступа к микрофону.");
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (SpeechRecognition) {
+            if (!isRecording) {
+                try {
+                    recognition = new SpeechRecognition();
+                    recognition.lang = currentLang === 'uk' ? 'uk-UA' : 'ru-RU';
+                    recognition.interimResults = false;
+                    recognition.maxAlternatives = 1;
+
+                    recognition.onstart = () => {
+                        isRecording = true;
+                        btn.textContent = t.recordBtnStop;
+                        btn.classList.add('recording');
+                        resultBox.style.display = 'none';
+                        resultBox.className = 'speech-result-box';
+                    };
+
+                    recognition.onresult = (event) => {
+                        const transcript = event.results[0][0].transcript.trim();
+                        const cleanSpoken = transcript.toLowerCase().replace(/[^a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9]/g, '');
+                        const cleanTarget = targetWordClean.toLowerCase().replace(/[^a-zA-Zа-яА-ЯіІїЇєЄґҐ0-9]/g, '');
+
+                        const isMatch = cleanSpoken === cleanTarget;
+                        resultBox.className = 'speech-result-box ' + (isMatch ? 'correct' : 'incorrect');
+                        resultBox.innerHTML = `<div>${t.speechYouSaid}<strong>"${transcript}"</strong></div><div style="margin-top:4px; font-size:13px;">${isMatch ? t.speechCorrect : t.speechIncorrect}</div>`;
+                    };
+
+                    recognition.onerror = (event) => {
+                        console.error('Speech recognition error', event.error);
+                    };
+
+                    recognition.onend = () => {
+                        isRecording = false;
+                        btn.textContent = t.recordBtnStart;
+                        btn.classList.remove('recording');
+                    };
+
+                    recognition.start();
+                } catch (e) {
+                    console.error(e);
+                }
+            } else {
+                if (recognition) recognition.stop();
             }
         } else {
-            if (mediaRecorder && mediaRecorder.state === "recording") {
-                mediaRecorder.stop();
+            if (!isRecording) {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    alert(currentLang === 'uk' ? "Ваш браузер не підтримує запис або розпізнавання аудіо." : "Ваш браузер не поддерживает запись или распознавание аудио.");
+                    return;
+                }
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        const audio = new Audio(audioUrl);
+                        audio.play();
+                    };
+                    mediaRecorder.start();
+                    isRecording = true;
+                    btn.textContent = t.recordBtnStop;
+                    btn.classList.add('recording');
+                } catch (err) {
+                    alert(currentLang === 'uk' ? "Помилка доступу до мікрофона." : "Ошибка доступа к микрофону.");
+                }
+            } else {
+                if (mediaRecorder && mediaRecorder.state === "recording") {
+                    mediaRecorder.stop();
+                }
+                isRecording = false;
+                btn.textContent = t.recordBtnStart;
+                btn.classList.remove('recording');
             }
-            isRecording = false;
-            btn.textContent = t.recordBtnStart;
-            btn.classList.remove('recording');
         }
     }
 
@@ -1125,6 +1246,9 @@
     function nextQuestion() {
         isAnswered = false;
         document.getElementById('spellBuilderCard').classList.add('hidden');
+        const resultBox = document.getElementById('speechResultBox');
+        resultBox.style.display = 'none';
+        resultBox.className = 'speech-result-box';
 
         const categorySelect = document.getElementById('categorySelect');
         const selectedCategory = categorySelect.value;
@@ -1207,26 +1331,40 @@
         const cleanWord = stripHyphens(wordSyllables).toLowerCase();
         let accentedSpeak = accentFixes[currentLang] ? accentFixes[currentLang][cleanWord] : null;
 
-        if (!accentedSpeak || !wordSyllables.includes('-')) {
-            return wordSyllables.toUpperCase();
+        let upperChars = "";
+        if (accentedSpeak) {
+            upperChars = accentedSpeak.replace(/[^A-ZА-ЯЁІЇЄҐ]/g, '');
         }
 
-        let upperChars = accentedSpeak.replace(/[^A-ZА-ЯЁІЇЄҐ]/g, '');
-        if (upperChars.length === 0) return wordSyllables.toUpperCase();
-
-        let targetAccentChar = upperChars[0].toUpperCase();
+        let targetAccentChar = upperChars.length > 0 ? upperChars[0].toUpperCase() : null;
         let syllablesArr = wordSyllables.split('-');
         let accentApplied = false;
-        
+
         let resultSyllables = syllablesArr.map(syllable => {
             let upperSyllable = syllable.toUpperCase();
-            let charIndex = upperSyllable.indexOf(targetAccentChar);
-            if (charIndex !== -1 && !accentApplied) {
-                accentApplied = true;
-                return upperSyllable.slice(0, charIndex) + 
-                       `<span class="accent-char">${targetAccentChar}́</span>` + 
-                       upperSyllable.slice(charIndex + 1);
+
+            if (targetAccentChar && !accentApplied) {
+                let charIndex = upperSyllable.indexOf(targetAccentChar);
+                if (charIndex !== -1) {
+                    accentApplied = true;
+                    return upperSyllable.slice(0, charIndex) + 
+                           `<span class="accent-char">${targetAccentChar}́</span>` + 
+                           upperSyllable.slice(charIndex + 1);
+                }
             }
+
+            if (!targetAccentChar && !accentApplied) {
+                const vowels = 'АЕЄИІЇОУЮЯЫЭЁ';
+                for (let i = 0; i < upperSyllable.length; i++) {
+                    if (vowels.includes(upperSyllable[i])) {
+                        accentApplied = true;
+                        return upperSyllable.slice(0, i) + 
+                               `<span class="accent-char">${upperSyllable[i]}́</span>` + 
+                               upperSyllable.slice(i + 1);
+                    }
+                }
+            }
+
             return upperSyllable;
         });
 
@@ -1238,7 +1376,6 @@
         const pool = document.getElementById('lettersPool');
         const target = document.getElementById('lettersTarget');
         const syllableDisplay = document.getElementById('syllableDisplay');
-        const t = i18n[currentLang];
 
         pool.innerHTML = '';
         target.innerHTML = '';
