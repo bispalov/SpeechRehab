@@ -779,6 +779,7 @@
     let audioChunks = [];
     let isRecording = false;
     let recognition = null;
+    let lastRecognitionError = null;
 
     let timerEnabled = true;
     let playSeconds = 5 * 60;
@@ -1026,108 +1027,75 @@
     }
 
     // ИСПРАВЛЕННАЯ ФУНКЦИЯ ЗАПИСИ / РАСПОЗНАВАНИЯ ГОЛОСА
-    // Запись аудио и распознавание речи запускаются вместе. Если распознавание
-    // сработало — показываем текст (даже если слово произнесено с ошибкой).
-    // Если распознавание на устройстве невозможно или не дало результата —
-    // просто воспроизводим записанный голос.
-    let recognitionSucceeded = false;
+    // Важно: распознавание речи и запись через MediaRecorder НЕ запускаются
+    // одновременно — на многих устройствах (особенно Android) микрофон может
+    // использоваться только одной audio-сессией за раз, и одновременный запуск
+    // обеих ломает распознавание. Поэтому сначала пробуем только распознавание;
+    // запись+воспроизведение включаются лишь если оно правда не сработало —
+    // после того как распознавание полностью освободило микрофон.
+    let usingFallback = false;
 
     async function toggleRecording() {
         if (!isRecording) {
             const resultBox = document.getElementById('speechResultBox');
             resultBox.style.display = 'none';
             resultBox.className = 'speech-result-box';
-            await startRecordingSession();
+            usingFallback = false;
+            startRecognitionAttempt();
         } else {
-            stopRecordingSession();
+            stopEverything();
         }
     }
 
-    async function startRecordingSession() {
+    function startRecognitionAttempt() {
         const btn = document.getElementById('recordBtn');
         const t = i18n[currentLang];
-
-        recognitionSucceeded = false;
-        audioChunks = [];
-        mediaRecorder = null;
-        recognition = null;
-
-        // 1) Запускаем запись аудио (нужна для воспроизведения, если распознавание недоступно)
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                const supportedType = (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported('audio/webm'))
-                    ? 'audio/webm' : '';
-                mediaRecorder = supportedType ? new MediaRecorder(stream, { mimeType: supportedType }) : new MediaRecorder(stream);
-
-                mediaRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) audioChunks.push(e.data); };
-                mediaRecorder.onstop = () => {
-                    stream.getTracks().forEach(track => track.stop()); // закрываем поток микрофона
-
-                    // Воспроизводим запись только если распознать речь не удалось/не вышло
-                    if (!recognitionSucceeded && audioChunks.length > 0) {
-                        const blobType = mediaRecorder.mimeType || 'audio/webm';
-                        const audioBlob = new Blob(audioChunks, { type: blobType });
-                        const audioUrl = URL.createObjectURL(audioBlob);
-                        const audio = new Audio(audioUrl);
-                        audio.play().catch(e => console.warn('Playback error:', e));
-
-                        const resultBox = document.getElementById('speechResultBox');
-                        resultBox.className = 'speech-result-box info';
-                        resultBox.innerHTML = `<div>${t.speechRecordedPlay}</div>`;
-                    }
-                };
-
-                mediaRecorder.start();
-            } catch (err) {
-                console.warn("Microphone access error:", err);
-                mediaRecorder = null;
-            }
-        }
-
-        // 2) Запускаем распознавание речи, если оно поддерживается устройством/браузером
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (SpeechRecognition) {
-            try {
-                recognition = new SpeechRecognition();
-                recognition.lang = currentLang === 'uk' ? 'uk-UA' : 'ru-RU';
-                recognition.interimResults = false;
-                recognition.maxAlternatives = 1;
 
-                recognition.onresult = (event) => {
-                    recognitionSucceeded = true;
-                    const transcript = event.results[0][0].transcript.trim();
-                    showRecognizedText(transcript);
-                };
-
-                recognition.onerror = (event) => {
-                    console.warn('Speech recognition error:', event.error);
-                    // Ничего не делаем: сработает onend, а он остановит запись —
-                    // и если аудио было записано, оно будет воспроизведено.
-                };
-
-                recognition.onend = () => {
-                    recognition = null;
-                    stopRecordingSession();
-                };
-
-                recognition.start();
-            } catch (e) {
-                console.warn("SpeechRecognition не удалось запустить:", e);
-                recognition = null;
-            }
-        }
-
-        if (!mediaRecorder && !recognition) {
-            alert(currentLang === 'uk'
-                ? "Цей пристрій не підтримує ні розпізнавання мовлення, ні запис аудіо."
-                : "Это устройство не поддерживает ни распознавание речи, ни запись аудио.");
+        if (!SpeechRecognition) {
+            startFallbackAudioRecording();
             return;
         }
 
-        isRecording = true;
-        btn.textContent = t.recordBtnStop;
-        btn.classList.add('recording');
+        try {
+            recognition = new SpeechRecognition();
+            recognition.lang = currentLang === 'uk' ? 'uk-UA' : 'ru-RU';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.onstart = () => {
+                isRecording = true;
+                btn.textContent = t.recordBtnStop;
+                btn.classList.add('recording');
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript.trim();
+                showRecognizedText(transcript);
+            };
+
+            recognition.onerror = (event) => {
+                console.warn('Speech recognition error:', event.error);
+                lastRecognitionError = event.error;
+                usingFallback = true;
+                recognition = null;
+                // Небольшая пауза перед повторным запросом микрофона — даём
+                // браузеру/ОС время полностью освободить устройство записи.
+                setTimeout(startFallbackAudioRecording, 250);
+            };
+
+            recognition.onend = () => {
+                recognition = null;
+                if (usingFallback) return; // управление уже перешло к резервной записи
+                stopRecordingUI();
+            };
+
+            recognition.start();
+        } catch (e) {
+            console.warn("SpeechRecognition не удалось запустить:", e);
+            usingFallback = true;
+            startFallbackAudioRecording();
+        }
     }
 
     function showRecognizedText(transcript) {
@@ -1142,17 +1110,72 @@
         resultBox.innerHTML = `<div>${t.speechYouSaid}<strong>"${transcript}"</strong></div><div style="margin-top:4px; font-size:13px;">${isMatch ? t.speechCorrect : t.speechIncorrect}</div>`;
     }
 
-    function stopRecordingSession() {
+    // Резервная запись через микрофон с авто-воспроизведением —
+    // включается только если распознавание речи недоступно/не сработало.
+    async function startFallbackAudioRecording() {
         const btn = document.getElementById('recordBtn');
+        const resultBox = document.getElementById('speechResultBox');
         const t = i18n[currentLang];
 
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert(currentLang === 'uk' ? "Ваш браузер не підтримує запис аудіо." : "Ваш браузер не поддерживает запись аудио.");
+            stopRecordingUI();
+            return;
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const supportedType = (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported('audio/webm'))
+                ? 'audio/webm' : '';
+            mediaRecorder = supportedType ? new MediaRecorder(stream, { mimeType: supportedType }) : new MediaRecorder(stream);
+            audioChunks = [];
+
+            mediaRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) audioChunks.push(e.data); };
+            mediaRecorder.onstop = () => {
+                stream.getTracks().forEach(track => track.stop()); // закрываем поток микрофона
+
+                if (audioChunks.length > 0) {
+                    const blobType = mediaRecorder.mimeType || 'audio/webm';
+                    const audioBlob = new Blob(audioChunks, { type: blobType });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const audio = new Audio(audioUrl);
+                    audio.play().catch(e => console.warn('Playback error:', e));
+
+                    const debugSuffix = lastRecognitionError
+                        ? ` <span style="opacity:0.6; font-size:11px;">(${lastRecognitionError})</span>`
+                        : '';
+                    resultBox.className = 'speech-result-box info';
+                    resultBox.innerHTML = `<div>${t.speechRecordedPlay}${debugSuffix}</div>`;
+                }
+                stopRecordingUI();
+            };
+
+            mediaRecorder.start();
+            isRecording = true;
+            btn.textContent = t.recordBtnStop;
+            btn.classList.add('recording');
+        } catch (err) {
+            console.error("Microphone access error:", err);
+            alert(currentLang === 'uk' ? "Помилка доступу до мікрофона. Перевірте дозволи в браузері." : "Ошибка доступа к микрофону. Проверьте разрешения в браузере.");
+            stopRecordingUI();
+        }
+    }
+
+    function stopEverything() {
         if (recognition) {
             try { recognition.stop(); } catch(e){}
         }
         if (mediaRecorder && mediaRecorder.state === "recording") {
             mediaRecorder.stop();
         }
+        if (!recognition && !(mediaRecorder && mediaRecorder.state === "recording")) {
+            stopRecordingUI();
+        }
+    }
 
+    function stopRecordingUI() {
+        const btn = document.getElementById('recordBtn');
+        const t = i18n[currentLang];
         isRecording = false;
         btn.textContent = t.recordBtnStart;
         btn.classList.remove('recording');
