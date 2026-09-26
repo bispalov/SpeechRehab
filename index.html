@@ -840,7 +840,7 @@
         "16. Животные Домашние": ["Кош-ка", "Со-ба-ка", "Ко-ро-ва", "Ло-шадь", "Свин-ья", "Ов-ца", "Ко-за", "Кро-лик", "Кот", "Ще-нок", "Ко-те-нок", "Те-ле-нок", "Же-ре-бе-нок", "О-сел", "Хо-мяк"],
         "17. Животные Дикие": ["Волк", "Ли-са", "Мед-ведь", "За-яц", "Еж", "Бел-ка", "О-лень", "Лось", "Лев", "Тигр", "Слон", "О-без-ья-на", "Жи-раф", "Бе-ге-мот", "Кро-ко-дил"],
         "18. Птицы": ["Пти-ца", "Во-ро-бей", "Во-ро-на", "Го-лубь", "Си-ни-ца", "Дя-тел", "Ут-ка", "Гусь", "Ку-ри-ца", "Пе-тух", "Ин-дюк", "Со-ва", "О-рел", "А-ист", "Лас-точ-ка"],
-        "19. Цвета": ["Бе-лый", "Чер-ный", "Крас-ный", "Си-ний", "Зе-ле-ный", "Жел-тый", "О-ран-же-вый", "Фи-о-ле-то-вый", "Ро-зо-вый", "Ко-рич-не-вый", "Се-рый", "Го-лу-бой", "Бе-же-вый", "Бор-до-вый", "Са-ла-то-вый"],
+        "19. Цвета": ["Бе-лый", "Чер-ный", "Крас-ный", "Си-ний", "Зе-ле-ный", "Жел-тый", "О-ран-же-вый", "Фи-о-ле-то-вый", "Ро-зо-вый", "Ко-рич-не-вый", "Се-рый", "Го-лу-бой", "Бе-же-вый", "Бор-до-вый", "Са-ла-то-вий"],
         "20. Числа и Счет": ["О-дин", "Два", "Три", "Че-ты-ре", "Пять", "Шесть", "Семь", "Во-семь", "Де-вять", "Де-сять", "Сто", "Ты-ся-ча", "Пер-вый", "Вто-рой", "Тре-тий", "Мно-го", "Ма-ло", "Po-ло-ви-на", "Ноль", "Па-ра"],
         "21. Действия (Глаголы)": ["Ид-ти", "Си-деть", "Сто-ять", "Ле-жать", "Спать", "Есть", "Пить", "Go-vo-рить", "Слу-шать", "Смот-реть", "Чи-тать", "Пи-сать", "Дать", "Взять", "Мыть", "Чис-тить", "О-деть", "Снять", "От-крыть", "За-крыть"],
         "22. Качества (Прилагательные)": ["Боль-шой", "Ма-лень-кий", "Go-ря-чий", "Хо-лод-ный", "Теп-лый", "Вкус-ный", "Чис-тый", "Гряз-ный", "Но-вый", "Ста-рый", "Доб-рый", "Хо-ро-ший", "Пло-хой", "Быст-рый", "Мед-лен-ный", "Силь-ный", "Свет-лый", "Тем-ный", "Мяг-кий", "Твер-дый"],
@@ -1070,7 +1070,7 @@
         if (accentFixes[currentLang] && accentFixes[currentLang][key]) {
             return accentFixes[currentLang][key];
         }
-        return wordClean;
+        return null;
     }
 
     function speakWord(syllableWord) {
@@ -1082,7 +1082,7 @@
         window.speechSynthesis.cancel();
 
         const wordClean = cleanWord(syllableWord);
-        const phoneticText = getPhoneticRepresentation(wordClean);
+        const phoneticText = getPhoneticRepresentation(wordClean) || wordClean;
         const utterance = new SpeechSynthesisUtterance(phoneticText);
 
         if (currentLang === 'uk') utterance.lang = 'uk-UA';
@@ -1113,31 +1113,57 @@
     }
 
     function formatWordWithAccents(syllableWord) {
-        const wordClean = cleanWord(syllableWord);
+        const wordClean = syllableWord
+            .replace(/-/g, '')
+            .replace(/\s*•\s*/g, '')
+            .replace(/\s+/g, '')
+            .trim();
+
         const phonetic = getPhoneticRepresentation(wordClean);
-        
+
+        if (!phonetic) {
+            return syllableWord;
+        }
+
         let accentIdx = -1;
+        let letterIdx = 0;
+
         for (let i = 0; i < phonetic.length; i++) {
-            if (phonetic[i] === phonetic[i].toUpperCase() && phonetic[i].toLowerCase() !== phonetic[i].toUpperCase()) {
-                accentIdx = i;
+            const char = phonetic[i];
+            if (char === '\u0301') {
+                accentIdx = Math.max(0, letterIdx - 1);
                 break;
+            }
+
+            if (/[\p{L}\p{N}]/u.test(char)) {
+                if (accentIdx === -1 && char === char.toUpperCase() && char.toLowerCase() !== char.toUpperCase()) {
+                    accentIdx = letterIdx;
+                }
+                letterIdx++;
             }
         }
 
         if (accentIdx === -1) {
-            return wordClean;
+            return syllableWord;
         }
 
         let resultHTML = "";
         let cleanCounter = 0;
-        for (let i = 0; i < wordClean.length; i++) {
-            if (cleanCounter === accentIdx) {
-                resultHTML += `<span class="accent-char">${wordClean[i]}</span>`;
+
+        for (let i = 0; i < syllableWord.length; i++) {
+            const char = syllableWord[i];
+            if (/[\p{L}\p{N}]/u.test(char)) {
+                if (cleanCounter === accentIdx) {
+                    resultHTML += `<span class="accent-char">${char}</span>`;
+                } else {
+                    resultHTML += char;
+                }
+                cleanCounter++;
             } else {
-                resultHTML += wordClean[i];
+                resultHTML += char;
             }
-            cleanCounter++;
         }
+
         return resultHTML;
     }
 
@@ -1151,7 +1177,7 @@
 
             const btn = document.createElement('button');
             btn.className = 'option-btn';
-            btn.innerHTML = formatWordWithAccents(optSyllables);
+            btn.innerText = cleanWord(optSyllables);
             btn.onclick = () => checkAnswer(optSyllables, btn);
 
             const audioBtn = document.createElement('button');
@@ -1203,7 +1229,8 @@
 
         const syllablesArr = syllableWord.split('-');
         const t = i18n[currentLang];
-        document.getElementById('syllableDisplay').innerText = t.syllablePrefix + syllablesArr.join(' • ');
+        const formattedSyllables = syllablesArr.join(' • ');
+        document.getElementById('syllableDisplay').innerHTML = t.syllablePrefix + formatWordWithAccents(formattedSyllables);
 
         const clean = cleanWord(syllableWord);
         const letters = clean.split('');
@@ -1441,79 +1468,84 @@
 
     function updateTimerDisplayUI() {
         const display = document.getElementById('timerDisplay');
-        const restTimeLeftSpan = document.getElementById('restTimeLeft');
+        const overlayLeft = document.getElementById('restTimeLeft');
         const t = i18n[currentLang];
 
-        const mins = Math.floor(timerSecondsLeft / 60);
-        const secs = timerSecondsLeft % 60;
-        const formatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        const mins = Math.floor(timerSecondsLeft / 60).toString().padStart(2, '0');
+        const secs = (timerSecondsLeft % 60).toString().padStart(2, '0');
+        const timeStr = `${mins}:${secs}`;
 
         if (timerMode === 'play') {
-            display.innerText = t.timerPlayPrefix + formatted;
+            display.innerText = t.timerPlayPrefix + timeStr;
             display.classList.remove('resting');
         } else {
-            display.innerText = t.timerRestPrefix + formatted;
+            display.innerText = t.timerRestPrefix + timeStr;
             display.classList.add('resting');
-            if (restTimeLeftSpan) restTimeLeftSpan.innerText = formatted;
+            if (overlayLeft) overlayLeft.innerText = timeStr;
         }
     }
 
     function saveSettings() {
-        const settings = {
-            lang: currentLang,
-            theme: document.documentElement.getAttribute('data-theme') || 'dark',
-            optionsCount: document.getElementById('optionsCountSelect').value,
-            category: document.getElementById('categorySelect').value,
-            voice: document.getElementById('voiceSelect').value,
-            rate: document.getElementById('rateRange').value,
-            timerEnabled: document.getElementById('timerEnabled').checked,
-            playMinutes: document.getElementById('playMinutes').value,
-            restMinutes: document.getElementById('restMinutes').value
-        };
-        localStorage.setItem('app_settings', JSON.stringify(settings));
         localStorage.setItem('app_lang', currentLang);
+        const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+        localStorage.setItem('app_theme', theme);
+        localStorage.setItem('app_options_count', optionsCount);
+        localStorage.setItem('app_voice', document.getElementById('voiceSelect').value);
+        localStorage.setItem('app_rate', document.getElementById('rateRange').value);
+        localStorage.setItem('app_timer_enabled', document.getElementById('timerEnabled').checked);
+        localStorage.setItem('app_play_mins', document.getElementById('playMinutes').value);
+        localStorage.setItem('app_rest_mins', document.getElementById('restMinutes').value);
+        localStorage.setItem('app_category', document.getElementById('categorySelect').value);
     }
 
     function loadSettings() {
-        const saved = localStorage.getItem('app_settings');
-        if (saved) {
-            try {
-                const s = JSON.parse(saved);
-                if (s.lang) currentLang = s.lang;
-                if (s.theme) document.documentElement.setAttribute('data-theme', s.theme);
-                if (s.optionsCount) {
-                    document.getElementById('optionsCountSelect').value = s.optionsCount;
-                    optionsCount = parseInt(s.optionsCount, 10);
-                }
-                if (s.voice) document.getElementById('voiceSelect').value = s.voice;
-                if (s.rate) {
-                    document.getElementById('rateRange').value = s.rate;
-                    updateRateLabel(s.rate);
-                }
-                if (s.timerEnabled !== undefined) {
-                    document.getElementById('timerEnabled').checked = s.timerEnabled;
-                }
-                if (s.playMinutes) document.getElementById('playMinutes').value = s.playMinutes;
-                if (s.restMinutes) document.getElementById('restMinutes').value = s.restMinutes;
-            } catch (e) {
-                console.warn("Error parsing saved settings", e);
-            }
+        const savedTheme = localStorage.getItem('app_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+
+        const savedOptionsCount = localStorage.getItem('app_options_count');
+        if (savedOptionsCount) {
+            optionsCount = parseInt(savedOptionsCount, 10);
+            document.getElementById('optionsCountSelect').value = optionsCount;
         }
+
+        const savedVoice = localStorage.getItem('app_voice');
+        if (savedVoice) document.getElementById('voiceSelect').value = savedVoice;
+
+        const savedRate = localStorage.getItem('app_rate');
+        if (savedRate) {
+            document.getElementById('rateRange').value = savedRate;
+            updateRateLabel(savedRate);
+        }
+
+        const savedTimerEnabled = localStorage.getItem('app_timer_enabled');
+        if (savedTimerEnabled !== null) {
+            document.getElementById('timerEnabled').checked = (savedTimerEnabled === 'true');
+        }
+
+        const savedPlayMins = localStorage.getItem('app_play_mins');
+        if (savedPlayMins) document.getElementById('playMinutes').value = savedPlayMins;
+
+        const savedRestMins = localStorage.getItem('app_rest_mins');
+        if (savedRestMins) document.getElementById('restMinutes').value = savedRestMins;
     }
 
-    window.addEventListener('DOMContentLoaded', async () => {
-        loadSettings();
+    window.onload = async () => {
         await loadAccents();
+        loadSettings();
         updateI18nUI();
         initCategorySelect();
-        
-        loadSettings(); 
-        initCategorySelect();
+
+        const savedCategory = localStorage.getItem('app_category');
+        if (savedCategory) {
+            const select = document.getElementById('categorySelect');
+            if (Array.from(select.options).some(o => o.value === savedCategory)) {
+                select.value = savedCategory;
+            }
+        }
 
         toggleTimerFeature();
         nextQuestion();
-    });
+    };
 </script>
-
 </body>
 </html>
