@@ -616,6 +616,9 @@
             optMedium: "3 options (Medium)",
             optHard: "4 options (Hard)",
             labelVoice: "Voice / Голос:",
+            voiceGenderFemale: "Female voices",
+            voiceGenderMale: "Male voices",
+            voiceGenderOther: "Other voices",
             labelRate: "Speech Speed:",
             labelTimerEnable: "Use \"Play / Rest\" timer",
             labelTimerDuration: "Duration (minutes):",
@@ -656,6 +659,9 @@
             optMedium: "3 варіанти (Середньо)",
             optHard: "4 варіанти (Складно)",
             labelVoice: "Голос озвучення:",
+            voiceGenderFemale: "Жіночі голоси",
+            voiceGenderMale: "Чоловічі голоси",
+            voiceGenderOther: "Інші голоси",
             labelRate: "Швидкість мовлення:",
             labelTimerEnable: "Використовувати таймер «гра / відпочинок»",
             labelTimerDuration: "Тривалість (хвилини):",
@@ -696,6 +702,9 @@
             optMedium: "3 варианта (Средне)",
             optHard: "4 варианта (Сложно)",
             labelVoice: "Голос озвучки:",
+            voiceGenderFemale: "Женские голоса",
+            voiceGenderMale: "Мужские голоса",
+            voiceGenderOther: "Другие голоса",
             labelRate: "Скорость речи:",
             labelTimerEnable: "Использовать таймер «игра / отдых»",
             labelTimerDuration: "Длительность (минуты):",
@@ -887,25 +896,88 @@
     let selectedLetters = [];
 
     let voiceListRetryTimer = null;
+    let speechWarmedUp = false;
+
+    // На Android голоса (`speechSynthesis.getVoices()`) часто не
+    // загружаются вовсе, пока движок TTS не будет «разбужен» реальным
+    // вызовом speak() после жеста пользователя, а событие onvoiceschanged
+    // может вообще ни разу не сработать. Поэтому при первом же клике/тапе
+    // по странице делаем один беззвучный вызов speak(), который на
+    // большинстве Android-браузеров запускает движок и заставляет его
+    // отдать полный список голосов (включая мужские и женские) при
+    // последующих вызовах getVoices().
+    function warmupSpeechSynthesis() {
+        if (speechWarmedUp) return;
+        if (!('speechSynthesis' in window)) return;
+        speechWarmedUp = true;
+
+        try {
+            const warm = new SpeechSynthesisUtterance(' ');
+            warm.volume = 0;
+            window.speechSynthesis.speak(warm);
+            window.speechSynthesis.cancel();
+        } catch (e) {
+            console.warn('Speech warmup failed:', e);
+        }
+
+        // Список голосов на Android нередко заполняется с задержкой уже
+        // после «пробуждения» движка, поэтому пробуем перечитать его
+        // несколько раз в течение нескольких секунд.
+        [300, 800, 1500, 3000, 5000].forEach(delay => {
+            setTimeout(() => populateVoiceList(), delay);
+        });
+    }
+
+    document.addEventListener('click', warmupSpeechSynthesis, { once: true, passive: true });
+    document.addEventListener('touchstart', warmupSpeechSynthesis, { once: true, passive: true });
+
+    // Эвристическое определение пола голоса по его имени. Единого
+    // стандарта тут нет: разные производители (Google, Samsung, Microsoft,
+    // eSpeak и др.) называют голоса по-разному, поэтому распознаём как
+    // явные слова ("Male"/"Female", "мужской"/"женский" и т.п.), так и
+    // самые распространённые собственные имена голосов.
+    function detectVoiceGender(voice) {
+        const name = (voice.name || '').toLowerCase();
+
+        const femaleMarkers = [
+            'female', 'женск', 'жіноч', '#female', 'x-female',
+            'zira', 'susan', 'samantha', 'victoria', 'karen', 'moira',
+            'tessa', 'fiona', 'anna', 'elena', 'milena', 'catherine',
+            'salli', 'joanna', 'kimberly', 'ivy', 'kendra', 'olga',
+            'milena', 'ekaterina', 'irina', 'oksana', 'lesya', 'natalia'
+        ];
+        const maleMarkers = [
+            'male', 'мужск', 'чоловіч', '#male', 'x-male',
+            'david', 'mark', 'daniel', 'george', 'fred', 'alex',
+            'yuri', 'pavel', 'dmitri', 'dmytro', 'matthew', 'joey',
+            'justin', 'ravi', 'oleg', 'ostap', 'mykyta'
+        ];
+
+        if (femaleMarkers.some(m => name.includes(m))) return 'female';
+        if (maleMarkers.some(m => name.includes(m))) return 'male';
+        return null;
+    }
 
     function populateVoiceList(attemptsLeft) {
         if (!('speechSynthesis' in window)) return;
-        if (attemptsLeft === undefined) attemptsLeft = 10;
+        if (attemptsLeft === undefined) attemptsLeft = 30;
 
         const voiceSelect = document.getElementById('voiceSelect');
         const savedVoiceURI = localStorage.getItem('app_voice');
         const voices = window.speechSynthesis.getVoices();
 
-        // На многих мобильных браузерах голоса подгружаются с задержкой,
-        // а событие onvoiceschanged не всегда срабатывает. Поэтому вместо
-        // того, чтобы полагаться только на это событие, повторяем попытку
-        // ещё несколько раз с небольшой паузой.
+        // На многих мобильных браузерах (особенно на Android) голоса
+        // подгружаются с задержкой, а событие onvoiceschanged не всегда
+        // срабатывает. Поэтому вместо того, чтобы полагаться только на
+        // это событие, повторяем попытку ещё несколько раз с небольшой
+        // паузой (в сумме до ~9 секунд).
         if (voices.length === 0 && attemptsLeft > 0) {
             clearTimeout(voiceListRetryTimer);
-            voiceListRetryTimer = setTimeout(() => populateVoiceList(attemptsLeft - 1), 250);
+            voiceListRetryTimer = setTimeout(() => populateVoiceList(attemptsLeft - 1), 300);
             return;
         }
 
+        const previousValue = voiceSelect.value;
         voiceSelect.innerHTML = '';
 
         let langVoices = voices.filter(v => {
@@ -925,15 +997,47 @@
             return;
         }
 
+        const t = i18n[currentLang];
+        const genderLabels = {
+            female: t.voiceGenderFemale,
+            male: t.voiceGenderMale,
+            other: t.voiceGenderOther
+        };
+
+        const groups = { female: [], male: [], other: [] };
         langVoices.forEach(v => {
+            const gender = detectVoiceGender(v) || 'other';
+            groups[gender].push(v);
+        });
+
+        // Группируем по полу (Женские / Мужские / Другие) только тогда,
+        // когда удалось определить хотя бы один мужской или женский голос
+        // — иначе просто выводим плоский список, как раньше.
+        const hasGenderInfo = groups.female.length > 0 || groups.male.length > 0;
+
+        const appendOption = (container, v) => {
             const opt = document.createElement('option');
             opt.value = v.voiceURI;
             opt.innerText = `${v.name} (${v.lang})`;
-            voiceSelect.appendChild(opt);
-        });
+            container.appendChild(opt);
+        };
+
+        if (hasGenderInfo) {
+            ['female', 'male', 'other'].forEach(gender => {
+                if (groups[gender].length === 0) return;
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = genderLabels[gender];
+                groups[gender].forEach(v => appendOption(optgroup, v));
+                voiceSelect.appendChild(optgroup);
+            });
+        } else {
+            langVoices.forEach(v => appendOption(voiceSelect, v));
+        }
 
         if (savedVoiceURI && Array.from(voiceSelect.options).some(o => o.value === savedVoiceURI)) {
             voiceSelect.value = savedVoiceURI;
+        } else if (previousValue && Array.from(voiceSelect.options).some(o => o.value === previousValue)) {
+            voiceSelect.value = previousValue;
         } else {
             voiceSelect.value = langVoices[0].voiceURI;
         }
@@ -1011,6 +1115,7 @@
     }
 
     function toggleSettingsPanel() {
+        warmupSpeechSynthesis();
         const panel = document.getElementById('settingsPanel');
         panel.classList.toggle('hidden');
     }
@@ -1130,6 +1235,7 @@
             return;
         }
 
+        warmupSpeechSynthesis();
         window.speechSynthesis.cancel();
 
         const wordClean = cleanWord(syllableWord);
