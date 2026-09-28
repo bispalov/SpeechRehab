@@ -498,6 +498,8 @@
         .option-btn.eliminated { opacity: 0.25; pointer-events: none; }
         .option-btn.hint-glow { box-shadow: 0 0 0 4px #ffc107; }
         body.gentle-mode .stat-box.total-stat { display: none; }
+        .next-btn { scroll-margin-bottom: 14px; }
+        body { overflow-anchor: none; }
     </style>
 </head>
 <body>
@@ -3219,6 +3221,39 @@
 
     // Мягкий режим: без красных «ошибок». Неверный вариант просто гаснет,
     // слово озвучивается снова, пока человек не найдёт правильный ответ.
+    // Автопрокрутка: после правильного ответа плавно подводит экран к кнопке
+    // «Следующее слово», а при переходе к новому слову возвращает к
+    // карточке с заданием. Небольшая задержка нужна, чтобы человек успел
+    // увидеть зелёный ответ и похвалу.
+    let autoScrollTimer = null;
+
+    function scrollBehavior() {
+        return (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 'auto' : 'smooth';
+    }
+
+    function scrollToNextButton() {
+        clearTimeout(autoScrollTimer);
+        autoScrollTimer = setTimeout(() => {
+            const btn = document.getElementById('nextBtn');
+            if (!btn) return;
+            const r = btn.getBoundingClientRect();
+            if (r.bottom > window.innerHeight - 4) {
+                btn.scrollIntoView({ behavior: scrollBehavior(), block: 'end' });
+            }
+        }, 600);
+    }
+
+    function scrollToTaskCard() {
+        clearTimeout(autoScrollTimer);
+        const card = document.querySelector('.card');
+        if (!card) return;
+        const top = card.getBoundingClientRect().top + window.scrollY - 8;
+        // Только вверх: при первом запуске страницы ничего не двигаем.
+        if (window.scrollY > top) {
+            window.scrollTo({ top: Math.max(0, top), behavior: scrollBehavior() });
+        }
+    }
+
     function checkAnswerGentle(selectedSyllables, btnElement) {
         const selectedClean = cleanWord(selectedSyllables).toLowerCase();
         const targetClean = cleanWord(targetWordSyllables).toLowerCase();
@@ -3233,6 +3268,7 @@
             vibrateShort(60);
             updateStatsUI();
             setupSpellBuilder(targetWordSyllables);
+            scrollToNextButton();
         } else {
             btnElement.classList.add('eliminated');
             btnElement.disabled = true;
@@ -3381,6 +3417,7 @@
         if (selectedClean === targetClean) {
             correctCount++;
             btnElement.classList.add('correct');
+            scrollToNextButton();
         } else {
             btnElement.classList.add('wrong');
             const rows = document.querySelectorAll('.option-row');
@@ -3469,6 +3506,7 @@
 
         const options = generateOptions(targetWordSyllables);
         renderOptions(options);
+        scrollToTaskCard();
 
         if (isChecked('autoSpeak')) {
             setTimeout(() => {
