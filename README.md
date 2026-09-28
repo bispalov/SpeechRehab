@@ -26,7 +26,12 @@ The app runs entirely in the browser — no installation, no backend, no account
 - **Three interface languages**: English, Ukrainian, and Russian — with a matching dictionary and speech recognition locale for each.
 - **Adjustable difficulty**: 2 / 3 / 4 answer options per question (Easy / Medium / Hard).
 - **Play / Rest timer** — configurable session and break lengths, with a rest overlay, to support therapy pacing and prevent fatigue.
-- **Progress stats** — running count of correct answers and total attempts.
+- **Gentle mode (on by default)** — no red errors: a wrong option simply fades out and the word is spoken again until the user finds the answer; correct answers get short praise and a light vibration on phones.
+- **Picture support (emoji)** — a picture next to each answer option and a large one after the answer, for about 45% of the words; can be switched off.
+- **Step-by-step hints** — 💡 first syllable → the word by syllables → the highlighted answer.
+- **🐢 Speak by syllables** — the word is spoken slowly, syllable by syllable, then as a whole.
+- **Auto-speak** the new word (optional) with a slow speech speed by default.
+- **Progress stats** — running count of correct answers (and total attempts in classic mode).
 - **Light / dark theme**, responsive layout for phones and tablets.
 - **Works offline** as an installable PWA (manifest + icons); all settings (language, voice, theme, timer, category, etc.) are saved locally on the device.
 
@@ -80,7 +85,12 @@ Issues and pull requests are welcome — additional languages, dictionary words,
 - **Три мови інтерфейсу**: англійська, українська та російська — з окремим словником і мовою розпізнавання мовлення для кожної.
 - **Регульована складність**: 2 / 3 / 4 варіанти відповіді на запитання (Легко / Середньо / Складно).
 - **Таймер «Гра / Відпочинок»** — з можливістю налаштувати тривалість заняття та перерви й екраном відпочинку, щоб підтримувати правильний темп занять і запобігати перевтомі.
-- **Статистика прогресу** — лічильник правильних відповідей та загальної кількості спроб.
+- **М'який режим (увімкнений за замовчуванням)** — без червоних помилок: неправильний варіант просто гасне, а слово озвучується знову, доки людина не знайде відповідь; за правильну відповідь — коротка похвала й легка вібрація на телефоні.
+- **Візуальна опора (емодзі)** — картинка біля кожного варіанту відповіді та велика після відповіді, приблизно для 45% слів; можна вимкнути.
+- **Покрокові підказки** — 💡 перший склад → слово по складах → підсвічена відповідь.
+- **🐢 Озвучення по складах** — слово вимовляється повільно, склад за складом, а потім цілком.
+- **Автоозвучення** нового слова (за бажанням) з повільною швидкістю мовлення за замовчуванням.
+- **Статистика прогресу** — лічильник правильних відповідей (і загальної кількості спроб у класичному режимі).
 - **Світла / темна тема**, адаптивний вигляд для телефонів і планшетів.
 - **Робота офлайн** як встановлюваний PWA-застосунок (маніфест + іконки); усі налаштування (мова, голос, тема, таймер, категорія тощо) зберігаються локально на пристрої.
 
