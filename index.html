@@ -498,7 +498,6 @@
         .option-btn.eliminated { opacity: 0.25; pointer-events: none; }
         .option-btn.hint-glow { box-shadow: 0 0 0 4px #ffc107; }
         body.gentle-mode .stat-box.total-stat { display: none; }
-        .next-btn { scroll-margin-bottom: 14px; }
         body { overflow-anchor: none; }
     </style>
 </head>
@@ -3221,37 +3220,89 @@
 
     // Мягкий режим: без красных «ошибок». Неверный вариант просто гаснет,
     // слово озвучивается снова, пока человек не найдёт правильный ответ.
-    // Автопрокрутка: после правильного ответа плавно подводит экран к кнопке
-    // «Следующее слово», а при переходе к новому слову возвращает к
-    // карточке с заданием. Небольшая задержка нужна, чтобы человек успел
-    // увидеть зелёный ответ и похвалу.
+    // Автопрокрутка: после правильного ответа подводит экран к кнопке
+    // «Следующее слово», а при переходе к новому слову возвращает к карточке
+    // с заданием. Прокрутка сделана вручную (через requestAnimationFrame), а
+    // не через scroll-behavior: 'smooth' — в установленных на Android
+    // PWA-приложениях встроенная плавная прокрутка иногда обрывается или не
+    // срабатывает. Целевая позиция пересчитывается на каждом кадре, поэтому
+    // сдвиги вёрстки (эмодзи, плитки букв) ей не мешают. Если человек сам
+    // коснулся экрана или покрутил колесо мыши, автопрокрутка уступает.
     let autoScrollTimer = null;
+    let autoScrollRaf = null;
 
-    function scrollBehavior() {
-        return (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 'auto' : 'smooth';
+    function currentScrollY() {
+        return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    }
+
+    function visibleViewportHeight() {
+        const vv = window.visualViewport;
+        const h = Math.min(window.innerHeight || Infinity, (vv && vv.height) ? vv.height : Infinity);
+        return isFinite(h) ? h : document.documentElement.clientHeight;
+    }
+
+    function cancelAutoScroll() {
+        clearTimeout(autoScrollTimer);
+        autoScrollTimer = null;
+        if (autoScrollRaf) {
+            cancelAnimationFrame(autoScrollRaf);
+            autoScrollRaf = null;
+        }
+    }
+
+    ['touchstart', 'wheel', 'keydown', 'mousedown'].forEach(evt => {
+        window.addEventListener(evt, cancelAutoScroll, { passive: true });
+    });
+
+    function animateScrollTo(getTarget, duration) {
+        if (autoScrollRaf) cancelAnimationFrame(autoScrollRaf);
+        const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const total = reduce ? 0 : duration;
+        const startY = currentScrollY();
+        const t0 = performance.now();
+
+        const step = (now) => {
+            const target = getTarget();
+            if (target === null) { autoScrollRaf = null; return; }
+            const p = total === 0 ? 1 : Math.min(1, (now - t0) / total);
+            const eased = 1 - Math.pow(1 - p, 3);
+            window.scrollTo(0, startY + (target - startY) * eased);
+            autoScrollRaf = (p < 1) ? requestAnimationFrame(step) : null;
+        };
+        autoScrollRaf = requestAnimationFrame(step);
+    }
+
+    function nextButtonTarget() {
+        const btn = document.getElementById('nextBtn');
+        if (!btn) return null;
+        const bottom = btn.getBoundingClientRect().bottom;
+        return Math.max(0, currentScrollY() + bottom - visibleViewportHeight() + 16);
     }
 
     function scrollToNextButton() {
-        clearTimeout(autoScrollTimer);
+        cancelAutoScroll();
         autoScrollTimer = setTimeout(() => {
-            const btn = document.getElementById('nextBtn');
-            if (!btn) return;
-            const r = btn.getBoundingClientRect();
-            if (r.bottom > window.innerHeight - 4) {
-                btn.scrollIntoView({ behavior: scrollBehavior(), block: 'end' });
-            }
-        }, 600);
+            const t = nextButtonTarget();
+            if (t !== null && t > currentScrollY() + 2) animateScrollTo(nextButtonTarget, 450);
+            // Проверка: если что-то помешало (вёрстка ещё менялась), пробуем один раз ещё.
+            autoScrollTimer = setTimeout(() => {
+                const t2 = nextButtonTarget();
+                if (t2 !== null && t2 > currentScrollY() + 6) animateScrollTo(nextButtonTarget, 300);
+            }, 900);
+        }, 350);
+    }
+
+    function taskCardTarget() {
+        const card = document.querySelector('.card');
+        if (!card) return null;
+        return Math.max(0, currentScrollY() + card.getBoundingClientRect().top - 8);
     }
 
     function scrollToTaskCard() {
-        clearTimeout(autoScrollTimer);
-        const card = document.querySelector('.card');
-        if (!card) return;
-        const top = card.getBoundingClientRect().top + window.scrollY - 8;
+        cancelAutoScroll();
+        const t = taskCardTarget();
         // Только вверх: при первом запуске страницы ничего не двигаем.
-        if (window.scrollY > top) {
-            window.scrollTo({ top: Math.max(0, top), behavior: scrollBehavior() });
-        }
+        if (t !== null && currentScrollY() > t + 2) animateScrollTo(taskCardTarget, 350);
     }
 
     function checkAnswerGentle(selectedSyllables, btnElement) {
