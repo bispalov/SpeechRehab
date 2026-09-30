@@ -578,6 +578,27 @@
         </div>
 
         <div class="control-group">
+            <label class="checkbox-label" for="modeChoice">
+                <input type="checkbox" id="modeChoice" checked onchange="onModeSettingChange()">
+                <span id="labelModeChoice">Block: choose the spoken word</span>
+            </label>
+        </div>
+
+        <div class="control-group">
+            <label class="checkbox-label" for="modeSpell">
+                <input type="checkbox" id="modeSpell" checked onchange="onModeSettingChange()">
+                <span id="labelModeSpell">Block: assemble the word from letters</span>
+            </label>
+        </div>
+
+        <div class="control-group">
+            <label class="checkbox-label" for="spellSyllableHint">
+                <input type="checkbox" id="spellSyllableHint" checked onchange="onModeSettingChange()">
+                <span id="labelSpellSyllableHint">Letters-only mode: show syllables before the word is assembled</span>
+            </label>
+        </div>
+
+        <div class="control-group">
             <label class="checkbox-label" for="timerEnabled">
                 <input type="checkbox" id="timerEnabled" checked onchange="toggleTimerFeature()">
                 <span id="labelTimerEnable">Use "Play / Rest" timer</span>
@@ -694,6 +715,9 @@
             labelGentle: "Gentle mode (no red errors, hints, praise)",
             labelEmoji: "Show pictures (emoji)",
             labelAutoSpeak: "Speak new word automatically",
+            labelModeChoice: "Block: choose the spoken word",
+            labelModeSpell: "Block: assemble the word from letters",
+            labelSpellSyllableHint: "Letters-only mode: show syllables before the word is assembled",
             syllablesBtn: "🐢 By syllables",
             hintBtn: "💡 Hint",
             hintStarts: "It starts with: ",
@@ -747,6 +771,9 @@
             labelGentle: "М’який режим (без червоних помилок, підказки, похвала)",
             labelEmoji: "Показувати картинки (емодзі)",
             labelAutoSpeak: "Озвучувати нове слово автоматично",
+            labelModeChoice: "Блок: вибір озвученого слова",
+            labelModeSpell: "Блок: складання слова з літер",
+            labelSpellSyllableHint: "Режим «лише літери»: показувати склади до завершення складання",
             syllablesBtn: "🐢 По складах",
             hintBtn: "💡 Підказка",
             hintStarts: "Починається з: ",
@@ -800,6 +827,9 @@
             labelGentle: "Мягкий режим (без красных ошибок, подсказки, похвала)",
             labelEmoji: "Показывать картинки (эмодзи)",
             labelAutoSpeak: "Озвучивать новое слово автоматически",
+            labelModeChoice: "Блок: выбор озвученного слова",
+            labelModeSpell: "Блок: сбор слова из букв",
+            labelSpellSyllableHint: "Режим «только буквы»: показывать слоги до завершения сбора",
             syllablesBtn: "🐢 По слогам",
             hintBtn: "💡 Подсказка",
             hintStarts: "Начинается с: ",
@@ -1078,6 +1108,9 @@
         document.getElementById('labelGentle').innerText = t.labelGentle;
         document.getElementById('labelEmoji').innerText = t.labelEmoji;
         document.getElementById('labelAutoSpeak').innerText = t.labelAutoSpeak;
+        document.getElementById('labelModeChoice').innerText = t.labelModeChoice;
+        document.getElementById('labelModeSpell').innerText = t.labelModeSpell;
+        document.getElementById('labelSpellSyllableHint').innerText = t.labelSpellSyllableHint;
         document.getElementById('syllablesBtn').innerText = t.syllablesBtn;
         document.getElementById('hintBtn').innerText = t.hintBtn;
         
@@ -1278,6 +1311,35 @@
         document.body.classList.toggle('gentle-mode', isChecked('gentleMode'));
     }
 
+    // Блоки игры: «выбор озвученного слова» и «сбор слова из букв».
+    // Можно включить любой из них или оба; отключить оба нельзя —
+    // последний включённый блок блокируется (disabled).
+    function applyModeSettings() {
+        const choiceEl = document.getElementById('modeChoice');
+        const spellEl = document.getElementById('modeSpell');
+        if (!choiceEl.checked && !spellEl.checked) choiceEl.checked = true;
+
+        choiceEl.disabled = choiceEl.checked && !spellEl.checked;
+        spellEl.disabled = spellEl.checked && !choiceEl.checked;
+
+        const showChoice = choiceEl.checked;
+        document.getElementById('labelInstruction').style.display = showChoice ? '' : 'none';
+        document.getElementById('optionsContainer').style.display = showChoice ? '' : 'none';
+        if (!spellEl.checked) document.getElementById('spellBuilderCard').classList.add('hidden');
+
+        // Слог-подсказка настраивается только в режиме «только буквы»;
+        // при включённом блоке выбора слова переключатель неактивен.
+        const hintEl = document.getElementById('spellSyllableHint');
+        hintEl.disabled = showChoice;
+        hintEl.closest('.control-group').style.opacity = showChoice ? '0.5' : '';
+    }
+
+    function onModeSettingChange() {
+        applyModeSettings();
+        saveSettings();
+        nextQuestion();
+    }
+
     function onAssistSettingChange() {
         applyAssistSettings();
         saveSettings();
@@ -1365,7 +1427,7 @@
             box.innerHTML = t.hintSyllables + formatWordWithAccents(parts.join(' • '));
             speakSyllables(targetWordSyllables);
         } else {
-            box.innerText = t.hintAnswer;
+            box.innerText = isChecked('modeChoice') ? t.hintAnswer : cleanWord(targetWordSyllables);
             const targetClean = cleanWord(targetWordSyllables).toLowerCase();
             document.querySelectorAll('.option-btn').forEach(b => {
                 if (b.innerText.toLowerCase() === targetClean) b.classList.add('hint-glow');
@@ -1665,13 +1727,17 @@
     }
 
     function setupSpellBuilder(syllableWord) {
+        if (!isChecked('modeSpell')) return;
         const card = document.getElementById('spellBuilderCard');
         card.classList.remove('hidden');
 
         const syllablesArr = syllableWord.split('-');
         const t = i18n[currentLang];
         const formattedSyllables = syllablesArr.join(' • ');
-        document.getElementById('syllableDisplay').innerHTML = t.syllablePrefix + formatWordWithAccents(formattedSyllables);
+        const syllDisplay = document.getElementById('syllableDisplay');
+        syllDisplay.innerHTML = t.syllablePrefix + formatWordWithAccents(formattedSyllables);
+        // В режиме «только буквы» слоги можно скрыть до завершения сбора.
+        syllDisplay.style.display = (!isChecked('modeChoice') && !isChecked('spellSyllableHint')) ? 'none' : '';
         document.getElementById('wordEmojiBig').innerText = getWordEmoji(syllableWord);
 
         const clean = cleanWord(syllableWord);
@@ -1719,6 +1785,17 @@
         const assembled = selectedLetters.join('');
         if (assembled.toLowerCase() === targetWordClean.toLowerCase()) {
             speakWord(targetWordSyllables);
+            document.getElementById('syllableDisplay').style.display = '';
+            // Если блок выбора слова отключён, засчитываем собранное слово.
+            if (!isChecked('modeChoice') && !isAnswered) {
+                isAnswered = true;
+                totalCount++;
+                correctCount++;
+                updateStatsUI();
+                showFeedback('praise');
+                vibrateShort(60);
+                scrollToNextButton();
+            }
         }
     }
 
@@ -1735,6 +1812,7 @@
 
         const options = generateOptions(targetWordSyllables);
         renderOptions(options);
+        if (!isChecked('modeChoice')) setupSpellBuilder(targetWordSyllables);
         scrollToTaskCard();
 
         if (isChecked('autoSpeak')) {
@@ -1947,6 +2025,9 @@
         localStorage.setItem('app_gentle', document.getElementById('gentleMode').checked);
         localStorage.setItem('app_emoji', document.getElementById('emojiEnabled').checked);
         localStorage.setItem('app_autospeak', document.getElementById('autoSpeak').checked);
+        localStorage.setItem('app_mode_choice', document.getElementById('modeChoice').checked);
+        localStorage.setItem('app_mode_spell', document.getElementById('modeSpell').checked);
+        localStorage.setItem('app_spell_syll_hint', document.getElementById('spellSyllableHint').checked);
     }
 
     function loadSettings() {
@@ -1976,11 +2057,12 @@
         const savedRestMins = localStorage.getItem('app_rest_mins');
         if (savedRestMins) document.getElementById('restMinutes').value = savedRestMins;
 
-        [['app_gentle', 'gentleMode'], ['app_emoji', 'emojiEnabled'], ['app_autospeak', 'autoSpeak']].forEach(([key, id]) => {
+        [['app_gentle', 'gentleMode'], ['app_emoji', 'emojiEnabled'], ['app_autospeak', 'autoSpeak'], ['app_mode_choice', 'modeChoice'], ['app_mode_spell', 'modeSpell'], ['app_spell_syll_hint', 'spellSyllableHint']].forEach(([key, id]) => {
             const v = localStorage.getItem(key);
             if (v !== null) document.getElementById(id).checked = (v === 'true');
         });
         applyAssistSettings();
+        applyModeSettings();
     }
 
     // Пере-синхронізація мови/словника з localStorage при поверненні до
