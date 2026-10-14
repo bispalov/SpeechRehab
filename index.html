@@ -1824,6 +1824,12 @@
 
     // Озвучивание результата распознавания речи:
     // верно -> «Правильно»; неверно -> «Неправильно, вы произнесли» + распознанное слово.
+    // На Android сразу после распознавания движок синтеза часто молчит (микрофон/аудиофокус
+    // ещё заняты), поэтому фраза запоминается и произносится, когда распознавание
+    // полностью завершилось (onend) или по запасному таймеру; при неудаче - повтор.
+    let pendingSpeechFeedback = null;
+    let feedbackToken = 0;
+
     function speakSpeechFeedback(isCorrect, recognizedWord) {
         if (!('speechSynthesis' in window)) return;
         const phrases = {
@@ -1832,13 +1838,36 @@
             en: { ok: 'Correct', bad: 'Incorrect, you said' }
         };
         const p = phrases[currentLang] || phrases.ru;
-        const text = isCorrect ? p.ok : (p.bad + ' ' + recognizedWord);
-        // Небольшая пауза, чтобы микрофон успел освободиться (важно для Android).
-        setTimeout(() => {
-            warmupSpeechSynthesis();
-            window.speechSynthesis.cancel();
-            window.speechSynthesis.speak(makeUtterance(text, 1));
-        }, 300);
+        pendingSpeechFeedback = isCorrect ? p.ok : (p.bad + ' ' + recognizedWord);
+        const token = ++feedbackToken;
+        // Запасной вариант, если onend не сработает.
+        setTimeout(() => { if (token === feedbackToken) flushSpeechFeedback(); }, 1500);
+    }
+
+    function flushSpeechFeedback() {
+        const text = pendingSpeechFeedback;
+        if (!text) return;
+        pendingSpeechFeedback = null;
+        const synth = window.speechSynthesis;
+
+        const attempt = (triesLeft) => {
+            let started = false;
+            try {
+                synth.cancel();
+                synth.resume();
+                const u = makeUtterance(text, 1);
+                u.volume = 1;
+                u.onstart = () => { started = true; };
+                synth.speak(u);
+            } catch (e) {
+                console.warn('Feedback speech failed:', e);
+            }
+            // Если речь не началась - пробуем ещё раз.
+            setTimeout(() => {
+                if (!started && triesLeft > 0) attempt(triesLeft - 1);
+            }, 1200);
+        };
+        setTimeout(() => attempt(2), 500);
     }
 
     function initSpeechRecognition() {
@@ -1863,6 +1892,7 @@
 
         recognition.onend = () => {
             isRecording = false;
+            flushSpeechFeedback();
             const btn = document.getElementById('recordBtn');
             btn.classList.remove('recording');
             btn.innerText = i18n[currentLang].recordBtnStart;
