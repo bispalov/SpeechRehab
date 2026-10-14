@@ -218,6 +218,26 @@
             color: #383d41;
             border: 1px solid #d6d8db;
         }
+        .extra-panel {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            border-radius: 6px;
+            background: var(--word-box-bg);
+            color: var(--text-color);
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .extra-panel.hidden { display: none; }
+        mark.diff-bad {
+            background: #ffd54f;
+            color: #000;
+            border-radius: 3px;
+            padding: 0 2px;
+        }
+        .diff-row { margin-top: 6px; font-weight: bold; letter-spacing: 1px; }
+        .stats-table { width: 100%; border-collapse: collapse; margin: 4px 0 8px; }
+        .stats-table td { padding: 3px 4px; border-bottom: 1px solid var(--input-border); }
         .options-grid {
             display: flex;
             flex-direction: column;
@@ -599,6 +619,13 @@
         </div>
 
         <div class="control-group">
+            <label class="checkbox-label" for="strictSpeech">
+                <input type="checkbox" id="strictSpeech" onchange="saveSettings()">
+                <span id="labelStrictSpeech">Strict speech check (whole word must match exactly)</span>
+            </label>
+        </div>
+
+        <div class="control-group">
             <label class="checkbox-label" for="timerEnabled">
                 <input type="checkbox" id="timerEnabled" checked onchange="toggleTimerFeature()">
                 <span id="labelTimerEnable">Use "Play / Rest" timer</span>
@@ -651,6 +678,19 @@
         <div id="hintBox" class="hint-box"></div>
         <div id="feedbackMsg" class="feedback-msg"></div>
         <div id="speechResultBox" class="speech-result-box"></div>
+        <div class="assist-row">
+            <button class="assist-btn" id="ownVoiceBtn" onclick="toggleOwnRecording()">🎧 Record yourself</button>
+            <button class="assist-btn" id="statsBtn" onclick="toggleStatsPanel()">📊 Statistics</button>
+        </div>
+        <div id="ownVoicePanel" class="extra-panel hidden">
+            <div id="ownVoiceMsg"></div>
+            <div class="assist-row" id="ownVoicePlayRow">
+                <button class="assist-btn" id="ownPlayRefBtn" onclick="speakWord(targetWordSyllables)">▶ Reference</button>
+                <button class="assist-btn" id="ownPlayMineBtn" onclick="playOwnRecording()">▶ My recording</button>
+                <button class="assist-btn" id="ownPlayBothBtn" onclick="playRefThenOwn()">▶▶ Both</button>
+            </div>
+        </div>
+        <div id="statsPanel" class="extra-panel hidden"></div>
     </div>
 
     <label id="labelInstruction">Select the word you heard (all options are real words):</label>
@@ -1113,6 +1153,7 @@
         document.getElementById('labelSpellSyllableHint').innerText = t.labelSpellSyllableHint;
         document.getElementById('syllablesBtn').innerText = t.syllablesBtn;
         document.getElementById('hintBtn').innerText = t.hintBtn;
+        updateExtraTexts();
         
         if (!isRecording) {
             document.getElementById('recordBtn').innerText = t.recordBtnStart;
@@ -1225,6 +1266,8 @@
 
     function getRandomWord() {
         const pool = getWordsFromCurrentCategory();
+        const problemWord = pickProblemWord(pool);
+        if (problemWord && problemWord !== targetWordSyllables) return problemWord;
         const randIndex = Math.floor(Math.random() * pool.length);
         return pool[randIndex];
     }
@@ -1557,6 +1600,7 @@
             isAnswered = true;
             totalCount++;
             correctCount++;
+            recordResult('choice', targetClean, '', true);
             btnElement.classList.add('correct');
             btnElement.classList.remove('hint-glow');
             showFeedback('praise');
@@ -1565,6 +1609,7 @@
             setupSpellBuilder(targetWordSyllables);
             scrollToNextButton();
         } else {
+            recordResult('choice', targetClean, selectedClean, false);
             btnElement.classList.add('eliminated');
             btnElement.disabled = true;
             showFeedback('retry');
@@ -1707,9 +1752,11 @@
 
         if (selectedClean === targetClean) {
             correctCount++;
+            recordResult('choice', targetClean, '', true);
             btnElement.classList.add('correct');
             scrollToNextButton();
         } else {
+            recordResult('choice', targetClean, selectedClean, false);
             btnElement.classList.add('wrong');
             const rows = document.querySelectorAll('.option-row');
             rows.forEach(r => {
@@ -1805,6 +1852,7 @@
         clearFeedback();
         document.getElementById('speechResultBox').className = 'speech-result-box';
         document.getElementById('speechResultBox').innerText = '';
+        resetOwnVoicePanel();
         document.getElementById('spellBuilderCard').classList.add('hidden');
 
         targetWordSyllables = getRandomWord();
@@ -1822,16 +1870,380 @@
         }
     }
 
+    // ===== Дополнительные возможности (всё работает офлайн) =====
+    // 1) подсветка различий; 2) запись и прослушивание своего голоса;
+    // 3) статистика ошибок в localStorage + чаще предлагаются трудные слова.
+    const extraI18n = {
+        ru: {
+            ownBtn: '🎧 Записать себя', ownStop: '⏹ Остановить запись',
+            ownRef: '▶ Эталон', ownMine: '▶ Моя запись', ownBoth: '▶▶ Подряд',
+            ownHint: 'Скажите слово, затем сравните на слух с эталоном.',
+            ownRecording: '🔴 Идёт запись…', ownDone: 'Запись готова. Сравните на слух.',
+            ownNoSupport: 'Запись звука не поддерживается в этом браузере.',
+            ownDenied: 'Нет доступа к микрофону. Разрешите его в настройках браузера.',
+            statsBtn: '📊 Статистика', statsTitle: 'Статистика ошибок',
+            statsHard: 'Трудные слова', statsConf: 'Частые путаницы',
+            statsEmpty: 'Пока нет ошибок. Продолжайте заниматься!',
+            statsAttempts: 'Всего попыток: ', statsOf: 'ошибок', statsFrom: 'из',
+            statsExport: '⬇ Скачать CSV', statsReset: '🗑 Сбросить',
+            statsResetConfirm: 'Удалить всю статистику?',
+            need: 'Нужно: ', said: 'Вы сказали: ',
+            strict: 'Строгая проверка речи (слово должно совпасть полностью)'
+        },
+        uk: {
+            ownBtn: '🎧 Записати себе', ownStop: '⏹ Зупинити запис',
+            ownRef: '▶ Еталон', ownMine: '▶ Мій запис', ownBoth: '▶▶ Підряд',
+            ownHint: 'Скажіть слово, потім порівняйте на слух з еталоном.',
+            ownRecording: '🔴 Йде запис…', ownDone: 'Запис готовий. Порівняйте на слух.',
+            ownNoSupport: 'Запис звуку не підтримується в цьому браузері.',
+            ownDenied: 'Немає доступу до мікрофона. Дозвольте його в налаштуваннях браузера.',
+            statsBtn: '📊 Статистика', statsTitle: 'Статистика помилок',
+            statsHard: 'Важкі слова', statsConf: 'Часті плутанини',
+            statsEmpty: 'Поки немає помилок. Продовжуйте займатися!',
+            statsAttempts: 'Усього спроб: ', statsOf: 'помилок', statsFrom: 'з',
+            statsExport: '⬇ Завантажити CSV', statsReset: '🗑 Скинути',
+            statsResetConfirm: 'Видалити всю статистику?',
+            need: 'Потрібно: ', said: 'Ви сказали: ',
+            strict: 'Сувора перевірка мовлення (слово має збігтися повністю)'
+        },
+        en: {
+            ownBtn: '🎧 Record yourself', ownStop: '⏹ Stop recording',
+            ownRef: '▶ Reference', ownMine: '▶ My recording', ownBoth: '▶▶ Both',
+            ownHint: 'Say the word, then compare it by ear with the reference.',
+            ownRecording: '🔴 Recording…', ownDone: 'Recording ready. Compare by ear.',
+            ownNoSupport: 'Audio recording is not supported in this browser.',
+            ownDenied: 'No microphone access. Allow it in the browser settings.',
+            statsBtn: '📊 Statistics', statsTitle: 'Error statistics',
+            statsHard: 'Difficult words', statsConf: 'Frequent confusions',
+            statsEmpty: 'No errors yet. Keep practicing!',
+            statsAttempts: 'Total attempts: ', statsOf: 'errors', statsFrom: 'of',
+            statsExport: '⬇ Download CSV', statsReset: '🗑 Reset',
+            statsResetConfirm: 'Delete all statistics?',
+            need: 'Target: ', said: 'You said: ',
+            strict: 'Strict speech check (whole word must match exactly)'
+        }
+    };
+
+    function ex() { return extraI18n[currentLang] || extraI18n.ru; }
+
+    function escHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    // Посимвольное выравнивание (расстояние Левенштейна): какие буквы отличаются.
+    function diffChars(a, b) {
+        const n = a.length, m = b.length;
+        const d = [];
+        for (let i = 0; i <= n; i++) { d[i] = new Array(m + 1).fill(0); d[i][0] = i; }
+        for (let j = 0; j <= m; j++) d[0][j] = j;
+        for (let i = 1; i <= n; i++) {
+            for (let j = 1; j <= m; j++) {
+                const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+                d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+            }
+        }
+        const ta = [], tb = [];
+        let i = n, j = m;
+        while (i > 0 || j > 0) {
+            if (i > 0 && j > 0 && d[i][j] === d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)) {
+                const bad = a[i - 1] !== b[j - 1];
+                ta.unshift({ c: a[i - 1], bad });
+                tb.unshift({ c: b[j - 1], bad });
+                i--; j--;
+            } else if (i > 0 && d[i][j] === d[i - 1][j] + 1) {
+                ta.unshift({ c: a[i - 1], bad: true });
+                i--;
+            } else {
+                tb.unshift({ c: b[j - 1], bad: true });
+                j--;
+            }
+        }
+        return { ta, tb };
+    }
+
+    function renderDiffParts(parts) {
+        return parts.map(p => p.bad ? '<mark class="diff-bad">' + escHtml(p.c) + '</mark>' : escHtml(p.c)).join('');
+    }
+
+    function buildDiffHtml(target, said) {
+        const r = diffChars(target, said);
+        const x = ex();
+        return '<div class="diff-row">' + escHtml(x.need) + renderDiffParts(r.ta) + '</div>' +
+               '<div class="diff-row">' + escHtml(x.said) + renderDiffParts(r.tb) + '</div>';
+    }
+
+    // ----- статистика -----
+    const STATS_KEY = 'app_stats_v1';
+
+    function loadStats() {
+        try {
+            const s = JSON.parse(localStorage.getItem(STATS_KEY) || '{}');
+            return (s && typeof s === 'object') ? s : {};
+        } catch (e) { return {}; }
+    }
+
+    function saveStats(s) {
+        try { localStorage.setItem(STATS_KEY, JSON.stringify(s)); } catch (e) {}
+    }
+
+    function recordResult(kind, target, said, ok) {
+        try {
+            const tw = (target || '').toLowerCase().trim();
+            if (!tw) return;
+            const s = loadStats();
+            if (!s[currentLang]) s[currentLang] = { words: {}, conf: {} };
+            const L = s[currentLang];
+            const w = L.words[tw] || (L.words[tw] = { ok: 0, bad: 0 });
+            if (ok) w.ok++; else w.bad++;
+            if (!ok && said) {
+                const sd = String(said).toLowerCase().trim().slice(0, 40);
+                if (sd && sd !== tw) {
+                    const k = tw + '>' + sd;
+                    L.conf[k] = (L.conf[k] || 0) + 1;
+                    const keys = Object.keys(L.conf);
+                    if (keys.length > 400) {
+                        keys.sort((p, q) => L.conf[p] - L.conf[q]).slice(0, 100).forEach(k2 => delete L.conf[k2]);
+                    }
+                }
+            }
+            saveStats(s);
+        } catch (e) {}
+    }
+
+    // Иногда (30%) предлагает слово, в котором раньше чаще ошибались.
+    function pickProblemWord(pool) {
+        try {
+            if (Math.random() > 0.3) return null;
+            const L = ((loadStats()[currentLang]) || {}).words || {};
+            const cands = [];
+            let total = 0;
+            pool.forEach(item => {
+                const w = L[cleanWord(item).toLowerCase()];
+                if (w) {
+                    const sc = w.bad - 0.5 * w.ok;
+                    if (sc > 0) { cands.push([item, sc]); total += sc; }
+                }
+            });
+            if (!cands.length) return null;
+            let r = Math.random() * total;
+            for (const [item, sc] of cands) {
+                r -= sc;
+                if (r <= 0) return item;
+            }
+            return cands[cands.length - 1][0];
+        } catch (e) { return null; }
+    }
+
+    function renderStatsPanel() {
+        const x = ex();
+        const L = (loadStats()[currentLang]) || { words: {}, conf: {} };
+        const words = Object.entries(L.words || {});
+        const attempts = words.reduce((n, [, v]) => n + v.ok + v.bad, 0);
+        const hard = words.filter(([, v]) => v.bad > 0)
+            .sort((p, q) => (q[1].bad - 0.5 * q[1].ok) - (p[1].bad - 0.5 * p[1].ok)).slice(0, 8);
+        const conf = Object.entries(L.conf || {}).sort((p, q) => q[1] - p[1]).slice(0, 8);
+
+        let h = '<b>' + escHtml(x.statsTitle) + '</b><br>' + escHtml(x.statsAttempts) + attempts + '<br>';
+        if (!hard.length && !conf.length) {
+            h += '<p>' + escHtml(x.statsEmpty) + '</p>';
+        } else {
+            if (hard.length) {
+                h += '<p><b>' + escHtml(x.statsHard) + '</b></p><table class="stats-table">';
+                hard.forEach(([k, v]) => {
+                    h += '<tr><td>' + escHtml(k) + '</td><td>' + v.bad + ' ' + escHtml(x.statsOf) + ' ' + escHtml(x.statsFrom) + ' ' + (v.ok + v.bad) + '</td></tr>';
+                });
+                h += '</table>';
+            }
+            if (conf.length) {
+                h += '<p><b>' + escHtml(x.statsConf) + '</b></p><table class="stats-table">';
+                conf.forEach(([k, n]) => {
+                    const parts = k.split('>');
+                    h += '<tr><td>' + escHtml(parts[0]) + ' → ' + escHtml(parts[1] || '') + '</td><td>×' + n + '</td></tr>';
+                });
+                h += '</table>';
+            }
+        }
+        h += '<div class="assist-row">' +
+             '<button class="assist-btn" onclick="exportStatsCsv()">' + escHtml(x.statsExport) + '</button>' +
+             '<button class="assist-btn" onclick="resetStats()">' + escHtml(x.statsReset) + '</button></div>';
+        document.getElementById('statsPanel').innerHTML = h;
+    }
+
+    function toggleStatsPanel() {
+        const panel = document.getElementById('statsPanel');
+        if (panel.classList.contains('hidden')) {
+            renderStatsPanel();
+            panel.classList.remove('hidden');
+        } else {
+            panel.classList.add('hidden');
+        }
+    }
+
+    function exportStatsCsv() {
+        const s = loadStats();
+        const q = v => '"' + String(v).replace(/"/g, '""') + '"';
+        const rows = [['lang', 'type', 'word', 'said', 'ok', 'errors', 'count'].join(',')];
+        Object.keys(s).forEach(lang => {
+            const L = s[lang] || {};
+            Object.entries(L.words || {}).forEach(([w, v]) => {
+                rows.push([q(lang), q('word'), q(w), q(''), v.ok, v.bad, ''].join(','));
+            });
+            Object.entries(L.conf || {}).forEach(([k, n]) => {
+                const p = k.split('>');
+                rows.push([q(lang), q('confusion'), q(p[0]), q(p[1] || ''), '', '', n].join(','));
+            });
+        });
+        const blob = new Blob(['\ufeff' + rows.join('\n')], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'trainer-stats.csv';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+
+    function resetStats() {
+        if (!confirm(ex().statsResetConfirm)) return;
+        try { localStorage.removeItem(STATS_KEY); } catch (e) {}
+        renderStatsPanel();
+    }
+
+    // ----- запись и прослушивание своего голоса -----
+    let ownRec = null, ownStream = null, ownChunks = [], ownUrl = null;
+    let ownTimer = null, ownRecording = false, ownDiscard = false, ownAudio = null;
+
+    function setOwnMsg(msg) {
+        document.getElementById('ownVoiceMsg').innerText = msg;
+    }
+
+    function updateOwnBtn() {
+        const x = ex();
+        document.getElementById('ownVoiceBtn').innerText = ownRecording ? x.ownStop : x.ownBtn;
+    }
+
+    function stopOwnRecording() {
+        clearTimeout(ownTimer);
+        try { if (ownRec && ownRec.state !== 'inactive') ownRec.stop(); } catch (e) {}
+    }
+
+    async function toggleOwnRecording() {
+        const x = ex();
+        const panel = document.getElementById('ownVoicePanel');
+        if (ownRecording) { stopOwnRecording(); return; }
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+            panel.classList.remove('hidden');
+            document.getElementById('ownVoicePlayRow').style.display = 'none';
+            setOwnMsg(x.ownNoSupport);
+            return;
+        }
+        // Микрофон нельзя занимать одновременно с распознаванием речи.
+        try { if (isRecording && recognition) recognition.stop(); } catch (e) {}
+        try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (e) {}
+        try {
+            ownStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch (e) {
+            panel.classList.remove('hidden');
+            document.getElementById('ownVoicePlayRow').style.display = 'none';
+            setOwnMsg(x.ownDenied);
+            return;
+        }
+        ownChunks = [];
+        ownDiscard = false;
+        ownRec = new MediaRecorder(ownStream);
+        ownRec.ondataavailable = e => { if (e.data && e.data.size) ownChunks.push(e.data); };
+        ownRec.onstop = () => {
+            ownStream.getTracks().forEach(tr => tr.stop());
+            ownRecording = false;
+            updateOwnBtn();
+            if (ownDiscard) return;
+            const blob = new Blob(ownChunks, { type: ownRec.mimeType || 'audio/webm' });
+            if (ownUrl) URL.revokeObjectURL(ownUrl);
+            ownUrl = URL.createObjectURL(blob);
+            document.getElementById('ownVoicePlayRow').style.display = 'flex';
+            setOwnMsg(ex().ownDone);
+        };
+        panel.classList.remove('hidden');
+        document.getElementById('ownVoicePlayRow').style.display = 'none';
+        setOwnMsg(x.ownRecording);
+        ownRec.start();
+        ownRecording = true;
+        updateOwnBtn();
+        ownTimer = setTimeout(stopOwnRecording, 5000);
+    }
+
+    function playOwnRecording() {
+        if (!ownUrl) return;
+        try { if (ownAudio) ownAudio.pause(); } catch (e) {}
+        ownAudio = new Audio(ownUrl);
+        ownAudio.play().catch(() => {});
+    }
+
+    // Сначала эталон, затем запись пользователя.
+    function playRefThenOwn() {
+        if (!ownUrl) return;
+        if (!('speechSynthesis' in window)) { playOwnRecording(); return; }
+        warmupSpeechSynthesis();
+        window.speechSynthesis.cancel();
+        const wordClean = cleanWord(targetWordSyllables);
+        const text = getPhoneticRepresentation(wordClean) || wordClean;
+        const u = makeUtterance(text, 1);
+        let done = false;
+        const go = () => {
+            if (done) return;
+            done = true;
+            setTimeout(playOwnRecording, 300);
+        };
+        u.onend = go;
+        u.onerror = go;
+        window.speechSynthesis.speak(u);
+        setTimeout(go, 3500);
+    }
+
+    function resetOwnVoicePanel() {
+        ownDiscard = true;
+        stopOwnRecording();
+        try { if (ownAudio) ownAudio.pause(); } catch (e) {}
+        if (ownUrl) { URL.revokeObjectURL(ownUrl); ownUrl = null; }
+        ownRecording = false;
+        const panel = document.getElementById('ownVoicePanel');
+        if (panel) panel.classList.add('hidden');
+        const sp = document.getElementById('statsPanel');
+        if (sp) sp.classList.add('hidden');
+        updateOwnBtn();
+    }
+
+    function updateExtraTexts() {
+        const x = ex();
+        updateOwnBtn();
+        document.getElementById('statsBtn').innerText = x.statsBtn;
+        document.getElementById('ownPlayRefBtn').innerText = x.ownRef;
+        document.getElementById('ownPlayMineBtn').innerText = x.ownMine;
+        document.getElementById('ownPlayBothBtn').innerText = x.ownBoth;
+        document.getElementById('labelStrictSpeech').innerText = x.strict;
+        const sp = document.getElementById('statsPanel');
+        if (sp && !sp.classList.contains('hidden')) renderStatsPanel();
+    }
+
     // Озвучивание результата распознавания речи:
     // верно -> «Правильно»; неверно -> «Неправильно, вы произнесли» + распознанное слово.
     // На Android сразу после распознавания движок синтеза часто молчит (микрофон/аудиофокус
     // ещё заняты), поэтому фраза запоминается и произносится, когда распознавание
     // полностью завершилось (onend) или по запасному таймеру; при неудаче - повтор.
+    // Под результатом выводится строка состояния озвучивания (для диагностики).
     let pendingSpeechFeedback = null;
     let feedbackToken = 0;
 
+    function setFeedbackStatus(msg) {
+        console.log('[feedback]', msg);
+    }
+
     function speakSpeechFeedback(isCorrect, recognizedWord) {
-        if (!('speechSynthesis' in window)) return;
+        if (!('speechSynthesis' in window)) {
+            setFeedbackStatus('⚠ TTS не поддерживается');
+            return;
+        }
         const phrases = {
             ru: { ok: 'Правильно', bad: 'Неправильно, вы произнесли' },
             uk: { ok: 'Правильно', bad: 'Неправильно, ви вимовили' },
@@ -1840,6 +2252,9 @@
         const p = phrases[currentLang] || phrases.ru;
         pendingSpeechFeedback = isCorrect ? p.ok : (p.bad + ' ' + recognizedWord);
         const token = ++feedbackToken;
+        setFeedbackStatus('🔊 ожидание озвучивания…');
+        // Освобождаем микрофон сразу, чтобы движок синтеза не конфликтовал с ним.
+        try { if (recognition) recognition.stop(); } catch (e) {}
         // Запасной вариант, если onend не сработает.
         setTimeout(() => { if (token === feedbackToken) flushSpeechFeedback(); }, 1500);
     }
@@ -1857,17 +2272,26 @@
                 synth.resume();
                 const u = makeUtterance(text, 1);
                 u.volume = 1;
-                u.onstart = () => { started = true; };
-                synth.speak(u);
+                u.onstart = () => { started = true; setFeedbackStatus('🔊 звучит'); };
+                u.onend = () => { started = true; setFeedbackStatus('🔊 озвучено'); };
+                u.onerror = (ev) => { setFeedbackStatus('⚠ ошибка TTS: ' + (ev && ev.error ? ev.error : '?')); };
+                setTimeout(() => synth.speak(u), 100);
             } catch (e) {
                 console.warn('Feedback speech failed:', e);
+                setFeedbackStatus('⚠ исключение TTS: ' + e.message);
             }
             // Если речь не началась - пробуем ещё раз.
             setTimeout(() => {
-                if (!started && triesLeft > 0) attempt(triesLeft - 1);
-            }, 1200);
+                if (started) return;
+                if (triesLeft > 0) {
+                    setFeedbackStatus('🔊 повтор… (голосов: ' + synth.getVoices().length + ')');
+                    attempt(triesLeft - 1);
+                } else {
+                    setFeedbackStatus('⚠ речь не запустилась (голосов: ' + synth.getVoices().length + ')');
+                }
+            }, 1500);
         };
-        setTimeout(() => attempt(2), 500);
+        setTimeout(() => attempt(2), 800);
     }
 
     function initSpeechRecognition() {
@@ -1904,13 +2328,21 @@
             const box = document.getElementById('speechResultBox');
             const t = i18n[currentLang];
 
-            if (transcript === targetClean || transcript.includes(targetClean) || targetClean.includes(transcript)) {
+            const norm = s => s.replace(/[\s.,!?;:'"«»\-–—]+/g, '');
+            const isCorrect = isChecked('strictSpeech')
+                ? norm(transcript) === norm(targetClean)
+                : (transcript === targetClean || transcript.includes(targetClean) || targetClean.includes(transcript));
+
+            recordResult('speech', targetClean, transcript, isCorrect);
+
+            if (isCorrect) {
                 box.className = 'speech-result-box correct';
                 box.innerText = t.speechYouSaid + `"${transcript}". ` + t.speechCorrect;
                 speakSpeechFeedback(true, transcript);
             } else {
                 box.className = 'speech-result-box incorrect';
                 box.innerText = t.speechYouSaid + `"${transcript}". ` + t.speechIncorrect;
+                box.insertAdjacentHTML('beforeend', buildDiffHtml(targetClean, transcript));
                 speakSpeechFeedback(false, transcript);
             }
         };
@@ -2079,6 +2511,7 @@
         localStorage.setItem('app_mode_choice', document.getElementById('modeChoice').checked);
         localStorage.setItem('app_mode_spell', document.getElementById('modeSpell').checked);
         localStorage.setItem('app_spell_syll_hint', document.getElementById('spellSyllableHint').checked);
+        localStorage.setItem('app_strict_speech', document.getElementById('strictSpeech').checked);
     }
 
     function loadSettings() {
@@ -2108,7 +2541,7 @@
         const savedRestMins = localStorage.getItem('app_rest_mins');
         if (savedRestMins) document.getElementById('restMinutes').value = savedRestMins;
 
-        [['app_gentle', 'gentleMode'], ['app_emoji', 'emojiEnabled'], ['app_autospeak', 'autoSpeak'], ['app_mode_choice', 'modeChoice'], ['app_mode_spell', 'modeSpell'], ['app_spell_syll_hint', 'spellSyllableHint']].forEach(([key, id]) => {
+        [['app_gentle', 'gentleMode'], ['app_emoji', 'emojiEnabled'], ['app_autospeak', 'autoSpeak'], ['app_mode_choice', 'modeChoice'], ['app_mode_spell', 'modeSpell'], ['app_spell_syll_hint', 'spellSyllableHint'], ['app_strict_speech', 'strictSpeech']].forEach(([key, id]) => {
             const v = localStorage.getItem(key);
             if (v !== null) document.getElementById(id).checked = (v === 'true');
         });
