@@ -629,6 +629,13 @@
         </div>
 
         <div class="control-group">
+            <label class="checkbox-label" for="recordMode">
+                <input type="checkbox" id="recordMode" checked onchange="saveSettings()">
+                <span id="labelRecordMode">Record your voice, then recognize the recording (needs recent Chrome)</span>
+            </label>
+        </div>
+
+        <div class="control-group">
             <label class="checkbox-label" for="timerEnabled">
                 <input type="checkbox" id="timerEnabled" checked onchange="toggleTimerFeature()">
                 <span id="labelTimerEnable">Use "Play / Rest" timer</span>
@@ -1875,6 +1882,9 @@
         ru: {
             ownRef: '▶ Эталон', ownMine: '▶ Моя запись', ownBoth: '▶▶ Подряд',
             ownDone: 'Сравните своё произношение с эталоном:',
+            recStop: '⏹ Идёт запись — нажмите, чтобы остановить', recognizing: '⏳ Распознаю запись…',
+            recogFail: 'Не удалось распознать запись. Попробуйте ещё раз.',
+            recordMode: 'Записывать голос, затем распознавать запись (нужен свежий Chrome)',
             statsBtn: '📊 Статистика', statsTitle: 'Статистика ошибок',
             statsHard: 'Трудные слова', statsConf: 'Частые путаницы',
             statsEmpty: 'Пока нет ошибок. Продолжайте заниматься!',
@@ -1887,6 +1897,9 @@
         uk: {
             ownRef: '▶ Еталон', ownMine: '▶ Мій запис', ownBoth: '▶▶ Підряд',
             ownDone: 'Порівняйте свою вимову з еталоном:',
+            recStop: '⏹ Іде запис — натисніть, щоб зупинити', recognizing: '⏳ Розпізнаю запис…',
+            recogFail: 'Не вдалося розпізнати запис. Спробуйте ще раз.',
+            recordMode: 'Записувати голос, потім розпізнавати запис (потрібен свіжий Chrome)',
             statsBtn: '📊 Статистика', statsTitle: 'Статистика помилок',
             statsHard: 'Важкі слова', statsConf: 'Часті плутанини',
             statsEmpty: 'Поки немає помилок. Продовжуйте займатися!',
@@ -1899,6 +1912,9 @@
         en: {
             ownRef: '▶ Reference', ownMine: '▶ My recording', ownBoth: '▶▶ Both',
             ownDone: 'Compare your pronunciation with the reference:',
+            recStop: '⏹ Recording — tap to stop', recognizing: '⏳ Recognizing the recording…',
+            recogFail: 'Could not recognize the recording. Try again.',
+            recordMode: 'Record your voice, then recognize the recording (needs recent Chrome)',
             statsBtn: '📊 Statistics', statsTitle: 'Error statistics',
             statsHard: 'Difficult words', statsConf: 'Frequent confusions',
             statsEmpty: 'No errors yet. Keep practicing!',
@@ -2096,15 +2112,23 @@
         renderStatsPanel();
     }
 
-    // ----- запись своего голоса вместе с распознаванием -----
-    // Запись стартует с кнопкой «Проговорить и проверить себя» и останавливается, когда
-    // распознавание закончилось. Если слово сказано неверно - показывается блок прослушивания.
+    // ----- запись своего голоса, затем распознавание записи -----
+    // 1-е нажатие кнопки: идёт запись. 2-е нажатие: запись останавливается, записанное
+    // слово распознаётся (recognition.start(audioTrack) - нужен свежий Chrome).
+    // Если слово сказано неверно, показывается блок прослушивания.
+    // Если режим недоступен, работает прежнее распознавание «вживую».
     let ownRec = null, ownStream = null, ownChunks = [], ownUrl = null;
-    let ownTimer = null, ownRecording = false, ownAudio = null;
-    let ownWrong = false, ownSession = 0, ownStartTs = 0, capturePending = false;
+    let ownTimer = null, ownRecording = false, ownAudio = null, recogAudio = null;
+    let ownWrong = false, ownSession = 0, capturePending = false;
 
     function setOwnMsg(msg) {
         document.getElementById('ownVoiceMsg').innerText = msg;
+    }
+
+    function setRecordBtn(text, recordingClass) {
+        const btn = document.getElementById('recordBtn');
+        btn.innerText = text;
+        btn.classList.toggle('recording', !!recordingClass);
     }
 
     function stopOwnRecording() {
@@ -2112,17 +2136,27 @@
         try { if (ownRec && ownRec.state !== 'inactive') ownRec.stop(); } catch (e) {}
     }
 
-    async function startOwnCapture() {
+    // Поддерживает ли браузер запись и распознавание записанной дорожки.
+    function trackRecognitionSupported() {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        return !!(SR && SR.prototype && ('processLocally' in SR.prototype) &&
+                  window.MediaRecorder && navigator.mediaDevices && navigator.mediaDevices.getUserMedia &&
+                  window.HTMLMediaElement && HTMLMediaElement.prototype.captureStream);
+    }
+
+    function useRecordMode() {
+        return isChecked('recordMode') && trackRecognitionSupported();
+    }
+
+    async function beginOwnRecording() {
         resetOwnVoicePanel();
-        ownWrong = false;
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) return;
         try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (e) {}
         const sessionId = ownSession;
         try {
-            ownStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            ownStream = stream;
             ownChunks = [];
-            const rec = new MediaRecorder(ownStream);
-            const stream = ownStream;
+            const rec = new MediaRecorder(stream);
             ownRec = rec;
             rec.ondataavailable = e => { if (e.data && e.data.size) ownChunks.push(e.data); };
             rec.onstop = () => {
@@ -2130,20 +2164,65 @@
                 if (sessionId !== ownSession) return;
                 ownRecording = false;
                 const blob = new Blob(ownChunks, { type: rec.mimeType || 'audio/webm' });
-                // Слишком короткая или пустая запись (микрофон мог быть перехвачен распознаванием) не используется.
-                if (blob.size < 800 || Date.now() - ownStartTs < 300) { ownUrl = null; return; }
+                if (blob.size < 800) {
+                    ownUrl = null;
+                    setRecordBtn(i18n[currentLang].recordBtnStart, false);
+                    showRecordNote(ex().recogFail);
+                    return;
+                }
                 ownUrl = URL.createObjectURL(blob);
-                maybeShowOwnPanel();
+                recognizeRecording();
             };
             rec.start();
-            ownStartTs = Date.now();
             ownRecording = true;
-            ownTimer = setTimeout(stopOwnRecording, 10000);
+            ownTimer = setTimeout(stopOwnRecording, 15000);
+            return true;
         } catch (e) {
             console.warn('Own voice recording unavailable:', e);
             ownRecording = false;
-            try { if (ownStream) ownStream.getTracks().forEach(tr => tr.stop()); } catch (e2) {}
+            return false;
         }
+    }
+
+    function showRecordNote(msg) {
+        const box = document.getElementById('speechResultBox');
+        box.className = 'speech-result-box info';
+        box.innerText = msg;
+    }
+
+    // Распознавание записанной дорожки: запись воспроизводится и передаётся в recognition.start(track).
+    function recognizeRecording() {
+        capturePending = true;
+        setRecordBtn(ex().recognizing, false);
+        const sessionId = ownSession;
+        const audio = new Audio(ownUrl);
+        recogAudio = audio;
+        let started = false;
+        const fail = (err) => {
+            console.warn('Recognition of the recording failed:', err);
+            capturePending = false;
+            try { audio.pause(); } catch (e) {}
+            try { recognition.abort(); } catch (e) {}
+            if (sessionId !== ownSession) return;
+            setRecordBtn(i18n[currentLang].recordBtnStart, false);
+            showRecordNote(ex().recogFail);
+        };
+        audio.addEventListener('canplay', () => {
+            if (started) return;
+            started = true;
+            try {
+                const ms = audio.captureStream ? audio.captureStream() : audio.mozCaptureStream();
+                const track = ms.getAudioTracks()[0];
+                if (!track) throw new Error('no audio track');
+                audio.play().then(() => {
+                    capturePending = false;
+                    if (sessionId !== ownSession) { try { audio.pause(); } catch (e) {} return; }
+                    try { recognition.start(track); } catch (e) { fail(e); }
+                }).catch(fail);
+            } catch (e) { fail(e); }
+        }, { once: true });
+        audio.onerror = () => fail('audio error');
+        audio.load();
     }
 
     // Блок прослушивания показывается только после неверного произношения.
@@ -2187,6 +2266,7 @@
         ownWrong = false;
         stopOwnRecording();
         try { if (ownAudio) ownAudio.pause(); } catch (e) {}
+        try { if (recogAudio) recogAudio.pause(); } catch (e) {}
         if (ownUrl) { URL.revokeObjectURL(ownUrl); ownUrl = null; }
         ownRecording = false;
         const panel = document.getElementById('ownVoicePanel');
@@ -2200,6 +2280,7 @@
         document.getElementById('ownPlayMineBtn').innerText = x.ownMine;
         document.getElementById('ownPlayBothBtn').innerText = x.ownBoth;
         document.getElementById('labelStrictSpeech').innerText = x.strict;
+        document.getElementById('labelRecordMode').innerText = x.recordMode;
         const sp = document.getElementById('statsPanel');
         if (sp && !sp.classList.contains('hidden')) renderStatsPanel();
     }
@@ -2344,22 +2425,38 @@
             initSpeechRecognition();
         }
         if (!recognition) return;
+        if (capturePending) return;
+
+        // 2-е нажатие в режиме записи: остановить запись (дальше запись будет распознана).
+        if (ownRecording) {
+            stopOwnRecording();
+            return;
+        }
 
         if (isRecording) {
             recognition.stop();
-        } else {
-            if (currentLang === 'uk') recognition.lang = 'uk-UA';
-            else if (currentLang === 'ru') recognition.lang = 'ru-RU';
-            else recognition.lang = 'en-US';
-
-            if (capturePending) return;
-            capturePending = true;
-            // Сначала запускается запись голоса, затем распознавание.
-            startOwnCapture().finally(() => {
-                capturePending = false;
-                try { recognition.start(); } catch (e) { console.warn('Recognition start failed:', e); }
-            });
+            return;
         }
+
+        if (currentLang === 'uk') recognition.lang = 'uk-UA';
+        else if (currentLang === 'ru') recognition.lang = 'ru-RU';
+        else recognition.lang = 'en-US';
+
+        if (useRecordMode()) {
+            capturePending = true;
+            beginOwnRecording().then(ok => {
+                capturePending = false;
+                if (ok) {
+                    setRecordBtn(ex().recStop, true);
+                } else {
+                    // Запись недоступна (нет доступа к микрофону и т.п.) - прежний режим.
+                    try { recognition.start(); } catch (e) { console.warn(e); }
+                }
+            });
+            return;
+        }
+
+        recognition.start();
     }
 
     function toggleTimerFeature() {
@@ -2501,6 +2598,7 @@
         localStorage.setItem('app_mode_spell', document.getElementById('modeSpell').checked);
         localStorage.setItem('app_spell_syll_hint', document.getElementById('spellSyllableHint').checked);
         localStorage.setItem('app_strict_speech', document.getElementById('strictSpeech').checked);
+        localStorage.setItem('app_record_mode', document.getElementById('recordMode').checked);
     }
 
     function loadSettings() {
@@ -2530,7 +2628,7 @@
         const savedRestMins = localStorage.getItem('app_rest_mins');
         if (savedRestMins) document.getElementById('restMinutes').value = savedRestMins;
 
-        [['app_gentle', 'gentleMode'], ['app_emoji', 'emojiEnabled'], ['app_autospeak', 'autoSpeak'], ['app_mode_choice', 'modeChoice'], ['app_mode_spell', 'modeSpell'], ['app_spell_syll_hint', 'spellSyllableHint'], ['app_strict_speech', 'strictSpeech']].forEach(([key, id]) => {
+        [['app_gentle', 'gentleMode'], ['app_emoji', 'emojiEnabled'], ['app_autospeak', 'autoSpeak'], ['app_mode_choice', 'modeChoice'], ['app_mode_spell', 'modeSpell'], ['app_spell_syll_hint', 'spellSyllableHint'], ['app_strict_speech', 'strictSpeech'], ['app_record_mode', 'recordMode']].forEach(([key, id]) => {
             const v = localStorage.getItem(key);
             if (v !== null) document.getElementById(id).checked = (v === 'true');
         });
