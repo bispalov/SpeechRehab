@@ -1822,6 +1822,25 @@
         }
     }
 
+    // Озвучивание результата распознавания речи:
+    // верно -> «Правильно»; неверно -> «Неправильно, вы произнесли» + распознанное слово.
+    function speakSpeechFeedback(isCorrect, recognizedWord) {
+        if (!('speechSynthesis' in window)) return;
+        const phrases = {
+            ru: { ok: 'Правильно', bad: 'Неправильно, вы произнесли' },
+            uk: { ok: 'Правильно', bad: 'Неправильно, ви вимовили' },
+            en: { ok: 'Correct', bad: 'Incorrect, you said' }
+        };
+        const p = phrases[currentLang] || phrases.ru;
+        const text = isCorrect ? p.ok : (p.bad + ' ' + recognizedWord);
+        // Небольшая пауза, чтобы микрофон успел освободиться (важно для Android).
+        setTimeout(() => {
+            warmupSpeechSynthesis();
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(makeUtterance(text, 1));
+        }, 300);
+    }
+
     function initSpeechRecognition() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
@@ -1858,9 +1877,11 @@
             if (transcript === targetClean || transcript.includes(targetClean) || targetClean.includes(transcript)) {
                 box.className = 'speech-result-box correct';
                 box.innerText = t.speechYouSaid + `"${transcript}". ` + t.speechCorrect;
+                speakSpeechFeedback(true, transcript);
             } else {
                 box.className = 'speech-result-box incorrect';
                 box.innerText = t.speechYouSaid + `"${transcript}". ` + t.speechIncorrect;
+                speakSpeechFeedback(false, transcript);
             }
         };
 
