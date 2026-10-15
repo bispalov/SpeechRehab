@@ -624,7 +624,14 @@
         <div class="control-group">
             <label class="checkbox-label" for="strictSpeech">
                 <input type="checkbox" id="strictSpeech" onchange="saveSettings()">
-                <span id="labelStrictSpeech">Strict speech check (whole word must match exactly)</span>
+                <span id="labelStrictSpeech">Strict speech check (no other words allowed in the answer)</span>
+            </label>
+        </div>
+
+        <div class="control-group">
+            <label class="checkbox-label" for="requireSpeech">
+                <input type="checkbox" id="requireSpeech" onchange="saveSettings()">
+                <span id="labelRequireSpeech">Require saying the word aloud (otherwise Next is locked)</span>
             </label>
         </div>
 
@@ -707,7 +714,7 @@
         <div class="syllable-display" id="syllableDisplay"></div>
     </div>
 
-    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Next word ➔</button>
+    <button class="next-btn" id="nextBtn" onclick="tryNextQuestion()">Next word ➔</button>
 </div>
 
 <script src="accents.js"></script>
@@ -1580,6 +1587,28 @@
         }, 350);
     }
 
+    // Цель прокрутки: чтобы блок сбора слова из букв был виден целиком (если он помещается).
+    function spellCardTarget() {
+        const card = document.getElementById('spellBuilderCard');
+        if (!card || card.classList.contains('hidden')) return null;
+        const r = card.getBoundingClientRect();
+        const vh = visibleViewportHeight();
+        if (r.height + 24 > vh) return Math.max(0, currentScrollY() + r.top - 8);
+        return Math.max(0, currentScrollY() + r.bottom - vh + 16);
+    }
+
+    function scrollToSpellCard() {
+        cancelAutoScroll();
+        autoScrollTimer = setTimeout(() => {
+            const t = spellCardTarget();
+            if (t !== null && t > currentScrollY() + 2) animateScrollTo(spellCardTarget, 450);
+            autoScrollTimer = setTimeout(() => {
+                const t2 = spellCardTarget();
+                if (t2 !== null && t2 > currentScrollY() + 6) animateScrollTo(spellCardTarget, 300);
+            }, 900);
+        }, 350);
+    }
+
     function taskCardTarget() {
         const card = document.querySelector('.card');
         if (!card) return null;
@@ -1772,6 +1801,7 @@
         document.getElementById('totalCount').innerText = totalCount;
 
         setupSpellBuilder(targetWordSyllables);
+        if (selectedClean !== targetClean) scrollToSpellCard();
     }
 
     function setupSpellBuilder(syllableWord) {
@@ -1854,6 +1884,7 @@
         document.getElementById('speechResultBox').className = 'speech-result-box';
         document.getElementById('speechResultBox').innerText = '';
         resetOwnVoicePanel();
+        resetSpeechRequirement();
         document.getElementById('spellBuilderCard').classList.add('hidden');
 
         targetWordSyllables = getRandomWord();
@@ -1890,7 +1921,9 @@
             statsExport: '⬇ Скачать CSV', statsReset: '🗑 Сбросить',
             statsResetConfirm: 'Удалить всю статистику?',
             need: 'Нужно: ', said: 'Вы сказали: ',
-            strict: 'Строгая проверка речи (слово должно совпасть полностью)'
+            strict: 'Строгая проверка речи (в ответе не должно быть других слов)',
+            requireLabel: 'Обязательно проговаривать слово (иначе нельзя перейти к следующему)',
+            requireMsg: 'Сначала проговорите слово вслух.'
         },
         uk: {
             ownBtn: '🎧 Записати себе', ownStop: '⏹ Зупинити запис',
@@ -1907,7 +1940,9 @@
             statsExport: '⬇ Завантажити CSV', statsReset: '🗑 Скинути',
             statsResetConfirm: 'Видалити всю статистику?',
             need: 'Потрібно: ', said: 'Ви сказали: ',
-            strict: 'Сувора перевірка мовлення (слово має збігтися повністю)'
+            strict: 'Сувора перевірка мовлення (у відповіді не має бути інших слів)',
+            requireLabel: 'Обов’язково промовляти слово (інакше не можна перейти до наступного)',
+            requireMsg: 'Спочатку промовте слово вголос.'
         },
         en: {
             ownBtn: '🎧 Record yourself', ownStop: '⏹ Stop recording',
@@ -1924,7 +1959,9 @@
             statsExport: '⬇ Download CSV', statsReset: '🗑 Reset',
             statsResetConfirm: 'Delete all statistics?',
             need: 'Target: ', said: 'You said: ',
-            strict: 'Strict speech check (whole word must match exactly)'
+            strict: 'Strict speech check (no other words allowed in the answer)',
+            requireLabel: 'Require saying the word aloud (otherwise Next is locked)',
+            requireMsg: 'Please say the word aloud first.'
         }
     };
 
@@ -2239,8 +2276,74 @@
         document.getElementById('ownPlayMineBtn').innerText = x.ownMine;
         document.getElementById('ownPlayBothBtn').innerText = x.ownBoth;
         document.getElementById('labelStrictSpeech').innerText = x.strict;
+        document.getElementById('labelRequireSpeech').innerText = x.requireLabel;
         const sp = document.getElementById('statsPanel');
         if (sp && !sp.classList.contains('hidden')) renderStatsPanel();
+    }
+
+    // ----- проверка произнесённого слова -----
+    function normSpeech(s) {
+        return String(s).toLowerCase()
+            .replace(/ё/g, 'е')
+            .replace(/[’ʼʻ`´']/g, '')
+            .replace(/[^\p{L}\p{N}]+/gu, ' ')
+            .trim();
+    }
+
+    // Слово засчитывается только при точном совпадении (пробелы и знаки не важны).
+    // Похожее, но неточное слово («стараница» вместо «страница») не засчитывается.
+    // Обычный режим допускает другие слова в ответе, если искомое есть среди них целиком.
+    function isSpeechMatch(transcript, target, strict) {
+        const t = normSpeech(transcript);
+        const w = normSpeech(target);
+        if (!t || !w) return false;
+        if (t.replace(/ /g, '') === w.replace(/ /g, '')) return true;
+        if (strict) return false;
+        return t.split(' ').includes(w);
+    }
+
+    // ----- обязательное проговаривание перед переходом к следующему слову -----
+    // Следующее слово доступно после верного произнесения или после MAX_SPEECH_ATTEMPTS неудачных
+    // попыток (чтобы не застрять, если распознавание не работает, например без интернета).
+    const MAX_SPEECH_ATTEMPTS = 3;
+    let speechPassed = false, speechAttempts = 0;
+
+    function speechRecognitionAvailable() {
+        return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+    }
+
+    function nextIsLocked() {
+        return isChecked('requireSpeech') && speechRecognitionAvailable() &&
+               !speechPassed && speechAttempts < MAX_SPEECH_ATTEMPTS;
+    }
+
+    function updateNextLock() {
+        const btn = document.getElementById('nextBtn');
+        if (!btn) return;
+        const locked = nextIsLocked();
+        btn.style.opacity = locked ? '0.5' : '';
+        btn.setAttribute('aria-disabled', locked ? 'true' : 'false');
+    }
+
+    function registerSpeechAttempt(ok) {
+        if (ok) speechPassed = true; else speechAttempts++;
+        updateNextLock();
+    }
+
+    function resetSpeechRequirement() {
+        speechPassed = false;
+        speechAttempts = 0;
+        updateNextLock();
+    }
+
+    function tryNextQuestion() {
+        if (nextIsLocked()) {
+            const box = document.getElementById('speechResultBox');
+            box.className = 'speech-result-box info';
+            box.innerText = ex().requireMsg;
+            return;
+        }
+        nextQuestion();
     }
 
     // Озвучивание результата распознавания речи:
@@ -2345,17 +2448,16 @@
             const box = document.getElementById('speechResultBox');
             const t = i18n[currentLang];
 
-            const norm = s => s.replace(/[\s.,!?;:'"«»\-–—]+/g, '');
-            const isCorrect = isChecked('strictSpeech')
-                ? norm(transcript) === norm(targetClean)
-                : (transcript === targetClean || transcript.includes(targetClean) || targetClean.includes(transcript));
+            const isCorrect = isSpeechMatch(transcript, targetClean, isChecked('strictSpeech'));
 
             recordResult('speech', targetClean, transcript, isCorrect);
+            registerSpeechAttempt(isCorrect);
 
             if (isCorrect) {
                 box.className = 'speech-result-box correct';
                 box.innerText = t.speechYouSaid + `"${transcript}". ` + t.speechCorrect;
                 speakSpeechFeedback(true, transcript);
+                scrollToNextButton();
             } else {
                 box.className = 'speech-result-box incorrect';
                 box.innerText = t.speechYouSaid + `"${transcript}". ` + t.speechIncorrect;
@@ -2367,6 +2469,7 @@
 
         recognition.onerror = (event) => {
             console.warn("Speech recognition error:", event.error);
+            if (event.error !== 'aborted') registerSpeechAttempt(false);
             isRecording = false;
             const btn = document.getElementById('recordBtn');
             btn.classList.remove('recording');
@@ -2531,6 +2634,8 @@
         localStorage.setItem('app_mode_spell', document.getElementById('modeSpell').checked);
         localStorage.setItem('app_spell_syll_hint', document.getElementById('spellSyllableHint').checked);
         localStorage.setItem('app_strict_speech', document.getElementById('strictSpeech').checked);
+        localStorage.setItem('app_require_speech', document.getElementById('requireSpeech').checked);
+        updateNextLock();
     }
 
     function loadSettings() {
@@ -2560,7 +2665,7 @@
         const savedRestMins = localStorage.getItem('app_rest_mins');
         if (savedRestMins) document.getElementById('restMinutes').value = savedRestMins;
 
-        [['app_gentle', 'gentleMode'], ['app_emoji', 'emojiEnabled'], ['app_autospeak', 'autoSpeak'], ['app_mode_choice', 'modeChoice'], ['app_mode_spell', 'modeSpell'], ['app_spell_syll_hint', 'spellSyllableHint'], ['app_strict_speech', 'strictSpeech']].forEach(([key, id]) => {
+        [['app_gentle', 'gentleMode'], ['app_emoji', 'emojiEnabled'], ['app_autospeak', 'autoSpeak'], ['app_mode_choice', 'modeChoice'], ['app_mode_spell', 'modeSpell'], ['app_spell_syll_hint', 'spellSyllableHint'], ['app_strict_speech', 'strictSpeech'], ['app_require_speech', 'requireSpeech']].forEach(([key, id]) => {
             const v = localStorage.getItem(key);
             if (v !== null) document.getElementById(id).checked = (v === 'true');
         });
