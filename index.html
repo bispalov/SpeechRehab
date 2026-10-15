@@ -1609,6 +1609,21 @@
         }, 350);
     }
 
+    // Прокрутка к блоку «Проговорить и проверить себя» (кнопка и поле результата), если он не виден целиком.
+    function scrollToSpeechBlock() {
+        cancelAutoScroll();
+        autoScrollTimer = setTimeout(() => {
+            const btn = document.getElementById('recordBtn');
+            const box = document.getElementById('speechResultBox');
+            if (!btn || !box) return;
+            const top = btn.getBoundingClientRect().top;
+            const bottom = box.getBoundingClientRect().bottom;
+            if (top >= 0 && bottom <= visibleViewportHeight()) return;
+            const target = Math.max(0, currentScrollY() + top - 12);
+            if (Math.abs(target - currentScrollY()) > 2) animateScrollTo(() => target, 400);
+        }, 60);
+    }
+
     function taskCardTarget() {
         const card = document.querySelector('.card');
         if (!card) return null;
@@ -2341,6 +2356,7 @@
             const box = document.getElementById('speechResultBox');
             box.className = 'speech-result-box info';
             box.innerText = ex().requireMsg;
+            scrollToSpeechBlock();
             return;
         }
         nextQuestion();
