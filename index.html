@@ -380,6 +380,60 @@
             pointer-events: none;
             opacity: 0.5;
         }
+        .help-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 900;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        .help-overlay.hidden { display: none; }
+        .help-panel {
+            background: var(--card-bg);
+            color: var(--text-color);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 560px;
+            max-height: 82vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+        }
+        .help-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--input-border);
+        }
+        .help-head h2 { margin: 0; font-size: 1.2em; }
+        .help-close {
+            background: var(--word-box-bg);
+            color: var(--text-color);
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            font-size: 1.1em;
+            padding: 4px 12px;
+            cursor: pointer;
+        }
+        .help-body {
+            padding: 6px 16px 16px;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+            font-size: 0.95em;
+            line-height: 1.45;
+        }
+        .help-body h3 { margin: 14px 0 4px; font-size: 1.02em; }
+        .help-body p { margin: 4px 0; }
+        .help-body ul { margin: 4px 0; padding-left: 20px; }
+        .help-body li { margin: 3px 0; }
         .rest-overlay {
             position: fixed;
             inset: 0;
@@ -523,6 +577,16 @@
 </head>
 <body>
 
+<div id="helpOverlay" class="help-overlay hidden" onclick="onHelpOverlayClick(event)">
+    <div class="help-panel" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+        <div class="help-head">
+            <h2 id="helpTitle">Help</h2>
+            <button class="help-close" id="helpClose" onclick="closeHelp()" aria-label="Close">✕</button>
+        </div>
+        <div class="help-body" id="helpBody"></div>
+    </div>
+</div>
+
 <div id="restOverlay" class="rest-overlay hidden">
     <div class="rest-overlay-content">
         <div class="rest-icon">☕</div>
@@ -538,6 +602,7 @@
         <div class="header-btns">
             <button class="settings-toggle-btn" id="statsBtn" onclick="toggleStatsPanel()">📊 Statistics</button>
             <button class="settings-toggle-btn" id="settingsBtn" onclick="toggleSettingsPanel()">⚙️ Settings</button>
+            <button class="settings-toggle-btn" id="helpBtn" onclick="openHelp()" aria-label="Help" title="Help">❓</button>
         </div>
     </div>
 
@@ -2292,9 +2357,184 @@
         document.getElementById('ownPlayBothBtn').innerText = x.ownBoth;
         document.getElementById('labelStrictSpeech').innerText = x.strict;
         document.getElementById('labelRequireSpeech').innerText = x.requireLabel;
+        const hh = helpI18n[currentLang] || helpI18n.ru;
+        const hb = document.getElementById('helpBtn');
+        hb.setAttribute('aria-label', hh.btn);
+        hb.title = hh.btn;
+        if (!document.getElementById('helpOverlay').classList.contains('hidden')) renderHelp();
         const sp = document.getElementById('statsPanel');
         if (sp && !sp.classList.contains('hidden')) renderStatsPanel();
     }
+
+    // ----- Справка -----
+    const helpI18n = {
+        ru: {
+            btn: 'Справка', title: 'Справка', close: 'Закрыть',
+            body: `
+<p>Тренажёр помогает различать на слух похожие слова и тренировать собственное произношение. Занятия состоят из коротких заданий: слово озвучивается, а вы выбираете его, собираете из букв и произносите вслух.</p>
+
+<h3>Как заниматься</h3>
+<ul>
+<li><b>🔊 Послушать слово</b> — озвучить загаданное слово ещё раз.</li>
+<li><b>🐢 По слогам</b> — медленное произнесение по слогам.</li>
+<li><b>💡 Подсказка</b> — три уровня: первый слог, слово по слогам с ударением, ответ.</li>
+<li><b>Выбор слова</b> — выберите услышанное слово среди вариантов. В <i>мягком режиме</i> неверный вариант гаснет, и можно выбрать снова. В обычном режиме попытка одна, правильный ответ подсвечивается.</li>
+<li><b>Сбор слова из букв</b> — составьте слово из букв; можно показывать слоги.</li>
+<li><b>Следующее слово ➔</b> — переход к новому заданию.</li>
+<li>Счётчики над заданием показывают число верных ответов и всего заданий.</li>
+</ul>
+
+<h3>Проверка произношения</h3>
+<ul>
+<li>Нажмите <b>🎙 Проговорить и проверить себя</b>, когда появится «Слушаю», скажите слово.</li>
+<li>Приложение озвучит результат: «Правильно» или «Неправильно, вы произнесли …» и покажет, какие буквы отличаются.</li>
+<li>После верного слова страница сама прокручивается к кнопке «Следующее слово».</li>
+<li>После неверного слова появляется блок <b>🎧 Записать себя</b>: нажмите, скажите слово, нажмите ещё раз для остановки. Затем сравните на слух: «Эталон», «Моя запись» или «Подряд». Блок скрывается при переходе к следующему слову.</li>
+<li>Распознавание речи требует разрешения на микрофон и, как правило, интернета.</li>
+</ul>
+
+<h3>📊 Статистика</h3>
+<p>Показывает трудные слова и частые путаницы (что услышали вместо нужного слова). Слова с ошибками предлагаются чаще. Данные хранятся только на этом устройстве; их можно скачать в виде CSV или сбросить.</p>
+
+<h3>⚙️ Настройки</h3>
+<ul>
+<li><b>Язык и тема</b> — русский, украинский, английский; светлая и тёмная тема.</li>
+<li><b>Количество вариантов</b> — 2, 3 или 4.</li>
+<li><b>Голос и скорость речи</b> — голос устройства и темп озвучивания.</li>
+<li><b>Мягкий режим</b> — неверные варианты гаснут, выбирать можно снова.</li>
+<li><b>Картинки (эмодзи)</b> — показывать рисунок рядом со словом.</li>
+<li><b>Автоозвучивание</b> — новое слово произносится само.</li>
+<li><b>Блоки заданий</b> — можно включать и отключать «выбор слова» и «сбор из букв»; для режима только из букв можно показывать слоги.</li>
+<li><b>Строгая проверка речи</b> — в ответе не должно быть других слов. Слово должно совпасть точно; похожее, но неточное слово не засчитывается.</li>
+<li><b>Обязательно проговаривать слово</b> — пока слово не произнесено верно, «Следующее слово» не срабатывает, а страница возвращается к блоку проговаривания. После трёх неудачных попыток переход открывается, чтобы не застрять.</li>
+<li><b>Таймер «Игра / Отдых»</b> — после времени игры включается пауза для отдыха; длительность задаётся в минутах.</li>
+</ul>
+
+<h3>Без интернета и установка</h3>
+<p>Откройте приложение в Chrome и выберите «Установить приложение» или «Добавить на главный экран». После первого запуска с интернетом оно работает и без сети. Исключение — распознавание речи, ему обычно нужен интернет. Если приложение обновили, закройте его и откройте снова.</p>
+<p>Если слова не озвучиваются, проверьте громкость и выберите другой голос в настройках.</p>`
+        },
+        uk: {
+            btn: 'Довідка', title: 'Довідка', close: 'Закрити',
+            body: `
+<p>Тренажер допомагає розрізняти на слух схожі слова і тренувати власну вимову. Заняття складаються з коротких завдань: слово озвучується, а ви вибираєте його, збираєте з літер і вимовляєте вголос.</p>
+
+<h3>Як займатися</h3>
+<ul>
+<li><b>🔊 Послухати слово</b> — озвучити загадане слово ще раз.</li>
+<li><b>🐢 По складах</b> — повільна вимова по складах.</li>
+<li><b>💡 Підказка</b> — три рівні: перший склад, слово по складах з наголосом, відповідь.</li>
+<li><b>Вибір слова</b> — виберіть почуте слово серед варіантів. У <i>м’якому режимі</i> неправильний варіант гасне, і можна вибрати знову. У звичайному режимі спроба одна, правильна відповідь підсвічується.</li>
+<li><b>Збирання слова з літер</b> — складіть слово з літер; можна показувати склади.</li>
+<li><b>Наступне слово ➔</b> — перехід до нового завдання.</li>
+<li>Лічильники над завданням показують кількість правильних відповідей і всього завдань.</li>
+</ul>
+
+<h3>Перевірка вимови</h3>
+<ul>
+<li>Натисніть <b>🎙 Промовити і перевірити себе</b>, коли з’явиться «Слухаю», скажіть слово.</li>
+<li>Застосунок озвучить результат: «Правильно» або «Неправильно, ви вимовили …» і покаже, які літери відрізняються.</li>
+<li>Після правильного слова сторінка сама прокручується до кнопки «Наступне слово».</li>
+<li>Після неправильного слова з’являється блок <b>🎧 Записати себе</b>: натисніть, скажіть слово, натисніть ще раз для зупинки. Потім порівняйте на слух: «Еталон», «Мій запис» або «Підряд». Блок ховається при переході до наступного слова.</li>
+<li>Розпізнавання мовлення потребує дозволу на мікрофон і, як правило, інтернету.</li>
+</ul>
+
+<h3>📊 Статистика</h3>
+<p>Показує важкі слова і часті плутанини (що почули замість потрібного слова). Слова з помилками пропонуються частіше. Дані зберігаються лише на цьому пристрої; їх можна завантажити як CSV або скинути.</p>
+
+<h3>⚙️ Налаштування</h3>
+<ul>
+<li><b>Мова і тема</b> — російська, українська, англійська; світла й темна тема.</li>
+<li><b>Кількість варіантів</b> — 2, 3 або 4.</li>
+<li><b>Голос і швидкість мовлення</b> — голос пристрою і темп озвучення.</li>
+<li><b>М’який режим</b> — неправильні варіанти гаснуть, вибирати можна знову.</li>
+<li><b>Картинки (емодзі)</b> — показувати малюнок поруч зі словом.</li>
+<li><b>Автоозвучення</b> — нове слово вимовляється саме.</li>
+<li><b>Блоки завдань</b> — можна вмикати й вимикати «вибір слова» та «збирання з літер»; для режиму лише з літер можна показувати склади.</li>
+<li><b>Сувора перевірка мовлення</b> — у відповіді не має бути інших слів. Слово має збігтися точно; схоже, але неточне слово не зараховується.</li>
+<li><b>Обов’язково промовляти слово</b> — доки слово не вимовлено правильно, «Наступне слово» не спрацьовує, а сторінка повертається до блоку промовляння. Після трьох невдалих спроб перехід відкривається, щоб не застрягти.</li>
+<li><b>Таймер «Гра / Відпочинок»</b> — після часу гри вмикається пауза для відпочинку; тривалість задається в хвилинах.</li>
+</ul>
+
+<h3>Без інтернету та встановлення</h3>
+<p>Відкрийте застосунок у Chrome і виберіть «Установити застосунок» або «Додати на головний екран». Після першого запуску з інтернетом він працює і без мережі. Виняток — розпізнавання мовлення, йому зазвичай потрібен інтернет. Якщо застосунок оновили, закрийте його й відкрийте знову.</p>
+<p>Якщо слова не озвучуються, перевірте гучність і виберіть інший голос у налаштуваннях.</p>`
+        },
+        en: {
+            btn: 'Help', title: 'Help', close: 'Close',
+            body: `
+<p>This trainer helps you tell similar-sounding words apart by ear and practice your own pronunciation. Each task is short: the word is spoken, then you choose it, assemble it from letters and say it aloud.</p>
+
+<h3>How to practice</h3>
+<ul>
+<li><b>🔊 Listen</b> — hear the target word again.</li>
+<li><b>🐢 By syllables</b> — slow pronunciation, syllable by syllable.</li>
+<li><b>💡 Hint</b> — three levels: the first syllable, the word split into syllables with stress, then the answer.</li>
+<li><b>Choose the word</b> — pick the word you heard among the options. In <i>gentle mode</i> a wrong option fades out and you can choose again. In normal mode you have one attempt and the right answer is highlighted.</li>
+<li><b>Assemble from letters</b> — build the word from letters; syllables can be shown.</li>
+<li><b>Next word ➔</b> — move to the next task.</li>
+<li>The counters above the task show correct answers and total tasks.</li>
+</ul>
+
+<h3>Checking your pronunciation</h3>
+<ul>
+<li>Tap <b>🎙 Pronounce and check yourself</b> and say the word when it shows “Listening”.</li>
+<li>The app speaks the result, “Correct” or “Incorrect, you said …”, and shows which letters differ.</li>
+<li>After a correct word the page scrolls to the “Next word” button by itself.</li>
+<li>After a wrong word the <b>🎧 Record yourself</b> block appears: tap, say the word, tap again to stop. Then compare by ear: “Reference”, “My recording” or “Both”. The block hides when you go to the next word.</li>
+<li>Speech recognition needs microphone permission and usually an internet connection.</li>
+</ul>
+
+<h3>📊 Statistics</h3>
+<p>Shows difficult words and frequent confusions (what was heard instead of the target word). Words with mistakes are offered more often. Data stays on this device only; you can download it as CSV or reset it.</p>
+
+<h3>⚙️ Settings</h3>
+<ul>
+<li><b>Language and theme</b> — Russian, Ukrainian, English; light and dark theme.</li>
+<li><b>Number of options</b> — 2, 3 or 4.</li>
+<li><b>Voice and speech speed</b> — the device voice and speaking pace.</li>
+<li><b>Gentle mode</b> — wrong options fade out and you can choose again.</li>
+<li><b>Pictures (emoji)</b> — show a picture next to the word.</li>
+<li><b>Speak new word automatically</b> — the new word is spoken on its own.</li>
+<li><b>Task blocks</b> — “choose the word” and “assemble from letters” can be turned on and off; in letters-only mode syllables can be shown.</li>
+<li><b>Strict speech check</b> — no other words allowed in the answer. The word must match exactly; a similar but inexact word is not accepted.</li>
+<li><b>Require saying the word aloud</b> — “Next word” does not work until the word is pronounced correctly, and the page scrolls back to the speaking block. After three failed attempts it unlocks so you never get stuck.</li>
+<li><b>Play / Rest timer</b> — after the play time a rest break starts; durations are set in minutes.</li>
+</ul>
+
+<h3>Offline use and installing</h3>
+<p>Open the app in Chrome and choose “Install app” or “Add to home screen”. After the first launch with internet it also works without a network. The exception is speech recognition, which usually needs internet. After an update, close the app and open it again.</p>
+<p>If words are not spoken, check the volume and pick another voice in the settings.</p>`
+        }
+    };
+
+    function renderHelp() {
+        const h = helpI18n[currentLang] || helpI18n.ru;
+        document.getElementById('helpTitle').innerText = h.title;
+        document.getElementById('helpClose').setAttribute('aria-label', h.close);
+        document.getElementById('helpBody').innerHTML = h.body;
+    }
+
+    function openHelp() {
+        renderHelp();
+        const overlay = document.getElementById('helpOverlay');
+        overlay.classList.remove('hidden');
+        document.getElementById('helpBody').scrollTop = 0;
+        document.getElementById('helpClose').focus();
+    }
+
+    function closeHelp() {
+        document.getElementById('helpOverlay').classList.add('hidden');
+    }
+
+    // Закрытие по нажатию на затемнённую область за пределами окна справки.
+    function onHelpOverlayClick(e) {
+        if (e.target && e.target.id === 'helpOverlay') closeHelp();
+    }
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeHelp();
+    });
 
     // ----- проверка произнесённого слова -----
     function normSpeech(s) {
