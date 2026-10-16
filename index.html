@@ -431,6 +431,35 @@
             line-height: 1.45;
         }
         .help-body h3 { margin: 14px 0 4px; font-size: 1.02em; }
+        .help-body code { background: var(--word-box-bg); padding: 1px 5px; border-radius: 4px; }
+        .dict-row { display: flex; gap: 8px; align-items: center; }
+        .dict-input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 9px 10px;
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-size: 1em;
+            margin: 4px 0;
+        }
+        .dict-alts { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
+        .dict-chip {
+            background: var(--word-box-bg);
+            color: var(--text-color);
+            border: 1px solid var(--input-border);
+            border-radius: 14px;
+            padding: 3px 10px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .dict-status { min-height: 1.3em; margin-top: 6px; font-weight: bold; }
+        .dict-list { max-height: 180px; overflow-y: auto; border: 1px solid var(--input-border); border-radius: 8px; }
+        .dict-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 8px; border-bottom: 1px solid var(--input-border); }
+        .dict-item:last-child { border-bottom: none; }
+        .dict-item button { background: none; border: none; cursor: pointer; font-size: 1.1em; color: var(--text-color); }
+        .dict-empty { padding: 8px; opacity: 0.7; }
         .help-body p { margin: 4px 0; }
         .help-body ul { margin: 4px 0; padding-left: 20px; }
         .help-body li { margin: 3px 0; }
@@ -577,6 +606,44 @@
 </head>
 <body>
 
+<div id="dictOverlay" class="help-overlay hidden" onclick="onDictOverlayClick(event)">
+    <div class="help-panel" role="dialog" aria-modal="true" aria-labelledby="dictTitle">
+        <div class="help-head">
+            <h2 id="dictTitle">My words</h2>
+            <button class="help-close" id="dictClose" onclick="closeDict()" aria-label="Close">✕</button>
+        </div>
+        <div class="help-body" id="dictBody">
+            <label id="dictWordLabel" for="dictWordInput">Word:</label>
+            <div class="dict-row">
+                <input type="text" id="dictWordInput" class="dict-input" autocomplete="off" autocapitalize="off" spellcheck="false" oninput="onDictWordInput()">
+                <button class="assist-btn" id="dictSayBtn" onclick="dictListen()">🎙</button>
+            </div>
+            <div id="dictAlts" class="dict-alts"></div>
+            <label id="dictSylLabel" for="dictSylInput">Syllables:</label>
+            <input type="text" id="dictSylInput" class="dict-input" autocomplete="off" autocapitalize="off" spellcheck="false" oninput="dictSylTouched = true">
+            <div class="assist-row" style="margin-top:8px;">
+                <button class="assist-btn" id="dictHearBtn" onclick="dictHear()">🔊 Listen</button>
+                <button class="assist-btn hint" id="dictAddBtn" onclick="dictAdd()">➕ Add</button>
+            </div>
+            <div id="dictStatus" class="dict-status"></div>
+
+            <h3 id="dictListTitle">My words</h3>
+            <div id="dictList" class="dict-list"></div>
+            <div class="assist-row" style="margin-top:8px;">
+                <button class="assist-btn" id="dictExportBtn" onclick="dictExport()">⬇ Export</button>
+                <button class="assist-btn" id="dictImportBtn" onclick="document.getElementById('dictImportFile').click()">⬆ Import</button>
+            </div>
+            <input type="file" id="dictImportFile" accept=".json,application/json" style="display:none" onchange="dictImport(event)">
+
+            <h3 id="dictOnlineTitle">Online dictionary</h3>
+            <div id="dictOnline"></div>
+            <div class="assist-row" style="margin-top:8px;">
+                <button class="assist-btn" id="dictRefreshBtn" onclick="dictRefreshOnline()">🔄 Refresh</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="helpOverlay" class="help-overlay hidden" onclick="onHelpOverlayClick(event)">
     <div class="help-panel" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
         <div class="help-head">
@@ -698,6 +765,10 @@
                 <input type="checkbox" id="requireSpeech" onchange="saveSettings()">
                 <span id="labelRequireSpeech">Require saying the word aloud (otherwise Next is locked)</span>
             </label>
+        </div>
+
+        <div class="control-group">
+            <button class="assist-btn" id="dictBtn" onclick="openDict()">📚 My words</button>
         </div>
 
         <div class="control-group">
@@ -975,16 +1046,25 @@
         }
     };
 
-    function getActiveDictionary() {
-        if (currentLang === 'uk') return dictionaryUk;
-        if (currentLang === 'ru') return dictionaryRu;
+    // Базовые словари из файлов dict-*.js; к ним добавляются слова из extra-dict.json и «Мои слова».
+    function baseDictionaryFor(lang) {
+        if (lang === 'uk') return dictionaryUk;
+        if (lang === 'ru') return dictionaryRu;
         return dictionaryEn;
     }
 
-    function getActiveRealWordPairs() {
-        if (currentLang === 'uk') return realWordPairsUk;
-        if (currentLang === 'ru') return realWordPairsRu;
+    function basePairsFor(lang) {
+        if (lang === 'uk') return realWordPairsUk;
+        if (lang === 'ru') return realWordPairsRu;
         return realWordPairsEn;
+    }
+
+    function getActiveDictionary() {
+        return getMergedDictionary(currentLang);
+    }
+
+    function getActiveRealWordPairs() {
+        return getMergedPairs(currentLang);
     }
 
     let targetWordSyllables = "";
@@ -2357,6 +2437,10 @@
         document.getElementById('ownPlayBothBtn').innerText = x.ownBoth;
         document.getElementById('labelStrictSpeech').innerText = x.strict;
         document.getElementById('labelRequireSpeech').innerText = x.requireLabel;
+        document.getElementById('dictBtn').innerText = dx().btn;
+        if (!document.getElementById('dictOverlay').classList.contains('hidden')) {
+            renderDictTexts(); renderDictList(); renderDictOnline();
+        }
         const hh = helpI18n[currentLang] || helpI18n.ru;
         const hb = document.getElementById('helpBtn');
         hb.setAttribute('aria-label', hh.btn);
@@ -2365,6 +2449,500 @@
         const sp = document.getElementById('statsPanel');
         if (sp && !sp.classList.contains('hidden')) renderStatsPanel();
     }
+
+    // ===== Свой словарь =====
+    // 1) «Мои слова» - слова пользователя в localStorage (работают без интернета);
+    // 2) extra-dict.json - необязательный файл на сайте: скачивается при наличии интернета,
+    //    копия хранится на устройстве и используется без сети.
+    const dictI18n = {
+        ru: {
+            catName: 'Мои слова',
+            btn: '📚 Мои слова (словарь)', title: 'Мои слова',
+            wordLabel: 'Слово:', say: '🎙', listening: '⏺', sylLabel: 'Слоги (через дефис):',
+            hear: '🔊 Прослушать', add: '➕ Добавить', listTitle: 'Добавленные слова',
+            empty: 'Пока нет своих слов.', del: 'Удалить',
+            exportBtn: '⬇ Экспорт', importBtn: '⬆ Импорт',
+            onlineTitle: 'Онлайн-словарь (extra-dict.json)', refresh: '🔄 Обновить',
+            heard: 'Распознано: проверьте слово и нажмите «Добавить».',
+            noSupport: 'Распознавание речи не поддерживается в этом браузере.',
+            errPrefix: 'Ошибка распознавания: ',
+            needWord: 'Введите или проговорите слово.',
+            sylMismatch: 'Слоги должны давать то же слово.',
+            exists: 'Такое слово уже есть в словаре.',
+            added: 'Слово добавлено в «Мои слова».',
+            exported: 'Файл сохранён.',
+            imported: 'Добавлено слов: ',
+            importBad: 'Не удалось прочитать файл.',
+            onlineNone: 'Файл не найден или нет интернета, дополнительных слов нет.',
+            onlineOnline: 'Загружен с сайта. Слов: ',
+            onlineSaved: 'Используется копия на устройстве. Слов: ',
+            refreshing: 'Обновляю…', refreshFail: 'Не удалось загрузить файл с сайта.'
+        },
+        uk: {
+            catName: 'Мої слова',
+            btn: '📚 Мої слова (словник)', title: 'Мої слова',
+            wordLabel: 'Слово:', say: '🎙', listening: '⏺', sylLabel: 'Склади (через дефіс):',
+            hear: '🔊 Прослухати', add: '➕ Додати', listTitle: 'Додані слова',
+            empty: 'Поки немає своїх слів.', del: 'Видалити',
+            exportBtn: '⬇ Експорт', importBtn: '⬆ Імпорт',
+            onlineTitle: 'Онлайн-словник (extra-dict.json)', refresh: '🔄 Оновити',
+            heard: 'Розпізнано: перевірте слово і натисніть «Додати».',
+            noSupport: 'Розпізнавання мовлення не підтримується в цьому браузері.',
+            errPrefix: 'Помилка розпізнавання: ',
+            needWord: 'Введіть або промовте слово.',
+            sylMismatch: 'Склади мають давати те саме слово.',
+            exists: 'Таке слово вже є у словнику.',
+            added: 'Слово додано до «Мої слова».',
+            exported: 'Файл збережено.',
+            imported: 'Додано слів: ',
+            importBad: 'Не вдалося прочитати файл.',
+            onlineNone: 'Файл не знайдено або немає інтернету, додаткових слів немає.',
+            onlineOnline: 'Завантажено з сайту. Слів: ',
+            onlineSaved: 'Використовується копія на пристрої. Слів: ',
+            refreshing: 'Оновлюю…', refreshFail: 'Не вдалося завантажити файл із сайту.'
+        },
+        en: {
+            catName: 'My words',
+            btn: '📚 My words (dictionary)', title: 'My words',
+            wordLabel: 'Word:', say: '🎙', listening: '⏺', sylLabel: 'Syllables (separated by hyphens):',
+            hear: '🔊 Listen', add: '➕ Add', listTitle: 'Added words',
+            empty: 'No words of your own yet.', del: 'Delete',
+            exportBtn: '⬇ Export', importBtn: '⬆ Import',
+            onlineTitle: 'Online dictionary (extra-dict.json)', refresh: '🔄 Refresh',
+            heard: 'Recognized: check the word and tap “Add”.',
+            noSupport: 'Speech recognition is not supported in this browser.',
+            errPrefix: 'Recognition error: ',
+            needWord: 'Type or say a word.',
+            sylMismatch: 'The syllables must make up the same word.',
+            exists: 'This word is already in the dictionary.',
+            added: 'Word added to “My words”.',
+            exported: 'File saved.',
+            imported: 'Words added: ',
+            importBad: 'Could not read the file.',
+            onlineNone: 'File not found or no internet; no extra words.',
+            onlineOnline: 'Loaded from the site. Words: ',
+            onlineSaved: 'Using the copy saved on this device. Words: ',
+            refreshing: 'Refreshing…', refreshFail: 'Could not load the file from the site.'
+        }
+    };
+
+    function dx() { return dictI18n[currentLang] || dictI18n.ru; }
+
+    // ----- деление на слоги (приблизительное, результат можно исправить вручную) -----
+    function syllabifyToken(word, lang) {
+        const V = lang === 'en' ? 'aeiouy' : (lang === 'uk' ? 'аеєиіїоуюя' : 'аеёиоуыэюя');
+        const chars = [...word.toLowerCase()];
+        const isV = c => V.includes(c);
+        // ядра слогов: в английском подряд идущие гласные считаются одним ядром
+        const nuclei = [];
+        for (let i = 0; i < chars.length; i++) {
+            if (!isV(chars[i])) continue;
+            if (lang === 'en' && nuclei.length && nuclei[nuclei.length - 1][1] === i - 1) nuclei[nuclei.length - 1][1] = i;
+            else nuclei.push([i, i]);
+        }
+        // английское «немое e» на конце не образует слог
+        if (lang === 'en' && nuclei.length > 1) {
+            const last = nuclei[nuclei.length - 1];
+            const n = chars.length;
+            if (last[0] === n - 1 && chars[n - 1] === 'e' && !isV(chars[n - 2]) && !(chars[n - 2] === 'l' && n > 3 && !isV(chars[n - 3]))) nuclei.pop();
+        }
+        if (nuclei.length < 2) return chars.join('');
+        const cuts = [];
+        for (let k = 0; k < nuclei.length - 1; k++) {
+            const e = nuclei[k][1], s = nuclei[k + 1][0];
+            const gap = s - e - 1;
+            let cut;
+            if (gap === 0) cut = s;
+            else if (gap === 1) cut = (chars[e + 1] === 'й') ? e + 2 : e + 1;
+            else cut = e + 2;
+            while (cut < s && ['ь', 'ъ', "'"].includes(chars[cut])) cut++;
+            cuts.push(cut);
+        }
+        let out = '', prev = 0;
+        cuts.forEach(c => { out += chars.slice(prev, c).join('') + '-'; prev = c; });
+        out += chars.slice(prev).join('');
+        return out;
+    }
+
+    function syllabifyPhrase(text, lang) {
+        return text.trim().split(/\s+/).map(t => syllabifyToken(t, lang || currentLang)).join(' ');
+    }
+
+    function normalizeDictWord(s) {
+        return String(s || '').toLowerCase()
+            .replace(/[’ʼʻ`´]/g, "'")
+            .replace(/-/g, '')
+            .replace(/[^\p{L}\p{N}' ]+/gu, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function cleanKey(w) { return cleanWord(w).toLowerCase().replace(/\s+/g, ' ').trim(); }
+
+    // ----- хранилище «Мои слова» -----
+    const USER_WORDS_KEY = 'app_user_words_v1';
+    let userWords = (function () {
+        try {
+            const o = JSON.parse(localStorage.getItem(USER_WORDS_KEY) || '{}');
+            const r = { ru: [], uk: [], en: [] };
+            ['ru', 'uk', 'en'].forEach(l => { if (o && Array.isArray(o[l])) r[l] = o[l].filter(x => typeof x === 'string'); });
+            return r;
+        } catch (e) { return { ru: [], uk: [], en: [] }; }
+    })();
+
+    function saveUserWords() {
+        try { localStorage.setItem(USER_WORDS_KEY, JSON.stringify(userWords)); } catch (e) {}
+    }
+
+    // ----- дополнительный словарь extra-dict.json -----
+    const EXTRA_KEY = 'app_extra_dict_v1';
+    let extraDictData = { ru: {}, uk: {}, en: {}, pairs: { ru: {}, uk: {}, en: {} } };
+    let extraSource = 'none';   // 'online' | 'saved' | 'none'
+
+    function normalizeExtra(raw) {
+        const out = { ru: {}, uk: {}, en: {}, pairs: { ru: {}, uk: {}, en: {} } };
+        const fixWord = (w, lang) => {
+            if (typeof w !== 'string') return null;
+            let s = w.toLowerCase().replace(/[’ʼʻ`´]/g, "'").replace(/[^\p{L}\p{N}' \-]+/gu, '').replace(/\s+/g, ' ').trim();
+            if (!s || s.length > 40) return null;
+            return s.includes('-') ? s : syllabifyPhrase(s, lang);
+        };
+        ['ru', 'uk', 'en'].forEach(lang => {
+            const cats = raw && raw[lang];
+            if (cats && typeof cats === 'object' && !Array.isArray(cats)) {
+                Object.keys(cats).slice(0, 100).forEach(cat => {
+                    if (!Array.isArray(cats[cat])) return;
+                    const list = cats[cat].slice(0, 5000).map(w => fixWord(w, lang)).filter(Boolean);
+                    if (list.length) out[lang][String(cat).slice(0, 60)] = list;
+                });
+            }
+            const pairs = raw && raw.pairs && raw.pairs[lang];
+            if (pairs && typeof pairs === 'object' && !Array.isArray(pairs)) {
+                Object.keys(pairs).slice(0, 5000).forEach(k => {
+                    if (!Array.isArray(pairs[k])) return;
+                    const list = pairs[k].slice(0, 20).map(w => fixWord(w, lang)).filter(Boolean);
+                    const key = normalizeDictWord(k);
+                    if (key && list.length) out.pairs[lang][key] = list;
+                });
+            }
+        });
+        return out;
+    }
+
+    function countExtraWords() {
+        let n = 0;
+        ['ru', 'uk', 'en'].forEach(l => Object.values(extraDictData[l] || {}).forEach(a => { n += a.length; }));
+        return n;
+    }
+
+    (function loadExtraFromStorage() {
+        try {
+            const txt = localStorage.getItem(EXTRA_KEY);
+            if (!txt) return;
+            extraDictData = normalizeExtra(JSON.parse(txt));
+            extraSource = 'saved';
+        } catch (e) {}
+    })();
+
+    // Загрузка файла с сайта. При ошибке (нет интернета, нет файла) остаётся сохранённая копия.
+    async function fetchExtraDictionary() {
+        try {
+            const res = await fetch('extra-dict.json?ts=' + Date.now(), { cache: 'no-store' });
+            if (!res.ok) throw new Error('http ' + res.status);
+            const raw = JSON.parse(await res.text());
+            if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('bad format');
+            extraDictData = normalizeExtra(raw);
+            extraSource = 'online';
+            try { localStorage.setItem(EXTRA_KEY, JSON.stringify(raw)); } catch (e) {}
+            invalidateDictionaries();
+            return true;
+        } catch (e) {
+            console.log('extra-dict.json not loaded:', e && e.message);
+            return false;
+        }
+    }
+
+    // ----- объединённые словари (базовые + extra-dict.json + «Мои слова») -----
+    const mergedDictCache = {}, mergedPairsCache = {};
+
+    function invalidateDictionaries() {
+        Object.keys(mergedDictCache).forEach(k => delete mergedDictCache[k]);
+        Object.keys(mergedPairsCache).forEach(k => delete mergedPairsCache[k]);
+    }
+
+    function getMergedDictionary(lang) {
+        if (mergedDictCache[lang]) return mergedDictCache[lang];
+        const base = baseDictionaryFor(lang);
+        const out = {};
+        const seen = new Set();
+        Object.keys(base).forEach(c => {
+            out[c] = base[c];
+            base[c].forEach(w => seen.add(cleanKey(w)));
+        });
+        const addTo = (cat, words) => {
+            const fresh = [];
+            words.forEach(w => {
+                const k = cleanKey(w);
+                if (!seen.has(k)) { seen.add(k); fresh.push(w); }
+            });
+            if (fresh.length) out[cat] = (out[cat] || []).concat(fresh);
+        };
+        const extra = extraDictData[lang] || {};
+        Object.keys(extra).forEach(cat => addTo(cat, extra[cat]));
+        if (userWords[lang] && userWords[lang].length) addTo((dictI18n[lang] || dictI18n.ru).catName, userWords[lang]);
+        mergedDictCache[lang] = out;
+        return out;
+    }
+
+    function getMergedPairs(lang) {
+        if (mergedPairsCache[lang]) return mergedPairsCache[lang];
+        const base = basePairsFor(lang);
+        const extra = (extraDictData.pairs && extraDictData.pairs[lang]) || {};
+        const keys = Object.keys(extra);
+        if (!keys.length) { mergedPairsCache[lang] = base; return base; }
+        const out = Object.assign({}, base);
+        keys.forEach(k => { out[k] = (out[k] || []).concat(extra[k]); });
+        mergedPairsCache[lang] = out;
+        return out;
+    }
+
+    // ----- окно «Мои слова» -----
+    let dictRec = null, dictSylTouched = false;
+
+    function setDictStatus(msg, bad) {
+        const el = document.getElementById('dictStatus');
+        el.innerText = msg || '';
+        el.style.color = bad ? '#d9534f' : '';
+    }
+
+    function renderDictTexts() {
+        const x = dx();
+        document.getElementById('dictTitle').innerText = x.title;
+        document.getElementById('dictWordLabel').innerText = x.wordLabel;
+        document.getElementById('dictSayBtn').innerText = dictRec ? x.listening : x.say;
+        document.getElementById('dictSylLabel').innerText = x.sylLabel;
+        document.getElementById('dictHearBtn').innerText = x.hear;
+        document.getElementById('dictAddBtn').innerText = x.add;
+        document.getElementById('dictListTitle').innerText = x.listTitle;
+        document.getElementById('dictExportBtn').innerText = x.exportBtn;
+        document.getElementById('dictImportBtn').innerText = x.importBtn;
+        document.getElementById('dictOnlineTitle').innerText = x.onlineTitle;
+        document.getElementById('dictRefreshBtn').innerText = x.refresh;
+        document.getElementById('dictClose').setAttribute('aria-label', helpI18n[currentLang] ? helpI18n[currentLang].close : 'Close');
+    }
+
+    function renderDictList() {
+        const x = dx();
+        const box = document.getElementById('dictList');
+        const list = userWords[currentLang] || [];
+        box.innerHTML = '';
+        if (!list.length) {
+            const d = document.createElement('div');
+            d.className = 'dict-empty';
+            d.innerText = x.empty;
+            box.appendChild(d);
+            return;
+        }
+        list.forEach((w, i) => {
+            const row = document.createElement('div');
+            row.className = 'dict-item';
+            const span = document.createElement('span');
+            span.innerText = w.replace(/-/g, ' • ');
+            const btn = document.createElement('button');
+            btn.innerText = '🗑';
+            btn.title = x.del;
+            btn.setAttribute('aria-label', x.del);
+            btn.onclick = () => dictDelete(i);
+            row.appendChild(span);
+            row.appendChild(btn);
+            box.appendChild(row);
+        });
+    }
+
+    function renderDictOnline() {
+        const x = dx();
+        const n = countExtraWords();
+        let msg = x.onlineNone;
+        if (extraSource === 'online') msg = x.onlineOnline + n;
+        else if (extraSource === 'saved') msg = x.onlineSaved + n;
+        document.getElementById('dictOnline').innerText = msg;
+    }
+
+    function openDict() {
+        warmupSpeechSynthesis();
+        renderDictTexts();
+        renderDictList();
+        renderDictOnline();
+        setDictStatus('');
+        document.getElementById('dictAlts').innerHTML = '';
+        document.getElementById('dictOverlay').classList.remove('hidden');
+        document.getElementById('dictBody').scrollTop = 0;
+    }
+
+    function closeDict() {
+        stopDictListening();
+        document.getElementById('dictOverlay').classList.add('hidden');
+    }
+
+    function onDictOverlayClick(e) {
+        if (e.target && e.target.id === 'dictOverlay') closeDict();
+    }
+
+    function onDictWordInput() {
+        if (!dictSylTouched) {
+            const w = normalizeDictWord(document.getElementById('dictWordInput').value);
+            document.getElementById('dictSylInput').value = w ? syllabifyPhrase(w) : '';
+        }
+    }
+
+    function setDictWord(word) {
+        document.getElementById('dictWordInput').value = word;
+        dictSylTouched = false;
+        onDictWordInput();
+    }
+
+    function stopDictListening() {
+        try { if (dictRec) dictRec.stop(); } catch (e) {}
+    }
+
+    // Добавление слова проговариванием: распознанное слово подставляется в поле,
+    // его можно проверить, выбрать другой вариант и добавить кнопкой «Добавить».
+    function dictListen() {
+        const x = dx();
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) { setDictStatus(x.noSupport, true); return; }
+        if (dictRec) { stopDictListening(); return; }
+        try { if (isRecording && recognition) recognition.stop(); } catch (e) {}
+        try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (e) {}
+        const r = new SR();
+        dictRec = r;
+        r.lang = currentLang === 'uk' ? 'uk-UA' : (currentLang === 'ru' ? 'ru-RU' : 'en-US');
+        r.interimResults = false;
+        r.continuous = false;
+        r.maxAlternatives = 3;
+        r.onstart = () => { setDictStatus(''); renderDictTexts(); };
+        r.onresult = e => {
+            const alts = Array.from(e.results[0] || []).map(a => normalizeDictWord(a.transcript)).filter(Boolean);
+            const uniq = alts.filter((a, i) => alts.indexOf(a) === i);
+            if (!uniq.length) return;
+            setDictWord(uniq[0]);
+            const box = document.getElementById('dictAlts');
+            box.innerHTML = '';
+            uniq.slice(1).forEach(a => {
+                const b = document.createElement('button');
+                b.className = 'dict-chip';
+                b.innerText = a;
+                b.onclick = () => setDictWord(a);
+                box.appendChild(b);
+            });
+            setDictStatus(dx().heard);
+        };
+        r.onerror = e => {
+            if (e.error !== 'aborted') setDictStatus(dx().errPrefix + e.error, true);
+        };
+        r.onend = () => { dictRec = null; renderDictTexts(); };
+        try { r.start(); } catch (e) { dictRec = null; setDictStatus(x.errPrefix + (e && e.message), true); }
+    }
+
+    function dictHear() {
+        const w = normalizeDictWord(document.getElementById('dictWordInput').value);
+        if (!w || !('speechSynthesis' in window)) return;
+        warmupSpeechSynthesis();
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(makeUtterance(w, 1));
+    }
+
+    function refreshAfterDictChange() {
+        invalidateDictionaries();
+        initCategorySelect();
+        renderDictList();
+        renderDictOnline();
+    }
+
+    function dictAdd() {
+        const x = dx();
+        const word = normalizeDictWord(document.getElementById('dictWordInput').value);
+        if (!word) { setDictStatus(x.needWord, true); return; }
+        let syl = document.getElementById('dictSylInput').value.toLowerCase().replace(/[’ʼʻ`´]/g, "'").replace(/\s*-\s*/g, '-').replace(/\s+/g, ' ').trim();
+        if (!syl) syl = syllabifyPhrase(word);
+        if (syl.replace(/[-\s]/g, '') !== word.replace(/\s/g, '')) { setDictStatus(x.sylMismatch, true); return; }
+        const key = cleanKey(syl);
+        const exists = Object.values(getMergedDictionary(currentLang)).some(arr => arr.some(w => cleanKey(w) === key));
+        if (exists) { setDictStatus(x.exists, true); return; }
+        userWords[currentLang].push(syl);
+        saveUserWords();
+        refreshAfterDictChange();
+        document.getElementById('dictWordInput').value = '';
+        document.getElementById('dictSylInput').value = '';
+        document.getElementById('dictAlts').innerHTML = '';
+        dictSylTouched = false;
+        setDictStatus(x.added);
+    }
+
+    function dictDelete(i) {
+        userWords[currentLang].splice(i, 1);
+        saveUserWords();
+        refreshAfterDictChange();
+    }
+
+    // Экспорт в формате, совпадающем с extra-dict.json: файл можно положить на сайт.
+    function dictExport() {
+        const out = {};
+        ['ru', 'uk', 'en'].forEach(l => {
+            if (userWords[l].length) out[l] = { [dictI18n[l].catName]: userWords[l] };
+        });
+        const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'my-words.json';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        setDictStatus(dx().exported);
+    }
+
+    function dictImport(ev) {
+        const file = ev.target.files && ev.target.files[0];
+        ev.target.value = '';
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            try {
+                const norm = normalizeExtra(JSON.parse(reader.result));
+                let added = 0;
+                ['ru', 'uk', 'en'].forEach(l => {
+                    const seen = new Set(Object.values(getMergedDictionary(l)).flat().map(cleanKey));
+                    Object.values(norm[l]).forEach(arr => arr.forEach(w => {
+                        const k = cleanKey(w);
+                        if (!seen.has(k)) { seen.add(k); userWords[l].push(w); added++; }
+                    }));
+                });
+                saveUserWords();
+                refreshAfterDictChange();
+                setDictStatus(dx().imported + added);
+            } catch (e) {
+                setDictStatus(dx().importBad, true);
+            }
+        };
+        reader.onerror = () => setDictStatus(dx().importBad, true);
+        reader.readAsText(file);
+    }
+
+    async function dictRefreshOnline() {
+        setDictStatus(dx().refreshing);
+        const ok = await fetchExtraDictionary();
+        if (ok) { refreshAfterDictChange(); setDictStatus(''); }
+        else setDictStatus(dx().refreshFail, true);
+    }
+
+    // Фоновая загрузка дополнительного словаря при запуске (если есть интернет).
+    setTimeout(async () => {
+        if (await fetchExtraDictionary()) {
+            initCategorySelect();
+        }
+    }, 800);
 
     // ----- Справка -----
     const helpI18n = {
@@ -2408,6 +2986,17 @@
 <li><b>Строгая проверка речи</b> — в ответе не должно быть других слов. Слово должно совпасть точно; похожее, но неточное слово не засчитывается.</li>
 <li><b>Обязательно проговаривать слово</b> — пока слово не произнесено верно, «Следующее слово» не срабатывает, а страница возвращается к блоку проговаривания. После трёх неудачных попыток переход открывается, чтобы не застрять.</li>
 <li><b>Таймер «Игра / Отдых»</b> — после времени игры включается пауза для отдыха; длительность задаётся в минутах.</li>
+<li><b>📚 Мои слова</b> — окно для добавления своих слов в словарь (описание ниже).</li>
+</ul>
+
+<h3>📚 Свой словарь</h3>
+<ul>
+<li>Откройте <b>⚙️ Настройки → 📚 Мои слова</b>.</li>
+<li><b>Добавить слово:</b> нажмите 🎙 и скажите слово. Проверьте распознанный вариант: если он неточный, выберите другой из подсказок под полем или поправьте текст вручную. Слоги подставляются сами, при необходимости исправьте их (слоги через дефис). Нажмите «➕ Добавить».</li>
+<li>Свои слова попадают в категорию «Мои слова» и участвуют в заданиях наравне с остальными. Ненужные слова удаляются кнопкой 🗑 в списке.</li>
+<li>Слова хранятся на устройстве и работают без интернета. «Экспорт» сохраняет их в файл, «Импорт» добавляет слова из такого файла, например на другом устройстве.</li>
+<li><b>Онлайн-словарь:</b> положите на сайт рядом с приложением файл <code>extra-dict.json</code>. При наличии интернета приложение скачает его, сохранит копию на устройстве и будет пользоваться ею без сети. Формат файла такой же, как у экспорта: язык, категория, список слов. Слоги можно не указывать. В разделе <code>pairs</code> можно задать похожие слова для вариантов ответа. Кнопка «🔄 Обновить» загружает файл сразу.</li>
+<li>Распознавание речи при добавлении слова, как и при проверке произношения, обычно требует интернета; вводить слова с клавиатуры можно и без него.</li>
 </ul>
 
 <h3>Без интернета и установка</h3>
@@ -2454,6 +3043,17 @@
 <li><b>Сувора перевірка мовлення</b> — у відповіді не має бути інших слів. Слово має збігтися точно; схоже, але неточне слово не зараховується.</li>
 <li><b>Обов’язково промовляти слово</b> — доки слово не вимовлено правильно, «Наступне слово» не спрацьовує, а сторінка повертається до блоку промовляння. Після трьох невдалих спроб перехід відкривається, щоб не застрягти.</li>
 <li><b>Таймер «Гра / Відпочинок»</b> — після часу гри вмикається пауза для відпочинку; тривалість задається в хвилинах.</li>
+<li><b>📚 Мої слова</b> — вікно для додавання своїх слів до словника (опис нижче).</li>
+</ul>
+
+<h3>📚 Власний словник</h3>
+<ul>
+<li>Відкрийте <b>⚙️ Налаштування → 📚 Мої слова</b>.</li>
+<li><b>Додати слово:</b> натисніть 🎙 і скажіть слово. Перевірте розпізнаний варіант: якщо він неточний, виберіть інший із підказок під полем або виправте текст вручну. Склади підставляються самі, за потреби виправте їх (склади через дефіс). Натисніть «➕ Додати».</li>
+<li>Власні слова потрапляють до категорії «Мої слова» і беруть участь у завданнях нарівні з рештою. Непотрібні слова видаляються кнопкою 🗑 у списку.</li>
+<li>Слова зберігаються на пристрої та працюють без інтернету. «Експорт» зберігає їх у файл, «Імпорт» додає слова з такого файлу, наприклад на іншому пристрої.</li>
+<li><b>Онлайн-словник:</b> покладіть на сайт поруч із застосунком файл <code>extra-dict.json</code>. За наявності інтернету застосунок завантажить його, збереже копію на пристрої та користуватиметься нею без мережі. Формат файлу такий самий, як в експорту: мова, категорія, список слів. Склади можна не вказувати. У розділі <code>pairs</code> можна задати схожі слова для варіантів відповіді. Кнопка «🔄 Оновити» завантажує файл одразу.</li>
+<li>Розпізнавання мовлення під час додавання слова, як і під час перевірки вимови, зазвичай потребує інтернету; вводити слова з клавіатури можна й без нього.</li>
 </ul>
 
 <h3>Без інтернету та встановлення</h3>
@@ -2500,6 +3100,17 @@
 <li><b>Strict speech check</b> — no other words allowed in the answer. The word must match exactly; a similar but inexact word is not accepted.</li>
 <li><b>Require saying the word aloud</b> — “Next word” does not work until the word is pronounced correctly, and the page scrolls back to the speaking block. After three failed attempts it unlocks so you never get stuck.</li>
 <li><b>Play / Rest timer</b> — after the play time a rest break starts; durations are set in minutes.</li>
+<li><b>📚 My words</b> — a window for adding your own words to the dictionary (described below).</li>
+</ul>
+
+<h3>📚 Your own dictionary</h3>
+<ul>
+<li>Open <b>⚙️ Settings → 📚 My words</b>.</li>
+<li><b>Adding a word:</b> tap 🎙 and say the word. Check the recognized text: if it is not exact, pick another suggestion under the field or edit the text by hand. Syllables are filled in automatically; fix them if needed (separate syllables with hyphens). Then tap “➕ Add”.</li>
+<li>Your words go into the “My words” category and are used in tasks like any other word. Delete unwanted words with 🗑 in the list.</li>
+<li>Words are stored on the device and work offline. “Export” saves them to a file and “Import” adds words from such a file, for example on another device.</li>
+<li><b>Online dictionary:</b> put a file named <code>extra-dict.json</code> on the site next to the app. When there is internet the app downloads it, keeps a copy on the device and uses that copy offline. The format is the same as the export: language, category, list of words. Syllables are optional. The <code>pairs</code> section can list similar-sounding words for answer options. “🔄 Refresh” loads the file right away.</li>
+<li>Speech recognition when adding a word, like when checking pronunciation, usually needs internet; you can always type words by hand.</li>
 </ul>
 
 <h3>Offline use and installing</h3>
@@ -2533,7 +3144,7 @@
     }
 
     document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') closeHelp();
+        if (e.key === 'Escape') { closeHelp(); closeDict(); }
     });
 
     // ----- проверка произнесённого слова -----
