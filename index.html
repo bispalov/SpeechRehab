@@ -79,6 +79,12 @@
         .header-btns {
             display: flex;
             gap: 8px;
+            flex-wrap: wrap;
+        }
+        .header-btns .settings-toggle-btn { white-space: nowrap; }
+        @media (max-width: 440px) {
+            .header-btns { gap: 6px; }
+            .header-btns .settings-toggle-btn { padding: 6px 9px; font-size: 0.85em; }
         }
         .settings-toggle-btn {
             background: var(--option-btn-bg);
@@ -392,6 +398,74 @@
             box-sizing: border-box;
         }
         .help-overlay.hidden { display: none; }
+        .screen { width: 100%; display: flex; flex-direction: column; gap: 12px; align-items: stretch; }
+        .screen.hidden { display: none; }
+        .mode-card {
+            text-align: left;
+            background: var(--option-btn-bg);
+            color: var(--text-color);
+            border: 1px solid var(--option-btn-border);
+            border-radius: 10px;
+            padding: 14px;
+            cursor: pointer;
+            font-size: 1em;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .mode-title { font-weight: bold; font-size: 1.1em; }
+        .mode-desc { opacity: 0.8; font-size: 0.9em; }
+        .step-title { font-weight: bold; font-size: 1.15em; text-align: center; }
+        .step-progress { text-align: center; opacity: 0.75; font-size: 0.9em; }
+        .step-box {
+            background: var(--word-box-bg);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+        .step-note { text-align: center; font-size: 0.9em; opacity: 0.8; min-height: 1.2em; }
+        .primary-btn {
+            background: #4a90e2;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 1.05em;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .primary-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .letter-slots, .letter-tiles { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+        .letter-tile {
+            box-sizing: border-box;
+            padding: 0 8px;
+            min-width: 46px;
+            height: 50px;
+            font-size: 1.3em;
+            border-radius: 8px;
+            border: 1px solid var(--option-btn-border);
+            background: var(--option-btn-bg);
+            color: var(--text-color);
+            cursor: pointer;
+        }
+        .letter-tile.used { opacity: 0.2; pointer-events: none; }
+        .letter-slot {
+            box-sizing: border-box;
+            min-width: 46px;
+            height: 50px;
+            border: 2px dashed var(--input-border);
+            border-radius: 8px;
+            display: inline-block;
+        }
+        .result-row { padding: 8px 0; border-bottom: 1px solid var(--input-border); }
+        .result-row .res-label { font-size: 0.85em; opacity: 0.75; }
+        .res-ok { color: #2e9e4f; font-weight: bold; }
+        .res-bad { color: #d9534f; font-weight: bold; }
+        .quiz-row { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--input-border); }
         #dictOverlay { z-index: 910; }
         .help-body .settings-panel {
             background: transparent;
@@ -420,6 +494,9 @@
         }
         .help-head h2 { margin: 0; font-size: 1.2em; }
         .help-close {
+            width: auto;
+            flex: 0 0 auto;
+            margin: 0;
             background: var(--word-box-bg);
             color: var(--text-color);
             border: 1px solid var(--input-border);
@@ -812,12 +889,37 @@
     <div class="header-row">
         <h1 id="appTitle">Auditory Differentiation</h1>
         <div class="header-btns">
+            <button class="settings-toggle-btn" id="homeBtn" onclick="goHome()" aria-label="Modes" title="Modes" style="display:none">🏠</button>
             <button class="settings-toggle-btn" id="statsBtn" onclick="openStats()">📊 Statistics</button>
             <button class="settings-toggle-btn" id="settingsBtn" onclick="openSettings()">⚙️ Settings</button>
             <button class="settings-toggle-btn" id="helpBtn" onclick="openHelp()" aria-label="Help" title="Help">❓</button>
         </div>
     </div>
 
+    <div id="modeSelect" class="screen">
+        <div class="step-title" id="modeIntro">Choose a training mode:</div>
+        <div class="control-group">
+            <label for="modeCategorySelect" id="modeCatLabel">Word category:</label>
+            <select id="modeCategorySelect" onchange="onModeCategoryChange()"></select>
+        </div>
+        <button class="mode-card" onclick="startMode('full')">
+            <span class="mode-title" id="modeFullTitle"></span>
+            <span class="mode-desc" id="modeFullDesc"></span>
+        </button>
+        <button class="mode-card" onclick="startMode('listen')">
+            <span class="mode-title" id="modeListenTitle"></span>
+            <span class="mode-desc" id="modeListenDesc"></span>
+        </button>
+        <button class="mode-card" onclick="startMode('quiz')">
+            <span class="mode-title" id="modeQuizTitle"></span>
+            <span class="mode-desc" id="modeQuizDesc"></span>
+        </button>
+    </div>
+
+    <div id="listenScreen" class="screen hidden"></div>
+    <div id="quizScreen" class="screen hidden"></div>
+
+    <div id="fullTrainer" class="screen hidden">
     <div class="stats-row">
         <div class="stat-box correct-stat"><span id="statCorrectLabel">✅ Correct:</span> <span id="correctCount">0</span></div>
         <div class="stat-box total-stat"><span id="statTotalLabel">📝 Total:</span> <span id="totalCount">0</span></div>
@@ -876,6 +978,7 @@
     </div>
 
     <button class="next-btn" id="nextBtn" onclick="tryNextQuestion()">Next word ➔</button>
+    </div>
 </div>
 
 <script src="accents.js"></script>
@@ -2500,6 +2603,7 @@
         hb.setAttribute('aria-label', hh.btn);
         hb.title = hh.btn;
         if (!document.getElementById('helpOverlay').classList.contains('hidden')) renderHelp();
+        refreshModeTexts();
         document.getElementById('settingsTitle').innerText = i18n[currentLang].settingsBtnText;
         document.getElementById('statsTitle').innerText = x.statsTitle;
         const closeLabel = hh.close;
@@ -3010,6 +3114,7 @@
     function refreshAfterDictChange() {
         invalidateDictionaries();
         initCategorySelect();
+        syncModeCategorySelect();
         renderDictList();
         renderDictOnline();
     }
@@ -3120,8 +3225,565 @@
     setTimeout(async () => {
         if (await fetchExtraDictionary()) {
             initCategorySelect();
+            syncModeCategorySelect();
         }
     }, 800);
+
+    // ===== Режимы тренировки =====
+    // «Полный тренажёр» - прежний интерфейс; «Тренировка слуха» - слово по шагам;
+    // «Тест» - от 10 до 30 слов подряд с проговариванием и итогом.
+    const modeI18n = {
+        ru: {
+            intro: 'Выберите вид тренировки:', catLabel: 'Категория слов:',
+            fullTitle: '🧩 Полный тренажёр', fullDesc: 'Все блоки: выбор слова на слух, проверка произношения, сбор из букв, подсказки.',
+            listenTitle: '👂 Тренировка слуха', listenDesc: 'Одно слово по шагам: послушать, повторить вслух, собрать из букв. В конце итог.',
+            quizTitle: '📝 Тест', quizDesc: 'От 10 до 30 случайных слов подряд. Каждое слово звучит один раз, вы проговариваете его. В конце результат.',
+            home: 'К выбору режима',
+            stepOf: 'Шаг {i} из 3', s1: 'Послушайте слово', s2: 'Повторите слово вслух', s3: 'Соберите слово из букв', summary: 'Итог',
+            listen: '🔊 Послушать', slow: '🐢 По слогам', next: 'Далее ➔',
+            say: '🎙 Проговорить', again: '🎙 Ещё раз', listening: '⏺ Слушаю…',
+            heardLbl: 'Вы сказали:', noSpeech: 'Не расслышал. Попробуйте ещё раз.',
+            noRecSupport: 'Распознавание речи здесь недоступно. Можно перейти дальше.',
+            errPrefix: 'Ошибка распознавания: ',
+            requireNote: 'Сначала проговорите слово верно или сделайте 3 попытки.',
+            buildBack: '⌫ Стереть', buildClear: 'Очистить', builtOk: '✔ Верно!',
+            builtBad: '✘ Не совпадает. Можно исправить или перейти дальше.',
+            srcWord: 'Исходное слово', saidWord: 'Вы проговорили', builtWord: 'Вы собрали', notSaid: 'не проговаривали',
+            repeatWord: '🔁 Повторить это слово', nextWord: '➡ Следующее слово', toModes: '🏠 К выбору режима',
+            quizSetup: 'Тест на произношение', quizCountLabel: 'Сколько слов (10–30):',
+            quizPool: 'Слов в выбранной категории: {n}', quizSmall: 'Слов меньше выбранного числа: тест будет из {n} слов.',
+            quizStart: '▶ Начать тест', quizProgress: 'Слово {i} из {n}',
+            quizListenHint: 'Слушайте слово и проговорите его. Повторного воспроизведения нет.',
+            quizSkip: 'Пропустить', quizAnswered: 'Ответ записан.', quizNext: 'Далее ➔', quizFinish: 'Завершить',
+            quizResultTitle: 'Результат теста', quizScore: 'Верно: {k} из {n} ({p}%)',
+            quizHeard: 'услышано', quizMissed: 'нет ответа',
+            quizRepeatErrors: '🔁 Повторить ошибки', quizNew: '🆕 Новый тест',
+            leaveConfirm: 'Прервать тест? Результаты будут потеряны.', noWords: 'В категории нет слов.'
+        },
+        uk: {
+            intro: 'Оберіть вид тренування:', catLabel: 'Категорія слів:',
+            fullTitle: '🧩 Повний тренажер', fullDesc: 'Усі блоки: вибір слова на слух, перевірка вимови, збирання з літер, підказки.',
+            listenTitle: '👂 Тренування слуху', listenDesc: 'Одне слово по кроках: послухати, повторити вголос, зібрати з літер. Наприкінці підсумок.',
+            quizTitle: '📝 Тест', quizDesc: 'Від 10 до 30 випадкових слів поспіль. Кожне слово звучить один раз, ви промовляєте його. Наприкінці результат.',
+            home: 'До вибору режиму',
+            stepOf: 'Крок {i} з 3', s1: 'Послухайте слово', s2: 'Повторіть слово вголос', s3: 'Зберіть слово з літер', summary: 'Підсумок',
+            listen: '🔊 Послухати', slow: '🐢 По складах', next: 'Далі ➔',
+            say: '🎙 Промовити', again: '🎙 Ще раз', listening: '⏺ Слухаю…',
+            heardLbl: 'Ви сказали:', noSpeech: 'Не розчув. Спробуйте ще раз.',
+            noRecSupport: 'Розпізнавання мовлення тут недоступне. Можна перейти далі.',
+            errPrefix: 'Помилка розпізнавання: ',
+            requireNote: 'Спочатку промовте слово правильно або зробіть 3 спроби.',
+            buildBack: '⌫ Стерти', buildClear: 'Очистити', builtOk: '✔ Правильно!',
+            builtBad: '✘ Не збігається. Можна виправити або перейти далі.',
+            srcWord: 'Вихідне слово', saidWord: 'Ви промовили', builtWord: 'Ви зібрали', notSaid: 'не промовляли',
+            repeatWord: '🔁 Повторити це слово', nextWord: '➡ Наступне слово', toModes: '🏠 До вибору режиму',
+            quizSetup: 'Тест на вимову', quizCountLabel: 'Скільки слів (10–30):',
+            quizPool: 'Слів в обраній категорії: {n}', quizSmall: 'Слів менше за обране число: тест буде з {n} слів.',
+            quizStart: '▶ Почати тест', quizProgress: 'Слово {i} з {n}',
+            quizListenHint: 'Слухайте слово і промовте його. Повторного відтворення немає.',
+            quizSkip: 'Пропустити', quizAnswered: 'Відповідь записано.', quizNext: 'Далі ➔', quizFinish: 'Завершити',
+            quizResultTitle: 'Результат тесту', quizScore: 'Правильно: {k} з {n} ({p}%)',
+            quizHeard: 'почуто', quizMissed: 'немає відповіді',
+            quizRepeatErrors: '🔁 Повторити помилки', quizNew: '🆕 Новий тест',
+            leaveConfirm: 'Перервати тест? Результати буде втрачено.', noWords: 'У категорії немає слів.'
+        },
+        en: {
+            intro: 'Choose a training mode:', catLabel: 'Word category:',
+            fullTitle: '🧩 Full trainer', fullDesc: 'All blocks: choose the word by ear, pronunciation check, assembling from letters, hints.',
+            listenTitle: '👂 Listening practice', listenDesc: 'One word step by step: listen, repeat aloud, assemble from letters. A summary at the end.',
+            quizTitle: '📝 Test', quizDesc: '10 to 30 random words in a row. Each word is played once and you say it. A result at the end.',
+            home: 'Back to modes',
+            stepOf: 'Step {i} of 3', s1: 'Listen to the word', s2: 'Repeat the word aloud', s3: 'Assemble the word from letters', summary: 'Summary',
+            listen: '🔊 Listen', slow: '🐢 By syllables', next: 'Next ➔',
+            say: '🎙 Say it', again: '🎙 Again', listening: '⏺ Listening…',
+            heardLbl: 'You said:', noSpeech: 'Could not hear you. Try again.',
+            noRecSupport: 'Speech recognition is not available here. You can continue.',
+            errPrefix: 'Recognition error: ',
+            requireNote: 'First say the word correctly or make 3 attempts.',
+            buildBack: '⌫ Erase', buildClear: 'Clear', builtOk: '✔ Correct!',
+            builtBad: '✘ Does not match. You can fix it or continue.',
+            srcWord: 'Original word', saidWord: 'You said', builtWord: 'You assembled', notSaid: 'not spoken',
+            repeatWord: '🔁 Repeat this word', nextWord: '➡ Next word', toModes: '🏠 Back to modes',
+            quizSetup: 'Pronunciation test', quizCountLabel: 'How many words (10–30):',
+            quizPool: 'Words in the selected category: {n}', quizSmall: 'There are fewer words than selected: the test will have {n} words.',
+            quizStart: '▶ Start the test', quizProgress: 'Word {i} of {n}',
+            quizListenHint: 'Listen to the word and say it. There is no replay.',
+            quizSkip: 'Skip', quizAnswered: 'Answer recorded.', quizNext: 'Next ➔', quizFinish: 'Finish',
+            quizResultTitle: 'Test result', quizScore: 'Correct: {k} of {n} ({p}%)',
+            quizHeard: 'heard', quizMissed: 'no answer',
+            quizRepeatErrors: '🔁 Repeat mistakes', quizNew: '🆕 New test',
+            leaveConfirm: 'Stop the test? Results will be lost.', noWords: 'There are no words in this category.'
+        }
+    };
+
+    function mt() { return modeI18n[currentLang] || modeI18n.ru; }
+
+    const SCREEN_IDS = { select: 'modeSelect', listen: 'listenScreen', quiz: 'quizScreen', full: 'fullTrainer' };
+    let screenName = 'select', modeLang = null, modeCatChanged = false, modeRec = null;
+    const quiz = { words: [], i: 0, results: [], active: false, answered: false, cur: null };
+
+    function stopModeRec() {
+        const r = modeRec;
+        modeRec = null;
+        if (r) { r._aborted = true; try { r.abort(); } catch (e) {} }
+    }
+
+    function stopModeSpeech() {
+        stopModeRec();
+        try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (e) {}
+    }
+
+    function showScreen(name) {
+        stopModeSpeech();
+        screenName = name;
+        Object.keys(SCREEN_IDS).forEach(k => {
+            document.getElementById(SCREEN_IDS[k]).classList.toggle('hidden', k !== name);
+        });
+        document.getElementById('homeBtn').style.display = name === 'select' ? 'none' : '';
+        window.scrollTo(0, 0);
+    }
+
+    function startMode(m) {
+        warmupSpeechSynthesis();
+        modeLang = currentLang;
+        if (m === 'full') {
+            showScreen('full');
+            if (modeCatChanged) { modeCatChanged = false; nextQuestion(); }
+            else if (isChecked('autoSpeak')) speakWord(targetWordSyllables);
+        } else if (m === 'listen') {
+            showScreen('listen');
+            listenNewWord();
+        } else {
+            showScreen('quiz');
+            renderQuizSetup();
+        }
+    }
+
+    function goHome() {
+        if (screenName === 'quiz' && quiz.active && !confirm(mt().leaveConfirm)) return;
+        quiz.active = false;
+        showScreen('select');
+        refreshModeTexts();
+    }
+
+    function syncModeCategorySelect() {
+        const src = document.getElementById('categorySelect');
+        const dst = document.getElementById('modeCategorySelect');
+        if (!src || !dst) return;
+        dst.innerHTML = '';
+        Array.from(src.options).forEach(o => {
+            const n = document.createElement('option');
+            n.value = o.value;
+            n.textContent = o.textContent;
+            dst.appendChild(n);
+        });
+        dst.value = src.value;
+    }
+
+    function onModeCategoryChange() {
+        document.getElementById('categorySelect').value = document.getElementById('modeCategorySelect').value;
+        saveSettings();
+        modeCatChanged = true;
+    }
+
+    function refreshModeTexts() {
+        const t = mt();
+        // смена языка во время тренировки: слова другого языка, поэтому возврат к выбору режима
+        if ((screenName === 'listen' || screenName === 'quiz') && modeLang !== currentLang) {
+            quiz.active = false;
+            showScreen('select');
+        }
+        document.getElementById('modeIntro').innerText = t.intro;
+        document.getElementById('modeCatLabel').innerText = t.catLabel;
+        document.getElementById('modeFullTitle').innerText = t.fullTitle;
+        document.getElementById('modeFullDesc').innerText = t.fullDesc;
+        document.getElementById('modeListenTitle').innerText = t.listenTitle;
+        document.getElementById('modeListenDesc').innerText = t.listenDesc;
+        document.getElementById('modeQuizTitle').innerText = t.quizTitle;
+        document.getElementById('modeQuizDesc').innerText = t.quizDesc;
+        const hb = document.getElementById('homeBtn');
+        hb.title = t.home;
+        hb.setAttribute('aria-label', t.home);
+        syncModeCategorySelect();
+        setTimeout(syncModeCategorySelect, 0);
+    }
+
+    // Одно распознавание речи. onDone({transcript, alts}) или onDone({error}).
+    function recognizeOnce(onStart, onDone) {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) { onDone({ error: 'unsupported' }); return; }
+        stopModeRec();
+        try { if (isRecording && recognition) recognition.stop(); } catch (e) {}
+        try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (e) {}
+        const r = new SR();
+        modeRec = r;
+        r.lang = currentLang === 'uk' ? 'uk-UA' : (currentLang === 'ru' ? 'ru-RU' : 'en-US');
+        r.interimResults = false;
+        r.continuous = false;
+        r.maxAlternatives = 3;
+        let finished = false;
+        const finish = res => { if (finished) return; finished = true; if (modeRec === r) modeRec = null; onDone(res); };
+        r.onstart = () => { if (onStart) onStart(); };
+        r.onresult = e => {
+            const alts = Array.from(e.results[0] || []).map(a => a.transcript.trim().toLowerCase());
+            finish({ transcript: alts[0] || '', alts });
+        };
+        r.onerror = e => { if (e.error !== 'aborted') finish({ error: e.error }); };
+        r.onend = () => { if (!r._aborted) finish({ error: 'no-speech' }); };
+        try { r.start(); } catch (e) { finish({ error: 'start' }); }
+    }
+
+    function shuffleArray(a) {
+        const arr = a.slice();
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function recErrorText(code) {
+        const t = mt();
+        if (code === 'no-speech') return t.noSpeech;
+        if (code === 'unsupported') return t.noRecSupport;
+        return t.errPrefix + code;
+    }
+
+    // ----- Тренировка слуха -----
+    const train = {
+        word: '', clean: '', letters: [], tiles: [], placed: [], step: 1,
+        attempts: 0, passed: false, heard: null, heardOk: null, lastErr: null, built: null, builtOk: null
+    };
+
+    function trainReset(word) {
+        train.word = word;
+        train.clean = cleanWord(word).toLowerCase();
+        train.letters = [...train.clean.replace(/\s+/g, '')];
+        let order = shuffleArray(train.letters);
+        for (let k = 0; k < 8 && train.letters.length > 1 && order.join('') === train.letters.join(''); k++) order = shuffleArray(train.letters);
+        train.tiles = order.map(ch => ({ ch, used: false }));
+        train.placed = [];
+        train.step = 1;
+        train.attempts = 0;
+        train.passed = false;
+        train.heard = null;
+        train.heardOk = null;
+        train.lastErr = null;
+        train.built = null;
+        train.builtOk = null;
+    }
+
+    function listenNewWord() {
+        const pool = getWordsFromCurrentCategory();
+        if (!pool || !pool.length) { document.getElementById('listenScreen').innerHTML = '<div class="step-note">' + escHtml(mt().noWords) + '</div>'; return; }
+        let w = getRandomWord();
+        for (let i = 0; i < 6 && w === train.word && pool.length > 1; i++) w = getRandomWord();
+        trainReset(w);
+        renderListenStep(1);
+    }
+
+    function trainRepeatWord() {
+        trainReset(train.word);
+        renderListenStep(1);
+    }
+
+    function trainSpeak() { speakWord(train.word); }
+    function trainSyllables() { speakSyllables(train.word); }
+
+    function trainNextLocked() {
+        return isChecked('requireSpeech') && speechRecognitionAvailable() && !train.passed && train.attempts < MAX_SPEECH_ATTEMPTS;
+    }
+
+    function renderListenStep(step) {
+        stopModeSpeech();
+        train.step = step;
+        const t = mt();
+        const el = document.getElementById('listenScreen');
+        let h = '';
+        if (step <= 3) h += '<div class="step-progress">' + escHtml(t.stepOf.replace('{i}', step)) + '</div>';
+        if (step === 1) {
+            h += '<div class="step-title">' + escHtml(t.s1) + '</div>' +
+                 '<div class="step-box"><button class="assist-btn" onclick="trainSpeak()">' + escHtml(t.listen) + '</button>' +
+                 '<button class="assist-btn" onclick="trainSyllables()">' + escHtml(t.slow) + '</button></div>' +
+                 '<button class="primary-btn" onclick="renderListenStep(2)">' + escHtml(t.next) + '</button>';
+        } else if (step === 2) {
+            h += '<div class="step-title">' + escHtml(t.s2) + '</div>' +
+                 '<div class="step-box"><button class="assist-btn" onclick="trainSpeak()">' + escHtml(t.listen) + '</button>' +
+                 '<button class="assist-btn" id="trainMicBtn" onclick="trainMic()">' + escHtml(train.attempts ? t.again : t.say) + '</button></div>' +
+                 '<div class="step-box" id="trainSayResult" style="display:none"></div>' +
+                 '<div class="step-note" id="trainNote"></div>' +
+                 '<button class="primary-btn" id="trainNext2" onclick="renderListenStep(3)">' + escHtml(t.next) + '</button>';
+        } else if (step === 3) {
+            h += '<div class="step-title">' + escHtml(t.s3) + '</div>' +
+                 '<div class="step-box"><button class="assist-btn" onclick="trainSpeak()">' + escHtml(t.listen) + '</button>' +
+                 '<button class="assist-btn" onclick="trainSyllables()">' + escHtml(t.slow) + '</button></div>' +
+                 (isChecked('spellSyllableHint') ? '<div class="step-note"><b>' + escHtml(train.word.replace(/-/g, ' • ')) + '</b></div>' : '') +
+                 '<div class="letter-slots" id="trainSlots"></div>' +
+                 '<div class="letter-tiles" id="trainTiles"></div>' +
+                 '<div class="step-box"><button class="assist-btn" onclick="trainUndo()">' + escHtml(t.buildBack) + '</button>' +
+                 '<button class="assist-btn" onclick="trainClear()">' + escHtml(t.buildClear) + '</button></div>' +
+                 '<div class="step-note" id="trainBuildMsg"></div>' +
+                 '<button class="primary-btn" id="trainNext3" onclick="renderListenStep(4)">' + escHtml(t.next) + '</button>';
+        } else {
+            h += renderTrainSummary();
+        }
+        el.innerHTML = h;
+        window.scrollTo(0, 0);
+        if (step === 1) setTimeout(() => { if (screenName === 'listen' && train.step === 1) trainSpeak(); }, 250);
+        if (step === 2) updateTrainSayUI();
+        if (step === 3) renderBuildArea();
+    }
+
+    function trainMic() {
+        const t = mt();
+        const btn = document.getElementById('trainMicBtn');
+        if (!btn || btn.disabled) return;
+        btn.disabled = true;
+        btn.textContent = t.listening;
+        recognizeOnce(null, res => {
+            const b = document.getElementById('trainMicBtn');
+            if (b) { b.disabled = false; b.textContent = mt().again; }
+            if (res.error) {
+                train.lastErr = res.error;
+                if (res.error !== 'unsupported') train.attempts++;
+            } else {
+                const ok = isSpeechMatch(res.transcript, train.clean, isChecked('strictSpeech'));
+                train.heard = res.transcript;
+                train.heardOk = ok;
+                train.lastErr = null;
+                train.attempts++;
+                if (ok) train.passed = true;
+                recordResult('speech', train.clean, res.transcript, ok);
+                speakSpeechFeedback(ok, res.transcript);
+                flushSpeechFeedback();
+            }
+            if (train.step === 2) updateTrainSayUI();
+        });
+    }
+
+    function updateTrainSayUI() {
+        const t = mt();
+        const box = document.getElementById('trainSayResult');
+        if (!box) return;
+        let h = '';
+        if (train.lastErr) h += '<div class="res-bad">' + escHtml(recErrorText(train.lastErr)) + '</div>';
+        if (train.heard !== null) {
+            h += '<div>' + escHtml(t.heardLbl) + ' <b>' + escHtml(train.heard) + '</b> ' +
+                 (train.heardOk ? '<span class="res-ok">✔</span>' : '<span class="res-bad">✘</span>') + '</div>';
+            if (!train.heardOk) h += buildDiffHtml(train.clean, train.heard);
+        }
+        box.innerHTML = h;
+        box.style.display = h ? '' : 'none';
+        const locked = trainNextLocked();
+        document.getElementById('trainNext2').disabled = locked;
+        document.getElementById('trainNote').innerText = locked ? t.requireNote : '';
+    }
+
+    function renderBuildArea() {
+        const t = mt();
+        const total = train.letters.length;
+        let slots = '';
+        for (let i = 0; i < total; i++) {
+            if (train.placed[i] !== undefined) {
+                slots += '<button class="letter-tile" onclick="trainRemove(' + i + ')">' + escHtml(train.tiles[train.placed[i]].ch) + '</button>';
+            } else {
+                slots += '<span class="letter-slot"></span>';
+            }
+        }
+        document.getElementById('trainSlots').innerHTML = slots;
+        document.getElementById('trainTiles').innerHTML = train.tiles.map((tl, idx) =>
+            '<button class="letter-tile' + (tl.used ? ' used' : '') + '" onclick="trainPlace(' + idx + ')">' + escHtml(tl.ch) + '</button>').join('');
+        const complete = train.placed.length === total;
+        let msg = '';
+        if (complete) {
+            train.built = train.placed.map(i => train.tiles[i].ch).join('');
+            train.builtOk = train.built === train.letters.join('');
+            msg = train.builtOk ? '<span class="res-ok">' + escHtml(t.builtOk) + '</span>' : '<span class="res-bad">' + escHtml(t.builtBad) + '</span>';
+        } else {
+            train.built = null;
+            train.builtOk = null;
+        }
+        document.getElementById('trainBuildMsg').innerHTML = msg;
+        document.getElementById('trainNext3').disabled = !complete;
+    }
+
+    function trainPlace(idx) {
+        if (train.tiles[idx].used || train.placed.length >= train.letters.length) return;
+        train.tiles[idx].used = true;
+        train.placed.push(idx);
+        renderBuildArea();
+    }
+
+    function trainRemove(pos) {
+        const idx = train.placed[pos];
+        if (idx === undefined) return;
+        train.tiles[idx].used = false;
+        train.placed.splice(pos, 1);
+        renderBuildArea();
+    }
+
+    function trainUndo() {
+        if (train.placed.length) trainRemove(train.placed.length - 1);
+    }
+
+    function trainClear() {
+        train.tiles.forEach(tl => { tl.used = false; });
+        train.placed = [];
+        renderBuildArea();
+    }
+
+    function renderTrainSummary() {
+        const t = mt();
+        const target = train.letters.join('');
+        let h = '<div class="step-title">' + escHtml(t.summary) + '</div>';
+        h += '<div class="result-row"><div class="res-label">' + escHtml(t.srcWord) + '</div><b>' + escHtml(train.word.replace(/-/g, ' • ')) + '</b></div>';
+        h += '<div class="result-row"><div class="res-label">' + escHtml(t.saidWord) + '</div>';
+        if (train.heard === null) {
+            h += '<span>' + escHtml(t.notSaid) + '</span>';
+        } else {
+            h += '<b>' + escHtml(train.heard) + '</b> ' + (train.heardOk ? '<span class="res-ok">✔</span>' : '<span class="res-bad">✘</span>');
+            if (!train.heardOk) h += buildDiffHtml(train.clean, train.heard);
+        }
+        h += '</div>';
+        h += '<div class="result-row"><div class="res-label">' + escHtml(t.builtWord) + '</div>';
+        if (train.built === null) {
+            h += '<span>—</span>';
+        } else {
+            h += '<b>' + escHtml(train.built) + '</b> ' + (train.builtOk ? '<span class="res-ok">✔</span>' : '<span class="res-bad">✘</span>');
+            if (!train.builtOk) h += buildDiffHtml(target, train.built);
+        }
+        h += '</div>';
+        h += '<button class="primary-btn" onclick="trainRepeatWord()">' + escHtml(t.repeatWord) + '</button>' +
+             '<button class="primary-btn" onclick="listenNewWord()">' + escHtml(t.nextWord) + '</button>' +
+             '<button class="assist-btn" onclick="goHome()">' + escHtml(t.toModes) + '</button>';
+        return h;
+    }
+
+    // ----- Тест -----
+    function renderQuizSetup() {
+        stopModeSpeech();
+        quiz.active = false;
+        const t = mt();
+        const pool = getWordsFromCurrentCategory() || [];
+        let saved = parseInt(localStorage.getItem('app_quiz_count') || '10', 10);
+        if (!(saved >= 10 && saved <= 30)) saved = 10;
+        document.getElementById('quizScreen').innerHTML =
+            '<div class="step-title">' + escHtml(t.quizSetup) + '</div>' +
+            '<div class="step-note">' + escHtml(t.quizPool.replace('{n}', pool.length)) + '</div>' +
+            '<div class="control-group"><label for="quizCount">' + escHtml(t.quizCountLabel) + '</label>' +
+            '<input type="number" id="quizCount" class="dict-input" min="10" max="30" value="' + saved + '"></div>' +
+            '<div class="step-note" id="quizSetupNote"></div>' +
+            '<button class="primary-btn" onclick="startQuizFromSetup()">' + escHtml(t.quizStart) + '</button>' +
+            '<button class="assist-btn" onclick="goHome()">' + escHtml(t.toModes) + '</button>';
+        window.scrollTo(0, 0);
+    }
+
+    function startQuizFromSetup() {
+        const t = mt();
+        const pool = getWordsFromCurrentCategory() || [];
+        if (!pool.length) { document.getElementById('quizSetupNote').innerText = t.noWords; return; }
+        let n = parseInt(document.getElementById('quizCount').value, 10);
+        if (!(n >= 10)) n = 10;
+        if (n > 30) n = 30;
+        try { localStorage.setItem('app_quiz_count', String(n)); } catch (e) {}
+        warmupSpeechSynthesis();
+        startQuiz(shuffleArray(pool).slice(0, n));
+    }
+
+    function startQuiz(words) {
+        quiz.words = words;
+        quiz.i = 0;
+        quiz.results = [];
+        quiz.active = true;
+        renderQuizWord();
+    }
+
+    function renderQuizWord() {
+        stopModeSpeech();
+        const t = mt();
+        const w = quiz.words[quiz.i];
+        quiz.cur = { word: w, clean: cleanWord(w).toLowerCase() };
+        quiz.answered = false;
+        document.getElementById('quizScreen').innerHTML =
+            '<div class="step-progress">' + escHtml(t.quizProgress.replace('{i}', quiz.i + 1).replace('{n}', quiz.words.length)) + '</div>' +
+            '<div class="step-title">' + escHtml(t.quizListenHint) + '</div>' +
+            '<div class="step-box" id="quizActions"><button class="assist-btn" id="quizMicBtn" onclick="quizMic()">' + escHtml(t.say) + '</button>' +
+            '<button class="assist-btn" id="quizSkipBtn" onclick="quizSkip()">' + escHtml(t.quizSkip) + '</button></div>' +
+            '<div class="step-note" id="quizStatus"></div>' +
+            '<button class="primary-btn" id="quizNextBtn" style="display:none" onclick="quizAdvance()">' +
+            escHtml(quiz.i + 1 >= quiz.words.length ? t.quizFinish : t.quizNext) + '</button>';
+        window.scrollTo(0, 0);
+        setTimeout(() => {
+            if (screenName === 'quiz' && quiz.active && quiz.cur && quiz.cur.word === w && !quiz.answered) speakWord(w);
+        }, 250);
+    }
+
+    function quizMic() {
+        const t = mt();
+        const btn = document.getElementById('quizMicBtn');
+        if (!btn || btn.disabled || quiz.answered) return;
+        btn.disabled = true;
+        btn.textContent = t.listening;
+        document.getElementById('quizStatus').innerText = '';
+        recognizeOnce(null, res => {
+            if (screenName !== 'quiz' || !quiz.active) return;
+            const b = document.getElementById('quizMicBtn');
+            if (res.error) {
+                if (b) { b.disabled = false; b.textContent = mt().again; }
+                document.getElementById('quizStatus').innerText = recErrorText(res.error);
+                return;
+            }
+            const ok = isSpeechMatch(res.transcript, quiz.cur.clean, isChecked('strictSpeech'));
+            quiz.answered = true;
+            quiz.results.push({ word: quiz.cur.word, clean: quiz.cur.clean, heard: res.transcript, ok, skipped: false });
+            recordResult('speech', quiz.cur.clean, res.transcript, ok);
+            document.getElementById('quizActions').style.display = 'none';
+            document.getElementById('quizStatus').innerText = mt().quizAnswered;
+            document.getElementById('quizNextBtn').style.display = '';
+        });
+    }
+
+    function quizSkip() {
+        if (quiz.answered) return;
+        stopModeSpeech();
+        quiz.answered = true;
+        quiz.results.push({ word: quiz.cur.word, clean: quiz.cur.clean, heard: null, ok: false, skipped: true });
+        quizAdvance();
+    }
+
+    function quizAdvance() {
+        quiz.i++;
+        if (quiz.i >= quiz.words.length) {
+            quiz.active = false;
+            renderQuizResult();
+        } else {
+            renderQuizWord();
+        }
+    }
+
+    function renderQuizResult() {
+        stopModeSpeech();
+        const t = mt();
+        const n = quiz.results.length;
+        const k = quiz.results.filter(r => r.ok).length;
+        const p = n ? Math.round(k * 100 / n) : 0;
+        let h = '<div class="step-title">' + escHtml(t.quizResultTitle) + '</div>' +
+                '<div class="step-box"><b>' + escHtml(t.quizScore.replace('{k}', k).replace('{n}', n).replace('{p}', p)) + '</b></div>';
+        quiz.results.forEach(r => {
+            const right = r.skipped ? escHtml(t.quizMissed) : escHtml(t.quizHeard) + ': ' + escHtml(r.heard || '');
+            h += '<div class="quiz-row"><span>' + (r.ok ? '<span class="res-ok">✔</span>' : '<span class="res-bad">✘</span>') + ' <b>' + escHtml(r.word.replace(/-/g, ' • ')) + '</b></span><span>' + right + '</span></div>';
+        });
+        if (k < n) h += '<button class="primary-btn" onclick="quizRepeatErrors()">' + escHtml(t.quizRepeatErrors) + '</button>';
+        h += '<button class="primary-btn" onclick="renderQuizSetup()">' + escHtml(t.quizNew) + '</button>' +
+             '<button class="assist-btn" onclick="goHome()">' + escHtml(t.toModes) + '</button>';
+        document.getElementById('quizScreen').innerHTML = h;
+        window.scrollTo(0, 0);
+    }
+
+    function quizRepeatErrors() {
+        const wrong = quiz.results.filter(r => !r.ok).map(r => r.word);
+        if (wrong.length) startQuiz(shuffleArray(wrong));
+    }
 
     // ----- Справка -----
     const helpI18n = {
@@ -3129,6 +3791,14 @@
             btn: 'Справка', title: 'Справка', close: 'Закрыть',
             body: `
 <p>Тренажёр помогает различать на слух похожие слова и тренировать собственное произношение. Занятия состоят из коротких заданий: слово озвучивается, а вы выбираете его, собираете из букв и произносите вслух.</p>
+
+<h3>Режимы тренировки</h3>
+<ul>
+<li><b>🧩 Полный тренажёр</b> — все блоки на одном экране: выбор слова на слух, проверка произношения, сбор из букв.</li>
+<li><b>👂 Тренировка слуха</b> — одно слово по шагам: 1) послушать, 2) повторить вслух, 3) собрать из букв. В конце итог: исходное слово, что вы проговорили и что собрали, с подсветкой различий. Затем можно повторить это слово или перейти к следующему. Если включена настройка «Обязательно проговаривать слово», к сборке из букв можно перейти только после верного произношения (или трёх попыток).</li>
+<li><b>📝 Тест</b> — от 10 до 30 случайных слов подряд. Каждое слово звучит один раз, без повтора; вы проговариваете его или пропускаете. Верно или неверно, видно только в конце: результат, список слов и кнопка «Повторить ошибки».</li>
+<li>Категория слов выбирается на стартовом экране. Кнопка 🏠 в заголовке возвращает к выбору режима.</li>
+</ul>
 
 <h3>Как заниматься</h3>
 <ul>
@@ -3187,6 +3857,14 @@
             body: `
 <p>Тренажер допомагає розрізняти на слух схожі слова і тренувати власну вимову. Заняття складаються з коротких завдань: слово озвучується, а ви вибираєте його, збираєте з літер і вимовляєте вголос.</p>
 
+<h3>Режими тренування</h3>
+<ul>
+<li><b>🧩 Повний тренажер</b> — усі блоки на одному екрані: вибір слова на слух, перевірка вимови, збирання з літер.</li>
+<li><b>👂 Тренування слуху</b> — одне слово по кроках: 1) послухати, 2) повторити вголос, 3) зібрати з літер. Наприкінці підсумок: вихідне слово, що ви промовили і що зібрали, з підсвічуванням відмінностей. Потім можна повторити це слово або перейти до наступного. Якщо ввімкнено налаштування «Обов’язково промовляти слово», до збирання з літер можна перейти лише після правильної вимови (або трьох спроб).</li>
+<li><b>📝 Тест</b> — від 10 до 30 випадкових слів поспіль. Кожне слово звучить один раз, без повтору; ви промовляєте його або пропускаєте. Правильно чи ні, видно лише наприкінці: результат, список слів і кнопка «Повторити помилки».</li>
+<li>Категорія слів обирається на стартовому екрані. Кнопка 🏠 у заголовку повертає до вибору режиму.</li>
+</ul>
+
 <h3>Як займатися</h3>
 <ul>
 <li><b>🔊 Послухати слово</b> — озвучити загадане слово ще раз.</li>
@@ -3243,6 +3921,14 @@
             btn: 'Help', title: 'Help', close: 'Close',
             body: `
 <p>This trainer helps you tell similar-sounding words apart by ear and practice your own pronunciation. Each task is short: the word is spoken, then you choose it, assemble it from letters and say it aloud.</p>
+
+<h3>Training modes</h3>
+<ul>
+<li><b>🧩 Full trainer</b> — all blocks on one screen: choose the word by ear, pronunciation check, assembling from letters.</li>
+<li><b>👂 Listening practice</b> — one word step by step: 1) listen, 2) repeat aloud, 3) assemble from letters. At the end you get a summary: the original word, what you said and what you assembled, with differences highlighted. Then you can repeat this word or move to the next one. If “Require saying the word aloud” is on, you can go to letter assembly only after a correct pronunciation (or three attempts).</li>
+<li><b>📝 Test</b> — 10 to 30 random words in a row. Each word is played once, with no replay; you say it or skip it. Whether you were right is shown only at the end: the score, a list of words and a “Repeat mistakes” button.</li>
+<li>Choose the word category on the start screen. The 🏠 button in the header returns to the mode selection.</li>
+</ul>
 
 <h3>How to practice</h3>
 <ul>
@@ -3774,6 +4460,8 @@
 
         toggleTimerFeature();
         nextQuestion();
+        showScreen('select');
+        refreshModeTexts();
     };
 
     // Оффлайн: регистрация service worker (нужен HTTPS или localhost).
