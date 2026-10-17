@@ -76,10 +76,45 @@
             text-align: left;
             flex-grow: 1;
         }
+        .app-title {
+            font-family: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
+            font-size: 1.5em;
+            font-weight: 700;
+            font-style: italic;
+            letter-spacing: 0.4px;
+            line-height: 1.2;
+            text-align: center;
+            flex-grow: 0;
+            margin: 0 0 14px;
+            color: #4a90e2;
+            background: linear-gradient(90deg, #4a90e2, #8e5bd8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .home-btn {
+            width: auto;
+            flex: 0 0 auto;
+            margin: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #4a90e2;
+            color: #fff;
+            border: none;
+            border-radius: 22px;
+            padding: 9px 18px;
+            font-size: 14px;
+            font-weight: bold;
+            white-space: nowrap;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.45);
+        }
         .header-btns {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
+            margin-left: auto;
         }
         .header-btns .settings-toggle-btn { white-space: nowrap; }
         @media (max-width: 440px) {
@@ -886,10 +921,10 @@
 </div>
 
 <div class="container">
+    <h1 id="appTitle" class="app-title">Auditory Differentiation</h1>
     <div class="header-row">
-        <h1 id="appTitle">Auditory Differentiation</h1>
+        <button class="home-btn" id="homeBtn" onclick="goHome()" aria-label="Modes" title="Modes" style="display:none">🏠 <span id="homeBtnText">Modes</span></button>
         <div class="header-btns">
-            <button class="settings-toggle-btn" id="homeBtn" onclick="goHome()" aria-label="Modes" title="Modes" style="display:none">🏠</button>
             <button class="settings-toggle-btn" id="statsBtn" onclick="openStats()">📊 Statistics</button>
             <button class="settings-toggle-btn" id="settingsBtn" onclick="openSettings()">⚙️ Settings</button>
             <button class="settings-toggle-btn" id="helpBtn" onclick="openHelp()" aria-label="Help" title="Help">❓</button>
@@ -1717,6 +1752,7 @@
     // Произносит слово по слогам с паузами, затем целиком. На Android событие
     // onend срабатывает не всегда, поэтому есть запасной таймер.
     function speakSyllables(syllableWord) {
+        if (screenName === 'select') return;   // на стартовом экране слова не произносятся
         if (!('speechSynthesis' in window) || !syllableWord) return;
         warmupSpeechSynthesis();
         window.speechSynthesis.cancel();
@@ -1958,6 +1994,7 @@
     }
 
     function speakWord(syllableWord) {
+        if (screenName === 'select') return;   // на стартовом экране слова не произносятся
         if (!('speechSynthesis' in window)) {
             alert("TTS is not supported in this browser.");
             return;
@@ -2203,11 +2240,11 @@
         const options = generateOptions(targetWordSyllables);
         renderOptions(options);
         if (!isChecked('modeChoice')) setupSpellBuilder(targetWordSyllables);
-        scrollToTaskCard();
+        if (screenName === 'full') scrollToTaskCard();
 
-        if (isChecked('autoSpeak')) {
+        if (isChecked('autoSpeak') && screenName === 'full') {
             setTimeout(() => {
-                speakWord(targetWordSyllables);
+                if (screenName === 'full') speakWord(targetWordSyllables);
             }, 300);
         }
     }
@@ -3239,6 +3276,7 @@
             listenTitle: '👂 Тренировка слуха', listenDesc: 'Одно слово по шагам: послушать, повторить вслух, собрать из букв. В конце итог.',
             quizTitle: '📝 Тест', quizDesc: 'От 10 до 30 случайных слов подряд. Каждое слово звучит один раз, вы проговариваете его. В конце результат.',
             home: 'К выбору режима',
+            homeShort: 'Режимы',
             stepOf: 'Шаг {i} из 3', s1: 'Послушайте слово', s2: 'Повторите слово вслух', s3: 'Соберите слово из букв', summary: 'Итог',
             listen: '🔊 Послушать', slow: '🐢 По слогам', next: 'Далее ➔',
             say: '🎙 Проговорить', again: '🎙 Ещё раз', listening: '⏺ Слушаю…',
@@ -3266,6 +3304,7 @@
             listenTitle: '👂 Тренування слуху', listenDesc: 'Одне слово по кроках: послухати, повторити вголос, зібрати з літер. Наприкінці підсумок.',
             quizTitle: '📝 Тест', quizDesc: 'Від 10 до 30 випадкових слів поспіль. Кожне слово звучить один раз, ви промовляєте його. Наприкінці результат.',
             home: 'До вибору режиму',
+            homeShort: 'Режими',
             stepOf: 'Крок {i} з 3', s1: 'Послухайте слово', s2: 'Повторіть слово вголос', s3: 'Зберіть слово з літер', summary: 'Підсумок',
             listen: '🔊 Послухати', slow: '🐢 По складах', next: 'Далі ➔',
             say: '🎙 Промовити', again: '🎙 Ще раз', listening: '⏺ Слухаю…',
@@ -3293,6 +3332,7 @@
             listenTitle: '👂 Listening practice', listenDesc: 'One word step by step: listen, repeat aloud, assemble from letters. A summary at the end.',
             quizTitle: '📝 Test', quizDesc: '10 to 30 random words in a row. Each word is played once and you say it. A result at the end.',
             home: 'Back to modes',
+            homeShort: 'Modes',
             stepOf: 'Step {i} of 3', s1: 'Listen to the word', s2: 'Repeat the word aloud', s3: 'Assemble the word from letters', summary: 'Summary',
             listen: '🔊 Listen', slow: '🐢 By syllables', next: 'Next ➔',
             say: '🎙 Say it', again: '🎙 Again', listening: '⏺ Listening…',
@@ -3404,6 +3444,7 @@
         const hb = document.getElementById('homeBtn');
         hb.title = t.home;
         hb.setAttribute('aria-label', t.home);
+        document.getElementById('homeBtnText').innerText = t.homeShort;
         syncModeCategorySelect();
         setTimeout(syncModeCategorySelect, 0);
     }
