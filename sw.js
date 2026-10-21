@@ -1,16 +1,16 @@
 // Service worker: кэширует всё приложение, чтобы оно работало без интернета.
-// При любом изменении файлов игры увеличивайте номер версии (v1 -> v2 ...).
-const CACHE = 'diff-v23';
+// При любом изменении файлов приложения увеличивайте номер версии (v1 -> v2 ...).
+const CACHE = 'speech-rehab-v23';
 const ASSETS = [
-  './',
-  './index.html',
-  './manifest.json',
-  './accents.js',
-  './dict-en.js',
-  './dict-uk.js',
-  './dict-ru.js',
-  './icon-192.png',
-  './icon-512.png'
+  '/SpeechRehab/',
+  '/SpeechRehab/index.html',
+  '/SpeechRehab/manifest.json',
+  '/SpeechRehab/accents.js',
+  '/SpeechRehab/dict-en.js',
+  '/SpeechRehab/dict-uk.js',
+  '/SpeechRehab/dict-ru.js',
+  '/SpeechRehab/icon-192.png',
+  '/SpeechRehab/icon-512.png'
 ];
 
 self.addEventListener('install', e => {
@@ -30,6 +30,6 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
     caches.match(e.request, { ignoreSearch: true })
-      .then(r => r || fetch(e.request).catch(() => caches.match('./index.html')))
+      .then(r => r || fetch(e.request).catch(() => caches.match('/SpeechRehab/index.html')))
   );
 });
