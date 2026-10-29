@@ -732,6 +732,7 @@
         .abc-words { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
         .abc-word { width: 100%; min-height: 60px; padding: 6px 10px; border-radius: 12px; border: 3px solid var(--option-btn-border); background: var(--option-btn-bg); color: var(--text-color); font-size: clamp(20px, 6vw, 26px); font-weight: 700; cursor: pointer; overflow-wrap: anywhere; }
         .abc-word:hover, .abc-word:active { background: var(--option-btn-hover); }
+        .abc-online { width: 100%; min-height: 48px; border-radius: 10px; border: 2px solid var(--option-btn-border); background: var(--option-btn-bg); color: var(--option-btn-text); font-size: 16px; font-weight: bold; cursor: pointer; }
         .abc-kb { position: sticky; bottom: 0; z-index: 3; background: var(--card-bg); border-top: 2px solid var(--input-border); padding: 8px 0 4px; margin-top: 4px; }
         .abc-kbh { display: flex; gap: 6px; margin-bottom: 6px; }
         .abc-kbt { flex: 1; width: auto; min-width: 0; min-height: 40px; border-radius: 10px; background: var(--card-bg); border: 2px solid var(--input-border); color: var(--text-color); font-size: 15px; font-weight: 700; padding: 0 6px; cursor: pointer; }
@@ -842,6 +843,13 @@
 
         <div class="control-group">
             <button class="assist-btn" id="dictBtn" onclick="openDict()">📚 My words</button>
+        </div>
+
+        <div class="control-group">
+            <label class="checkbox-label" for="abcOnlineChk">
+                <input type="checkbox" id="abcOnlineChk" onchange="abcOnlineChanged()">
+                <span id="labelAbcOnline"></span>
+            </label>
         </div>
 
         <div class="control-group">
@@ -3469,6 +3477,8 @@
         document.getElementById('modeQuizDesc').innerText = t.quizDesc;
         document.getElementById('modeAbcTitle').innerText = abcT().title;
         document.getElementById('modeAbcDesc').innerText = abcT().desc;
+        document.getElementById('labelAbcOnline').innerText = abcT().setOnline;
+        document.getElementById('abcOnlineChk').checked = abcOnlineOn();
         const hb = document.getElementById('homeBtn');
         hb.title = t.home;
         hb.setAttribute('aria-label', t.home);
@@ -3863,7 +3873,8 @@
             hint: 'Нажмите первую букву слова', words: 'Подходящие слова — нажмите, чтобы добавить:',
             more: 'Найдено слов: {n}. Нажмите следующую букву, чтобы сузить список.',
             none: 'Слов на эти буквы нет', type: 'Набирайте слово так, как вы его себе представляете (можно с ошибками):',
-            fit: 'Подходящие буквы', free: 'Свободный набор', show: 'Показать буквы', hide: 'Скрыть буквы', say: 'Сказать так'
+            fit: 'Подходящие буквы', free: 'Свободный набор', show: 'Показать буквы', hide: 'Скрыть буквы', say: 'Сказать так',
+            online: "Найти слова в интернете", onlineRes: "Слова из интернета — нажмите, чтобы выбрать:", onlineNone: "В интернете подходящих слов не нашлось.", searching: "Ищу варианты…", err: "Не удалось связаться с сервисом словарей. Проверьте интернет.", setOnline: "Азбука: искать слова онлайн (Викисловарь; для английского ещё Datamuse). Бесплатно, ключ не нужен. Набранные буквы отправляются этим сервисам. Выбранные слова запоминаются на устройстве."
         },
         uk: {
             title: '🔤 Абетка',
@@ -3871,7 +3882,8 @@
             hint: 'Натисніть першу літеру слова', words: 'Відповідні слова — натисніть, щоб додати:',
             more: 'Знайдено слів: {n}. Натисніть наступну літеру, щоб звузити список.',
             none: 'Слів на ці літери немає', type: 'Набирайте слово так, як ви його собі уявляєте (можна з помилками):',
-            fit: 'Відповідні літери', free: 'Вільний набір', show: 'Показати літери', hide: 'Сховати літери', say: 'Сказати так'
+            fit: 'Відповідні літери', free: 'Вільний набір', show: 'Показати літери', hide: 'Сховати літери', say: 'Сказати так',
+            online: "Знайти слова в інтернеті", onlineRes: "Слова з інтернету — натисніть, щоб обрати:", onlineNone: "В інтернеті відповідних слів не знайшлося.", searching: "Шукаю варіанти…", err: "Не вдалося зв’язатися із сервісом словників. Перевірте інтернет.", setOnline: "Абетка: шукати слова онлайн (Вікісловник; для англійської ще Datamuse). Безкоштовно, ключ не потрібен. Набрані літери надсилаються цим сервісам. Обрані слова запам’ятовуються на пристрої."
         },
         en: {
             title: '🔤 ABC',
@@ -3879,7 +3891,8 @@
             hint: 'Tap the first letter of the word', words: 'Matching words — tap to add:',
             more: 'Words found: {n}. Tap the next letter to narrow the list.',
             none: 'No words for these letters', type: 'Type the word the way you imagine it (mistakes are fine):',
-            fit: 'Matching letters', free: 'Free typing', show: 'Show letters', hide: 'Hide letters', say: 'Say it'
+            fit: 'Matching letters', free: 'Free typing', show: 'Show letters', hide: 'Hide letters', say: 'Say it',
+            online: "Find words online", onlineRes: "Words from the internet — tap to choose:", onlineNone: "No matching words were found online.", searching: "Looking for options…", err: "Could not reach the dictionary service. Check the internet.", setOnline: "ABC: look up words online (Wiktionary; for English also Datamuse). Free, no key needed. The typed letters are sent to these services. Chosen words are remembered on the device."
         }
     };
 
@@ -3917,6 +3930,10 @@
             seen.add(w);
             items.push({ w, k });
         }));
+        abcLearned(currentLang).forEach(raw => {
+            const w = String(raw).toLowerCase(), k = abcKey(w);
+            if (w && k && !seen.has(w)) { seen.add(w); items.push({ w, k }); }
+        });
         const col = new Intl.Collator(currentLang);
         items.sort((a, b) => col.compare(a.w, b.w));
         abcState.dict = items.map(x => x.w);
@@ -3991,6 +4008,7 @@
 
     function abcPick(w) {
         abcState.line.push(w);
+        abcOnl = { key: '', st: undefined };
         abcState.prefix = '';
         abcState.typed = '';
         if (isChecked('autoSpeak')) abcSpeak([w]);
@@ -4034,7 +4052,7 @@
         return kb;
     }
 
-    function abcRender() {
+    function abcRender(keepScroll) {
         const t = abcT();
         if (abcState.src !== getActiveDictionary()) abcBuildDict();   // словарь изменился («Мои слова»)
         const el = document.getElementById('abcScreen');
@@ -4071,6 +4089,7 @@
             } else if (!abcState.typed) {
                 el.append(abcMk('div', 'abc-sec', t.type));
             }
+            abcOnlineBlock(el, 't:' + abcState.typed, abcState.typed);
             letters = ABC_ALPHA_FULL[currentLang].split('');
         } else {
             const pre = abcState.prefix;
@@ -4092,20 +4111,139 @@
                     el.append(abcMk('div', 'abc-sec', t.words), abcWordGrid(idx.slice(0, 60).map(i => abcState.dict[i])));
                     if (idx.length > 60) el.append(abcMk('div', 'step-note', t.more.replace('{n}', idx.length)));
                 }
+                abcOnlineBlock(el, 'p:' + pre, pre);
                 letters = [...new Set(idx.filter(i => abcState.keys[i].length > pre.length).map(i => abcState.keys[i][pre.length]))]
                     .filter(ch => /\p{L}/u.test(ch)).sort((a, b) => a.localeCompare(b, currentLang));
             }
         }
         el.append(abcKeyboard(free, letters));
-        window.scrollTo(0, 0);
+        if (!keepScroll) window.scrollTo(0, 0);
     }
 
     function abcOpen() {
         let m = 'prefix';
         try { if (localStorage.getItem('app_abc_mode') === 'free') m = 'free'; } catch (e) {}
         Object.assign(abcState, { mode: m, prefix: '', typed: '', line: [], kbOff: false });
+        abcOnl = { key: '', st: undefined };
         abcBuildDict();
         abcRender();
+    }
+
+    // ----- Азбука: онлайн-поиск слов (бесплатно, без ключа): Викисловарь, для английского ещё Datamuse -----
+    const ABC_WIKI = {
+        ru: 'https://ru.wiktionary.org/w/api.php',
+        uk: 'https://uk.wiktionary.org/w/api.php',
+        en: 'https://en.wiktionary.org/w/api.php'
+    };
+    const ABC_RE = {
+        ru: /^[а-я]+(?:-[а-я]+)?$/,
+        uk: /^[а-щьюяєіїґ]+(?:['’ʼ-][а-щьюяєіїґ]+)?$/,
+        en: /^[a-z]+(?:'[a-z]+)?$/
+    };
+    // Простая фильтрация нецензурной лексики (не исчерпывающая)
+    const ABC_BAD = {
+        ru: /хуй|хуе|хуи|хуя|пизд|бляд|бляц|блят|залуп|муда[кч]|пидор|пидар|гандон|шлюх|дерьм|говн|^(?:за|вы|по|на|съ|от|у|до|об|раз|рас|при)?еб|^жоп|^сук[аиуе]$/,
+        uk: /хуй|хуї|хує|пизд|бляд|курв|гівн|мудак|підор|підар|шлюх|^жоп|^сук[аиуе]$|^(?:за|ви|по|на|від|у|до|об|роз|при)?їб/,
+        en: /fuck|shit|cunt|bitch|asshole|pussy|whore|slut|bastard|nigg|^dick$|^cock$|^fag/
+    };
+    let abcOnl = { key: '', st: undefined };   // undefined | 'loading' | массив слов | { err }
+
+    function abcOnlineOn() {
+        try { return localStorage.getItem('app_abc_online') === 'true'; } catch (e) { return false; }
+    }
+
+    function abcOnlineChanged() {
+        const on = document.getElementById('abcOnlineChk').checked;
+        try { localStorage.setItem('app_abc_online', on ? 'true' : 'false'); } catch (e) {}
+        abcOnl = { key: '', st: undefined };
+        if (screenName === 'abc') abcRender(true);
+    }
+
+    function abcOkWord(w, l) {
+        w = String(w || '').toLowerCase().replace(/ё/g, 'е');
+        return w.length >= 2 && w.length <= 24 && ABC_RE[l].test(w) && !ABC_BAD[l].test(w) ? w : null;
+    }
+
+    // Слова, выбранные из онлайн-результатов, запоминаются на устройстве и входят в словарь «Азбуки»
+    function abcLearned(l) {
+        try { return JSON.parse(localStorage.getItem('app_abc_learned_' + l)) || []; } catch (e) { return []; }
+    }
+
+    function abcLearn(w) {
+        w = abcOkWord(w, currentLang);
+        if (!w) return null;
+        const a = abcLearned(currentLang).filter(x => x !== w);
+        a.unshift(w);
+        try { localStorage.setItem('app_abc_learned_' + currentLang, JSON.stringify(a.slice(0, 3000))); } catch (e) {}
+        return w;
+    }
+
+    async function abcJget(url, ms) {
+        const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), ms || 10000);
+        try {
+            const r = await fetch(url, { signal: ctl.signal });
+            if (!r.ok) throw new Error('http');
+            return await r.json();
+        } finally { clearTimeout(tm); }
+    }
+
+    async function abcOnlineWords(query) {
+        const q = abcKey(query);
+        if (q.length < 2) return [];
+        const enc = encodeURIComponent, base = ABC_WIKI[currentLang], l = currentLang, out = [];
+        const add = w => { w = abcOkWord(w, l); if (w && !out.includes(w)) out.push(w); };
+        const near = t => { t = abcOkWord(t, l); return t && (t.startsWith(q) || abcLev(q, t, 2) <= 2); };
+        const tasks = [
+            // продолжения слова
+            abcJget(base + '?action=query&list=prefixsearch&pssearch=' + enc(q) + '&pslimit=10&format=json&origin=*')
+                .then(j => ((j.query && j.query.prefixsearch) || []).forEach(x => add(x.title))),
+            // «возможно, вы имели в виду» и похожие названия статей
+            abcJget(base + '?action=query&list=search&srsearch=' + enc(q) + '&srnamespace=0&srlimit=8&srinfo=suggestion&srprop=&format=json&origin=*')
+                .then(j => {
+                    const s = j.query && j.query.searchinfo && j.query.searchinfo.suggestion;
+                    if (s) String(s).split(/\s+/).forEach(add);
+                    ((j.query && j.query.search) || []).forEach(x => { if (near(x.title)) add(x.title); });
+                })
+        ];
+        if (l === 'en') tasks.push(abcJget('https://api.datamuse.com/sug?s=' + enc(q) + '&max=10').then(a => (a || []).forEach(x => add(x.word))));
+        const res = await Promise.allSettled(tasks);
+        if (res.every(r => r.status === 'rejected')) throw res[0].reason;
+        out.sort((a, b) => (b === q) - (a === q) || (b.startsWith(q)) - (a.startsWith(q)) || abcLev(q, a, 3) - abcLev(q, b, 3));
+        return out.slice(0, 10);
+    }
+
+    function abcOnlineBlock(box, key, query) {
+        if (!abcOnlineOn() || !query || abcKey(query).length < 2) return;
+        const t = abcT();
+        if (abcOnl.key !== key) abcOnl = { key, st: undefined };
+        if (abcOnl.st === undefined) {
+            const b = abcMk('button', 'abc-online', '🌐 ' + t.online, async () => {
+                abcOnl = { key, st: 'loading' };
+                abcRender(true);
+                let st;
+                try { st = await abcOnlineWords(query); } catch (e) { st = { err: t.err }; }
+                if (abcOnl.key === key && screenName === 'abc') { abcOnl.st = st; abcRender(true); }
+            });
+            box.append(b);
+        } else if (abcOnl.st === 'loading') {
+            box.append(abcMk('div', 'step-note', t.searching));
+        } else if (abcOnl.st.err) {
+            box.append(abcMk('div', 'step-note', abcOnl.st.err));
+        } else if (!abcOnl.st.length) {
+            box.append(abcMk('div', 'step-note', t.onlineNone));
+        } else {
+            box.append(abcMk('div', 'abc-sec', t.onlineRes));
+            const g = abcMk('div', 'abc-words');
+            abcOnl.st.forEach(w => g.append(abcMk('button', 'abc-word', '🌐 ' + w, () => abcPickOnline(w))));
+            box.append(g);
+        }
+    }
+
+    function abcPickOnline(w) {
+        const learned = abcLearn(w);
+        abcBuildDict();
+        abcOnl = { key: '', st: undefined };
+        abcPick(learned || w);
     }
 
     const helpI18n = {
@@ -4119,7 +4257,7 @@
 <li><b>🧩 Полный тренажёр</b> — все блоки на одном экране: выбор слова на слух, проверка произношения, сбор из букв.</li>
 <li><b>👂 Тренировка слуха</b> — одно слово по шагам: 1) послушать, 2) повторить вслух, 3) собрать из букв. В конце итог: исходное слово, что вы проговорили и что собрали, с подсветкой различий. Затем можно повторить это слово или перейти к следующему. Если включена настройка «Обязательно проговаривать слово», к сборке из букв можно перейти только после верного произношения (или трёх попыток).</li>
 <li><b>📝 Тест</b> — от 10 до 30 случайных слов подряд. Каждое слово звучит один раз, без повтора; вы проговариваете его или пропускаете. Верно или неверно, видно только в конце: результат, список слов и кнопка «Повторить ошибки».</li>
-<li><b>🔤 Азбука</b> — подсказка по первой букве, когда слово «вертится на языке». Нажмите первую букву: появятся слова из словаря (включая «Мои слова»), которые с неё начинаются; следующая буква сужает список. Нажатие на слово добавляет его в строку (если включено автоозвучивание, слово сразу произносится), «Сказать так» озвучивает всю строку, ⌫ убирает последнее слово. «Скрыть буквы» освобождает место для слов. «Свободный набор» показывает весь алфавит: слово можно набирать так, как вы его себе представляете, даже с ошибками, а приложение предложит похожие слова. Категория слов здесь не учитывается: поиск идёт по всем словам.</li>
+<li><b>🔤 Азбука</b> — подсказка по первой букве, когда слово «вертится на языке». Нажмите первую букву: появятся слова из словаря (включая «Мои слова»), которые с неё начинаются; следующая буква сужает список. Нажатие на слово добавляет его в строку (если включено автоозвучивание, слово сразу произносится), «Сказать так» озвучивает всю строку, ⌫ убирает последнее слово. «Скрыть буквы» освобождает место для слов. «Свободный набор» показывает весь алфавит: слово можно набирать так, как вы его себе представляете, даже с ошибками, а приложение предложит похожие слова. Категория слов здесь не учитывается: поиск идёт по всем словам. Если в настройках включён онлайн-поиск, под списком появляется кнопка «Найти слова в интернете»: слова ищутся в Викисловаре (для английского ещё в Datamuse), для этого набранные буквы отправляются в эти сервисы. Выбранное слово запоминается на устройстве.</li>
 <li>Категория слов выбирается на стартовом экране. Кнопка 🏠 в заголовке возвращает к выбору режима.</li>
 </ul>
 
@@ -4185,7 +4323,7 @@
 <li><b>🧩 Повний тренажер</b> — усі блоки на одному екрані: вибір слова на слух, перевірка вимови, збирання з літер.</li>
 <li><b>👂 Тренування слуху</b> — одне слово по кроках: 1) послухати, 2) повторити вголос, 3) зібрати з літер. Наприкінці підсумок: вихідне слово, що ви промовили і що зібрали, з підсвічуванням відмінностей. Потім можна повторити це слово або перейти до наступного. Якщо ввімкнено налаштування «Обов’язково промовляти слово», до збирання з літер можна перейти лише після правильної вимови (або трьох спроб).</li>
 <li><b>📝 Тест</b> — від 10 до 30 випадкових слів поспіль. Кожне слово звучить один раз, без повтору; ви промовляєте його або пропускаєте. Правильно чи ні, видно лише наприкінці: результат, список слів і кнопка «Повторити помилки».</li>
-<li><b>🔤 Абетка</b> — підказка за першою літерою, коли слово «крутиться на язиці». Натисніть першу літеру: з’являться слова зі словника (разом із «Моїми словами»), що з неї починаються; наступна літера звужує список. Натискання на слово додає його до рядка (якщо ввімкнено автоозвучення, слово одразу промовляється), «Сказати так» озвучує весь рядок, ⌫ прибирає останнє слово. «Сховати літери» вивільняє місце для слів. «Вільний набір» показує всю абетку: слово можна набирати так, як ви його собі уявляєте, навіть з помилками, а застосунок запропонує схожі слова. Категорія слів тут не враховується: пошук іде по всіх словах.</li>
+<li><b>🔤 Абетка</b> — підказка за першою літерою, коли слово «крутиться на язиці». Натисніть першу літеру: з’являться слова зі словника (разом із «Моїми словами»), що з неї починаються; наступна літера звужує список. Натискання на слово додає його до рядка (якщо ввімкнено автоозвучення, слово одразу промовляється), «Сказати так» озвучує весь рядок, ⌫ прибирає останнє слово. «Сховати літери» вивільняє місце для слів. «Вільний набір» показує всю абетку: слово можна набирати так, як ви його собі уявляєте, навіть з помилками, а застосунок запропонує схожі слова. Категорія слів тут не враховується: пошук іде по всіх словах. Якщо в налаштуваннях увімкнено онлайн-пошук, під списком з’являється кнопка «Знайти слова в інтернеті»: слова шукаються у Вікісловнику (для англійської ще в Datamuse), для цього набрані літери надсилаються цим сервісам. Обране слово запам’ятовується на пристрої.</li>
 <li>Категорія слів обирається на стартовому екрані. Кнопка 🏠 у заголовку повертає до вибору режиму.</li>
 </ul>
 
@@ -4251,7 +4389,7 @@
 <li><b>🧩 Full trainer</b> — all blocks on one screen: choose the word by ear, pronunciation check, assembling from letters.</li>
 <li><b>👂 Listening practice</b> — one word step by step: 1) listen, 2) repeat aloud, 3) assemble from letters. At the end you get a summary: the original word, what you said and what you assembled, with differences highlighted. Then you can repeat this word or move to the next one. If “Require saying the word aloud” is on, you can go to letter assembly only after a correct pronunciation (or three attempts).</li>
 <li><b>📝 Test</b> — 10 to 30 random words in a row. Each word is played once, with no replay; you say it or skip it. Whether you were right is shown only at the end: the score, a list of words and a “Repeat mistakes” button.</li>
-<li><b>🔤 ABC</b> — first-letter help for when a word is on the tip of your tongue. Tap the first letter: words from the dictionary (including “My words”) that start with it appear; the next letter narrows the list. Tapping a word adds it to the line (if auto-speak is on, the word is spoken at once), “Say it” speaks the whole line, ⌫ removes the last word. “Hide letters” makes room for more words. “Free typing” shows the whole alphabet: type the word the way you imagine it, mistakes included, and the app suggests similar words. The word category is not used here: the search covers all words.</li>
+<li><b>🔤 ABC</b> — first-letter help for when a word is on the tip of your tongue. Tap the first letter: words from the dictionary (including “My words”) that start with it appear; the next letter narrows the list. Tapping a word adds it to the line (if auto-speak is on, the word is spoken at once), “Say it” speaks the whole line, ⌫ removes the last word. “Hide letters” makes room for more words. “Free typing” shows the whole alphabet: type the word the way you imagine it, mistakes included, and the app suggests similar words. The word category is not used here: the search covers all words. If online search is turned on in Settings, a “Find words online” button appears under the list: words are looked up in Wiktionary (and Datamuse for English), so the typed letters are sent to these services. A chosen word is remembered on the device.</li>
 <li>Choose the word category on the start screen. The 🏠 button in the header returns to the mode selection.</li>
 </ul>
 

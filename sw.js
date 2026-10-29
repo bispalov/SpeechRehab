@@ -1,6 +1,6 @@
 // Service worker: кэширует всё приложение, чтобы оно работало без интернета.
 // При любом изменении файлов приложения увеличивайте номер версии (v1 -> v2 ...).
-const CACHE = 'speech-rehab-v24';
+const CACHE = 'speech-rehab-v25';
 const ASSETS = [
   '/SpeechRehab/',
   '/SpeechRehab/index.html',
@@ -28,6 +28,8 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  // Запросы к другим сайтам (онлайн-поиск слов) идут напрямую, без кэша и подмены страницей приложения
+  if (new URL(e.request.url).origin !== self.location.origin) return;
   e.respondWith(
     caches.match(e.request, { ignoreSearch: true })
       .then(r => r || fetch(e.request).catch(() => caches.match('/SpeechRehab/index.html')))
