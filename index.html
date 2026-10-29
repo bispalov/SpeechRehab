@@ -719,6 +719,24 @@
         .option-btn.eliminated { opacity: 0.25; pointer-events: none; }
         .option-btn.hint-glow { box-shadow: 0 0 0 4px #ffc107; }
         body.gentle-mode .stat-box.total-stat { display: none; }
+        /* ----- Режим «Азбука» ----- */
+        #abcScreen { gap: 8px; }
+        .abc-built { background: var(--word-box-bg); border: 2px dashed var(--input-border); border-radius: 10px; padding: 8px 12px; text-align: left; }
+        .abc-built-text { font-size: clamp(20px, 5.6vw, 26px); font-weight: 800; line-height: 1.2; overflow-wrap: anywhere; }
+        .abc-row { display: flex; gap: 8px; align-items: center; }
+        .abc-row .assist-btn { flex: 0 0 auto; width: auto; min-width: 64px; min-height: 52px; padding: 0 14px; font-size: 22px; border-radius: 10px; }
+        .abc-row .assist-btn.abc-say { flex: 1 1 auto; min-width: 0; font-size: 18px; }
+        .abc-row .assist-btn.abc-del { background-color: #6c757d; }
+        .abc-prefix { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; text-align: left; font-size: clamp(30px, 9vw, 40px); font-weight: 800; }
+        .abc-sec { text-align: left; font-weight: bold; opacity: 0.8; margin: 4px 2px 0; }
+        .abc-words { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+        .abc-word { width: 100%; min-height: 60px; padding: 6px 10px; border-radius: 12px; border: 3px solid var(--option-btn-border); background: var(--option-btn-bg); color: var(--text-color); font-size: clamp(20px, 6vw, 26px); font-weight: 700; cursor: pointer; overflow-wrap: anywhere; }
+        .abc-word:hover, .abc-word:active { background: var(--option-btn-hover); }
+        .abc-kb { position: sticky; bottom: 0; z-index: 3; background: var(--card-bg); border-top: 2px solid var(--input-border); padding: 8px 0 4px; margin-top: 4px; }
+        .abc-kbh { display: flex; gap: 6px; margin-bottom: 6px; }
+        .abc-kbt { flex: 1; width: auto; min-width: 0; min-height: 40px; border-radius: 10px; background: var(--card-bg); border: 2px solid var(--input-border); color: var(--text-color); font-size: 15px; font-weight: 700; padding: 0 6px; cursor: pointer; }
+        .abc-letters { display: grid; grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); gap: 4px; }
+        .abc-letter { width: 100%; min-height: 46px; font-size: 22px; font-weight: 800; padding: 0; border-radius: 10px; border: 2px solid var(--option-btn-border); background: var(--option-btn-bg); color: var(--text-color); cursor: pointer; }
         body { overflow-anchor: none; }
     </style>
 </head>
@@ -949,10 +967,15 @@
             <span class="mode-title" id="modeQuizTitle"></span>
             <span class="mode-desc" id="modeQuizDesc"></span>
         </button>
+        <button class="mode-card" onclick="startMode('abc')">
+            <span class="mode-title" id="modeAbcTitle"></span>
+            <span class="mode-desc" id="modeAbcDesc"></span>
+        </button>
     </div>
 
     <div id="listenScreen" class="screen hidden"></div>
     <div id="quizScreen" class="screen hidden"></div>
+    <div id="abcScreen" class="screen hidden"></div>
 
     <div id="fullTrainer" class="screen hidden">
     <div class="stats-row">
@@ -3358,7 +3381,7 @@
 
     function mt() { return modeI18n[currentLang] || modeI18n.ru; }
 
-    const SCREEN_IDS = { select: 'modeSelect', listen: 'listenScreen', quiz: 'quizScreen', full: 'fullTrainer' };
+    const SCREEN_IDS = { select: 'modeSelect', listen: 'listenScreen', quiz: 'quizScreen', abc: 'abcScreen', full: 'fullTrainer' };
     let screenName = 'select', modeLang = null, modeCatChanged = false, modeRec = null;
     const quiz = { words: [], i: 0, results: [], active: false, answered: false, cur: null };
 
@@ -3393,6 +3416,9 @@
         } else if (m === 'listen') {
             showScreen('listen');
             listenNewWord();
+        } else if (m === 'abc') {
+            showScreen('abc');
+            abcOpen();
         } else {
             showScreen('quiz');
             renderQuizSetup();
@@ -3429,7 +3455,7 @@
     function refreshModeTexts() {
         const t = mt();
         // смена языка во время тренировки: слова другого языка, поэтому возврат к выбору режима
-        if ((screenName === 'listen' || screenName === 'quiz') && modeLang !== currentLang) {
+        if ((screenName === 'listen' || screenName === 'quiz' || screenName === 'abc') && modeLang !== currentLang) {
             quiz.active = false;
             showScreen('select');
         }
@@ -3441,6 +3467,8 @@
         document.getElementById('modeListenDesc').innerText = t.listenDesc;
         document.getElementById('modeQuizTitle').innerText = t.quizTitle;
         document.getElementById('modeQuizDesc').innerText = t.quizDesc;
+        document.getElementById('modeAbcTitle').innerText = abcT().title;
+        document.getElementById('modeAbcDesc').innerText = abcT().desc;
         const hb = document.getElementById('homeBtn');
         hb.title = t.home;
         hb.setAttribute('aria-label', t.home);
@@ -3827,6 +3855,259 @@
     }
 
     // ----- Справка -----
+    // ----- Азбука: подсказка по первой букве -----
+    const abcI18n = {
+        ru: {
+            title: '🔤 Азбука',
+            desc: 'Подсказка по первой букве: нажмите букву, найдите слово, которое «вертится на языке», и услышьте его. Слова можно собирать в строку.',
+            hint: 'Нажмите первую букву слова', words: 'Подходящие слова — нажмите, чтобы добавить:',
+            more: 'Найдено слов: {n}. Нажмите следующую букву, чтобы сузить список.',
+            none: 'Слов на эти буквы нет', type: 'Набирайте слово так, как вы его себе представляете (можно с ошибками):',
+            fit: 'Подходящие буквы', free: 'Свободный набор', show: 'Показать буквы', hide: 'Скрыть буквы', say: 'Сказать так'
+        },
+        uk: {
+            title: '🔤 Абетка',
+            desc: 'Підказка за першою літерою: натисніть літеру, знайдіть слово, яке «крутиться на язиці», і почуйте його. Слова можна збирати в рядок.',
+            hint: 'Натисніть першу літеру слова', words: 'Відповідні слова — натисніть, щоб додати:',
+            more: 'Знайдено слів: {n}. Натисніть наступну літеру, щоб звузити список.',
+            none: 'Слів на ці літери немає', type: 'Набирайте слово так, як ви його собі уявляєте (можна з помилками):',
+            fit: 'Відповідні літери', free: 'Вільний набір', show: 'Показати літери', hide: 'Сховати літери', say: 'Сказати так'
+        },
+        en: {
+            title: '🔤 ABC',
+            desc: 'First-letter help: tap a letter, find the word that is on the tip of your tongue and hear it. Words can be collected into a line.',
+            hint: 'Tap the first letter of the word', words: 'Matching words — tap to add:',
+            more: 'Words found: {n}. Tap the next letter to narrow the list.',
+            none: 'No words for these letters', type: 'Type the word the way you imagine it (mistakes are fine):',
+            fit: 'Matching letters', free: 'Free typing', show: 'Show letters', hide: 'Hide letters', say: 'Say it'
+        }
+    };
+
+    function abcT() { return abcI18n[currentLang] || abcI18n.ru; }
+
+    const ABC_ALPHA = {
+        ru: 'абвгдежзийклмнопрстуфхцчшщэюя',
+        uk: 'абвгґдеєжзиіїйклмнопрстуфхцчшщюя',
+        en: 'abcdefghijklmnopqrstuvwxyz'
+    };
+    // Полная азбука для свободного набора (включая буквы, которых нет в начале слов)
+    const ABC_ALPHA_FULL = {
+        ru: 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя',
+        uk: "абвгґдеєжзиіїйклмнопрстуфхцчшщьюя'",
+        en: "abcdefghijklmnopqrstuvwxyz'"
+    };
+    // Буквы, которые часто путают в речи и при письме: замена такой пары стоит полцены
+    const ABC_CONF = new Set('бп пб вф фв гк кг дт тд жш шж зс сз ао оа еи ие яи ия еэ эе уы ыу иі ії bp pb dt td kg gk sz zs fv vf'.split(' '));
+    const abcState = { mode: 'prefix', prefix: '', typed: '', line: [], dict: [], keys: [], src: null, kbOff: false };
+
+    // Ключ для поиска: без регистра, «ё» как «е», без пробелов и дефисов
+    function abcKey(s) {
+        return String(s).toLowerCase().replace(/ё/g, 'е').replace(/[’ʼ`]/g, "'")
+            .replace(/[^\p{L}\p{N}'\s-]/gu, ' ').replace(/[\s-]+/g, '');
+    }
+
+    // Словарь «Азбуки» — все слова текущего языка из всех категорий, включая «Мои слова» и дополнительный словарь
+    function abcBuildDict() {
+        const src = getActiveDictionary();
+        const seen = new Set(), items = [];
+        Object.keys(src).forEach(cat => (src[cat] || []).forEach(raw => {
+            const w = cleanWord(String(raw)).replace(/[•\u0301]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+            const k = abcKey(w);
+            if (!w || !k || seen.has(w)) return;
+            seen.add(w);
+            items.push({ w, k });
+        }));
+        const col = new Intl.Collator(currentLang);
+        items.sort((a, b) => col.compare(a.w, b.w));
+        abcState.dict = items.map(x => x.w);
+        abcState.keys = items.map(x => x.k);
+        abcState.src = src;
+    }
+
+    function abcLev(a, b, max) {
+        const n = a.length, m = b.length, lim = max || 99;
+        if (Math.abs(n - m) > lim) return 99;
+        let prev = Array.from({ length: m + 1 }, (_, j) => j);
+        for (let i = 1; i <= n; i++) {
+            const cur = [i];
+            let rowMin = i;
+            for (let j = 1; j <= m; j++) {
+                const ca = a[i - 1], cb = b[j - 1];
+                const sub = ca === cb ? 0 : (ABC_CONF.has(ca + cb) ? 0.5 : 1);
+                const v = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + sub);
+                cur.push(v);
+                if (v < rowMin) rowMin = v;
+            }
+            if (rowMin > lim) return 99;
+            prev = cur;
+        }
+        return prev[m];
+    }
+
+    // Слова словаря, похожие на набранное (даже с ошибками): точное, начало слова, начало с опечаткой, слово с опечаткой
+    function abcFuzzy(typed) {
+        const q = abcKey(typed);
+        if (!q) return [];
+        const L = q.length, keys = abcState.keys, out = [];
+        for (let i = 0; i < keys.length; i++) {
+            const w = keys[i];
+            let cat = 9, d = 0;
+            if (w === q) cat = 0;
+            else if (w.startsWith(q)) cat = 1;
+            else if (L >= 3 && w.length >= L - 1) {
+                const lim = L <= 3 ? 0.5 : 1;
+                const dp = abcLev(q, w.slice(0, L), lim);
+                if (dp <= lim) { cat = 2; d = dp; }
+                else if (L >= 4 && Math.abs(w.length - L) <= 2) {
+                    const maxd = L <= 4 ? 1 : L <= 6 ? 1.5 : 2;
+                    const df = abcLev(q, w, maxd);
+                    if (df <= maxd) { cat = 3; d = df; }
+                }
+            }
+            if (cat < 9) out.push([cat, d, i]);
+        }
+        out.sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]);
+        return out.slice(0, 20).map(x => abcState.dict[x[2]]);
+    }
+
+    function abcMk(tag, cls, text, onclick) {
+        const e = document.createElement(tag);
+        if (cls) e.className = cls;
+        if (text != null) e.textContent = text;
+        if (tag === 'button') e.type = 'button';
+        if (onclick) e.onclick = onclick;
+        return e;
+    }
+
+    // Озвучивает слова с учётом таблицы ударений; всю строку — как одну фразу
+    function abcSpeak(words) {
+        if (!words || !words.length) return;
+        if (!('speechSynthesis' in window)) { alert('TTS is not supported in this browser.'); return; }
+        warmupSpeechSynthesis();
+        window.speechSynthesis.cancel();
+        const text = words.map(w => getPhoneticRepresentation(w) || w).join(' ');
+        window.speechSynthesis.speak(makeUtterance(text, 1));
+    }
+
+    function abcPick(w) {
+        abcState.line.push(w);
+        abcState.prefix = '';
+        abcState.typed = '';
+        if (isChecked('autoSpeak')) abcSpeak([w]);
+        abcRender();
+    }
+
+    function abcToggleMode() {
+        const free = abcState.mode === 'free', pre = abcState.prefix;
+        abcState.mode = free ? 'prefix' : 'free';
+        abcState.prefix = '';
+        abcState.typed = free ? '' : pre;   // уже набранное начало переносится в свободный набор
+        try { localStorage.setItem('app_abc_mode', abcState.mode); } catch (e) {}
+        abcRender();
+    }
+
+    function abcWordGrid(words) {
+        const g = abcMk('div', 'abc-words');
+        words.forEach(w => {
+            const em = getWordEmoji(w);
+            g.append(abcMk('button', 'abc-word', (em ? em + ' ' : '') + w, () => abcPick(w)));
+        });
+        return g;
+    }
+
+    // Клавиатура закреплена внизу экрана, найденные слова — над ней; её можно свернуть, чтобы увидеть больше слов
+    function abcKeyboard(free, letters) {
+        const t = abcT();
+        const kb = abcMk('div', 'abc-kb'), kh = abcMk('div', 'abc-kbh');
+        kh.append(
+            abcMk('button', 'abc-kbt', abcState.kbOff ? '⌨️ ▴ ' + t.show : '⌨️ ▾ ' + t.hide, () => { abcState.kbOff = !abcState.kbOff; abcRender(); }),
+            abcMk('button', 'abc-kbt', (free ? '🔤 ' : '✍️ ') + (free ? t.fit : t.free), abcToggleMode)
+        );
+        kb.append(kh);
+        if (abcState.kbOff) return kb;
+        const g = abcMk('div', 'abc-letters');
+        letters.forEach(ch => g.append(abcMk('button', 'abc-letter', ch === "'" ? '’' : ch.toUpperCase(), () => {
+            if (free) abcState.typed += ch; else abcState.prefix += ch;
+            abcRender();
+        })));
+        kb.append(g);
+        return kb;
+    }
+
+    function abcRender() {
+        const t = abcT();
+        if (abcState.src !== getActiveDictionary()) abcBuildDict();   // словарь изменился («Мои слова»)
+        const el = document.getElementById('abcScreen');
+        el.innerHTML = '';
+        const free = abcState.mode === 'free';
+
+        const built = abcMk('div', 'abc-built');
+        built.append(abcMk('div', 'abc-built-text', abcState.line.length ? abcState.line.join(' ') : '…'));
+        el.append(built);
+        if (abcState.line.length) {
+            const r = abcMk('div', 'abc-row');
+            r.append(
+                abcMk('button', 'assist-btn abc-say', '🔊 ' + t.say, () => abcSpeak(abcState.line)),
+                abcMk('button', 'assist-btn abc-del', '⌫', () => { abcState.line.pop(); abcRender(); })
+            );
+            el.append(r);
+        }
+
+        let letters;
+        if (free) {
+            // Свободный набор: любые буквы, как человек себе представляет слово; приложение предлагает похожие слова
+            const r = abcMk('div', 'abc-row');
+            r.append(
+                abcMk('div', 'abc-prefix', abcState.typed ? abcState.typed.toUpperCase() + '|' : '|'),
+                abcMk('button', 'assist-btn abc-del', '⌫', () => { abcState.typed = abcState.typed.slice(0, -1); abcRender(); })
+            );
+            if (abcState.typed) r.append(abcMk('button', 'assist-btn abc-del', '✖', () => { abcState.typed = ''; abcRender(); }));
+            el.append(r);
+            const words = abcFuzzy(abcState.typed);
+            if (words.length) {
+                el.append(abcMk('div', 'abc-sec', t.words), abcWordGrid(words));
+            } else if (abcKey(abcState.typed).length >= 3) {
+                el.append(abcMk('div', 'abc-sec', t.none));
+            } else if (!abcState.typed) {
+                el.append(abcMk('div', 'abc-sec', t.type));
+            }
+            letters = ABC_ALPHA_FULL[currentLang].split('');
+        } else {
+            const pre = abcState.prefix;
+            if (!pre) {
+                el.append(abcMk('div', 'abc-sec', t.hint));
+                letters = ABC_ALPHA[currentLang].split('');
+            } else {
+                const r = abcMk('div', 'abc-row');
+                r.append(
+                    abcMk('div', 'abc-prefix', pre.toUpperCase() + '…'),
+                    abcMk('button', 'assist-btn abc-del', '⌫', () => { abcState.prefix = pre.slice(0, -1); abcRender(); })
+                );
+                el.append(r);
+                const idx = [];
+                abcState.keys.forEach((k, i) => { if (k.startsWith(pre)) idx.push(i); });
+                if (!idx.length) {
+                    el.append(abcMk('div', 'abc-sec', t.none));
+                } else {
+                    el.append(abcMk('div', 'abc-sec', t.words), abcWordGrid(idx.slice(0, 60).map(i => abcState.dict[i])));
+                    if (idx.length > 60) el.append(abcMk('div', 'step-note', t.more.replace('{n}', idx.length)));
+                }
+                letters = [...new Set(idx.filter(i => abcState.keys[i].length > pre.length).map(i => abcState.keys[i][pre.length]))]
+                    .filter(ch => /\p{L}/u.test(ch)).sort((a, b) => a.localeCompare(b, currentLang));
+            }
+        }
+        el.append(abcKeyboard(free, letters));
+        window.scrollTo(0, 0);
+    }
+
+    function abcOpen() {
+        let m = 'prefix';
+        try { if (localStorage.getItem('app_abc_mode') === 'free') m = 'free'; } catch (e) {}
+        Object.assign(abcState, { mode: m, prefix: '', typed: '', line: [], kbOff: false });
+        abcBuildDict();
+        abcRender();
+    }
+
     const helpI18n = {
         ru: {
             btn: 'Справка', title: 'Справка', close: 'Закрыть',
@@ -3838,6 +4119,7 @@
 <li><b>🧩 Полный тренажёр</b> — все блоки на одном экране: выбор слова на слух, проверка произношения, сбор из букв.</li>
 <li><b>👂 Тренировка слуха</b> — одно слово по шагам: 1) послушать, 2) повторить вслух, 3) собрать из букв. В конце итог: исходное слово, что вы проговорили и что собрали, с подсветкой различий. Затем можно повторить это слово или перейти к следующему. Если включена настройка «Обязательно проговаривать слово», к сборке из букв можно перейти только после верного произношения (или трёх попыток).</li>
 <li><b>📝 Тест</b> — от 10 до 30 случайных слов подряд. Каждое слово звучит один раз, без повтора; вы проговариваете его или пропускаете. Верно или неверно, видно только в конце: результат, список слов и кнопка «Повторить ошибки».</li>
+<li><b>🔤 Азбука</b> — подсказка по первой букве, когда слово «вертится на языке». Нажмите первую букву: появятся слова из словаря (включая «Мои слова»), которые с неё начинаются; следующая буква сужает список. Нажатие на слово добавляет его в строку (если включено автоозвучивание, слово сразу произносится), «Сказать так» озвучивает всю строку, ⌫ убирает последнее слово. «Скрыть буквы» освобождает место для слов. «Свободный набор» показывает весь алфавит: слово можно набирать так, как вы его себе представляете, даже с ошибками, а приложение предложит похожие слова. Категория слов здесь не учитывается: поиск идёт по всем словам.</li>
 <li>Категория слов выбирается на стартовом экране. Кнопка 🏠 в заголовке возвращает к выбору режима.</li>
 </ul>
 
@@ -3903,6 +4185,7 @@
 <li><b>🧩 Повний тренажер</b> — усі блоки на одному екрані: вибір слова на слух, перевірка вимови, збирання з літер.</li>
 <li><b>👂 Тренування слуху</b> — одне слово по кроках: 1) послухати, 2) повторити вголос, 3) зібрати з літер. Наприкінці підсумок: вихідне слово, що ви промовили і що зібрали, з підсвічуванням відмінностей. Потім можна повторити це слово або перейти до наступного. Якщо ввімкнено налаштування «Обов’язково промовляти слово», до збирання з літер можна перейти лише після правильної вимови (або трьох спроб).</li>
 <li><b>📝 Тест</b> — від 10 до 30 випадкових слів поспіль. Кожне слово звучить один раз, без повтору; ви промовляєте його або пропускаєте. Правильно чи ні, видно лише наприкінці: результат, список слів і кнопка «Повторити помилки».</li>
+<li><b>🔤 Абетка</b> — підказка за першою літерою, коли слово «крутиться на язиці». Натисніть першу літеру: з’являться слова зі словника (разом із «Моїми словами»), що з неї починаються; наступна літера звужує список. Натискання на слово додає його до рядка (якщо ввімкнено автоозвучення, слово одразу промовляється), «Сказати так» озвучує весь рядок, ⌫ прибирає останнє слово. «Сховати літери» вивільняє місце для слів. «Вільний набір» показує всю абетку: слово можна набирати так, як ви його собі уявляєте, навіть з помилками, а застосунок запропонує схожі слова. Категорія слів тут не враховується: пошук іде по всіх словах.</li>
 <li>Категорія слів обирається на стартовому екрані. Кнопка 🏠 у заголовку повертає до вибору режиму.</li>
 </ul>
 
@@ -3968,6 +4251,7 @@
 <li><b>🧩 Full trainer</b> — all blocks on one screen: choose the word by ear, pronunciation check, assembling from letters.</li>
 <li><b>👂 Listening practice</b> — one word step by step: 1) listen, 2) repeat aloud, 3) assemble from letters. At the end you get a summary: the original word, what you said and what you assembled, with differences highlighted. Then you can repeat this word or move to the next one. If “Require saying the word aloud” is on, you can go to letter assembly only after a correct pronunciation (or three attempts).</li>
 <li><b>📝 Test</b> — 10 to 30 random words in a row. Each word is played once, with no replay; you say it or skip it. Whether you were right is shown only at the end: the score, a list of words and a “Repeat mistakes” button.</li>
+<li><b>🔤 ABC</b> — first-letter help for when a word is on the tip of your tongue. Tap the first letter: words from the dictionary (including “My words”) that start with it appear; the next letter narrows the list. Tapping a word adds it to the line (if auto-speak is on, the word is spoken at once), “Say it” speaks the whole line, ⌫ removes the last word. “Hide letters” makes room for more words. “Free typing” shows the whole alphabet: type the word the way you imagine it, mistakes included, and the app suggests similar words. The word category is not used here: the search covers all words.</li>
 <li>Choose the word category on the start screen. The 🏠 button in the header returns to the mode selection.</li>
 </ul>
 
