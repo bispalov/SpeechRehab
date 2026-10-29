@@ -57,9 +57,17 @@ This is a practice tool, not a medical device. It does not diagnose or treat any
 
 Issues and pull requests are welcome — additional languages, dictionary words, accessibility improvements, and bug reports all help.
 
+### ✍️ Authorship
+
+All of the code of this app was written by the AI assistant Claude (Anthropic) on the assignment and under the direction of the project's author: the idea, the requirements, practical testing and the decision to publish belong to the author.
+
+The phrases and help texts in Russian, Ukrainian and English were also prepared by the AI assistant. They have not been reviewed by native speakers or specialists, so before using the app with a specific person they should be read through, especially the medical wording. The app is not a medical device and does not replace a doctor or a speech-language pathologist.
+
 ### 📄 License
 
-*(Add your chosen license here, e.g. MIT.)*
+The app is distributed under the [MIT License](LICENSE): you may freely use, copy, modify and distribute it, including in your own projects. There is one condition: keep the license text and the copyright notice in your copies. We would also be grateful if you left a link to the original repository.
+
+The app is provided "as is", without warranty of any kind.
 
 ---
 
@@ -116,6 +124,30 @@ Issues and pull requests are welcome — additional languages, dictionary words,
 
 Будемо раді issue та pull request'ам — нові мови, слова для словника, покращення доступності та повідомлення про помилки допоможуть проєкту.
 
+### ✍️ Авторство
+
+Увесь код цього застосунку написано ШІ-асистентом Claude (Anthropic) за завданням і під керівництвом автора проєкту: ідея, вимоги, перевірка на практиці та рішення про публікацію належать авторові.
+
+Тексти фраз і довідки російською, українською та англійською також підготовлено ШІ-асистентом. Їх не перевіряли носії мови та фахівці, тому перед використанням із конкретною людиною їх варто переглянути, особливо медичні формулювання. Застосунок не є медичним виробом і не замінює лікаря чи логопеда.
+
 ### 📄 Ліцензія
 
-*(Додайте тут обрану вами ліцензію, наприклад MIT.)*
+Застосунок поширюється за ліцензією [MIT](LICENSE): його можна вільно використовувати, копіювати, змінювати й поширювати, зокрема у власних проєктах. Умова одна: зберігайте в копіях текст ліцензії та зазначення авторства. Будемо вдячні, якщо ви також залишите посилання на оригінальний репозиторій.
+
+Застосунок надається «як є», без жодних гарантій.
+
+---
+
+## 🇷🇺 Русский
+
+### ✍️ Об авторстве
+
+Весь код этого приложения написан ИИ-ассистентом Claude (Anthropic) по заданию и под руководством автора проекта: идея, требования, проверка на практике и решение о публикации принадлежат автору.
+
+Тексты фраз и справки на русском, украинском и английском тоже подготовлены ИИ-ассистентом. Их не проверяли носители языка и специалисты, поэтому перед использованием с конкретным человеком их стоит просмотреть, особенно медицинские формулировки. Приложение не является медицинским изделием и не заменяет врача или логопеда.
+
+### 📄 Лицензия
+
+Приложение распространяется по лицензии [MIT](LICENSE): его можно свободно использовать, копировать, изменять и распространять, в том числе в своих проектах. Условие одно: сохраняйте в копиях текст лицензии и указание авторства. Будем благодарны, если вы также оставите ссылку на оригинальный репозиторий.
+
+Приложение предоставляется «как есть», без каких-либо гарантий.
