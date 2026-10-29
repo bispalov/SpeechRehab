@@ -853,6 +853,13 @@
         </div>
 
         <div class="control-group">
+            <label class="checkbox-label" for="abcAutoHideChk">
+                <input type="checkbox" id="abcAutoHideChk" onchange="abcAutoHideChanged()">
+                <span id="labelAbcAutoHide"></span>
+            </label>
+        </div>
+
+        <div class="control-group">
             <label class="checkbox-label" for="timerEnabled">
                 <input type="checkbox" id="timerEnabled" checked onchange="toggleTimerFeature()">
                 <span id="labelTimerEnable">Use "Play / Rest" timer</span>
@@ -3479,6 +3486,8 @@
         document.getElementById('modeAbcDesc').innerText = abcT().desc;
         document.getElementById('labelAbcOnline').innerText = abcT().setOnline;
         document.getElementById('abcOnlineChk').checked = abcOnlineOn();
+        document.getElementById('labelAbcAutoHide').innerText = abcT().autoHide;
+        document.getElementById('abcAutoHideChk').checked = abcAutoHideOn();
         const hb = document.getElementById('homeBtn');
         hb.title = t.home;
         hb.setAttribute('aria-label', t.home);
@@ -3874,7 +3883,7 @@
             more: 'Найдено слов: {n}. Нажмите следующую букву, чтобы сузить список.',
             none: 'Слов на эти буквы нет', type: 'Набирайте слово так, как вы его себе представляете (можно с ошибками):',
             fit: 'Подходящие буквы', free: 'Свободный набор', show: 'Показать буквы', hide: 'Скрыть буквы', say: 'Сказать так',
-            online: "Найти слова в интернете", onlineRes: "Слова из интернета — нажмите, чтобы выбрать:", onlineNone: "В интернете подходящих слов не нашлось.", searching: "Ищу варианты…", err: "Не удалось связаться с сервисом словарей. Проверьте интернет.", setOnline: "Азбука: искать слова онлайн (Викисловарь; для английского ещё Datamuse). Бесплатно, ключ не нужен. Набранные буквы отправляются этим сервисам. Выбранные слова запоминаются на устройстве."
+            online: "Найти слова в интернете", onlineRes: "Слова из интернета — нажмите, чтобы выбрать:", onlineNone: "В интернете подходящих слов не нашлось.", searching: "Ищу варианты…", err: "Не удалось связаться с сервисом словарей. Проверьте интернет.", autoHide: "Азбука: сворачивать панель с буквами после каждой нажатой буквы, чтобы было больше места для слов. Вернуть её можно кнопкой «Показать буквы».", setOnline: "Азбука: искать слова онлайн (Викисловарь; для английского ещё Datamuse). Бесплатно, ключ не нужен. Набранные буквы отправляются этим сервисам. Выбранные слова запоминаются на устройстве."
         },
         uk: {
             title: '🔤 Абетка',
@@ -3883,7 +3892,7 @@
             more: 'Знайдено слів: {n}. Натисніть наступну літеру, щоб звузити список.',
             none: 'Слів на ці літери немає', type: 'Набирайте слово так, як ви його собі уявляєте (можна з помилками):',
             fit: 'Відповідні літери', free: 'Вільний набір', show: 'Показати літери', hide: 'Сховати літери', say: 'Сказати так',
-            online: "Знайти слова в інтернеті", onlineRes: "Слова з інтернету — натисніть, щоб обрати:", onlineNone: "В інтернеті відповідних слів не знайшлося.", searching: "Шукаю варіанти…", err: "Не вдалося зв’язатися із сервісом словників. Перевірте інтернет.", setOnline: "Абетка: шукати слова онлайн (Вікісловник; для англійської ще Datamuse). Безкоштовно, ключ не потрібен. Набрані літери надсилаються цим сервісам. Обрані слова запам’ятовуються на пристрої."
+            online: "Знайти слова в інтернеті", onlineRes: "Слова з інтернету — натисніть, щоб обрати:", onlineNone: "В інтернеті відповідних слів не знайшлося.", searching: "Шукаю варіанти…", err: "Не вдалося зв’язатися із сервісом словників. Перевірте інтернет.", autoHide: "Абетка: згортати панель з літерами після кожної натиснутої літери, щоб було більше місця для слів. Повернути її можна кнопкою «Показати літери».", setOnline: "Абетка: шукати слова онлайн (Вікісловник; для англійської ще Datamuse). Безкоштовно, ключ не потрібен. Набрані літери надсилаються цим сервісам. Обрані слова запам’ятовуються на пристрої."
         },
         en: {
             title: '🔤 ABC',
@@ -3892,7 +3901,7 @@
             more: 'Words found: {n}. Tap the next letter to narrow the list.',
             none: 'No words for these letters', type: 'Type the word the way you imagine it (mistakes are fine):',
             fit: 'Matching letters', free: 'Free typing', show: 'Show letters', hide: 'Hide letters', say: 'Say it',
-            online: "Find words online", onlineRes: "Words from the internet — tap to choose:", onlineNone: "No matching words were found online.", searching: "Looking for options…", err: "Could not reach the dictionary service. Check the internet.", setOnline: "ABC: look up words online (Wiktionary; for English also Datamuse). Free, no key needed. The typed letters are sent to these services. Chosen words are remembered on the device."
+            online: "Find words online", onlineRes: "Words from the internet — tap to choose:", onlineNone: "No matching words were found online.", searching: "Looking for options…", err: "Could not reach the dictionary service. Check the internet.", autoHide: "ABC: collapse the letter panel after each letter you tap, to leave more room for words. Bring it back with the “Show letters” button.", setOnline: "ABC: look up words online (Wiktionary; for English also Datamuse). Free, no key needed. The typed letters are sent to these services. Chosen words are remembered on the device."
         }
     };
 
@@ -4046,6 +4055,7 @@
         const g = abcMk('div', 'abc-letters');
         letters.forEach(ch => g.append(abcMk('button', 'abc-letter', ch === "'" ? '’' : ch.toUpperCase(), () => {
             if (free) abcState.typed += ch; else abcState.prefix += ch;
+            if (abcAutoHideOn()) abcState.kbOff = true;   // панель вернётся по кнопке «Показать буквы»
             abcRender();
         })));
         kb.append(g);
@@ -4147,6 +4157,16 @@
         en: /fuck|shit|cunt|bitch|asshole|pussy|whore|slut|bastard|nigg|^dick$|^cock$|^fag/
     };
     let abcOnl = { key: '', st: undefined };   // undefined | 'loading' | массив слов | { err }
+
+    // Автосворачивание панели букв после каждого нажатия (настройка «Азбуки»)
+    function abcAutoHideOn() {
+        try { return localStorage.getItem('app_abc_autohide') === 'true'; } catch (e) { return false; }
+    }
+
+    function abcAutoHideChanged() {
+        const on = document.getElementById('abcAutoHideChk').checked;
+        try { localStorage.setItem('app_abc_autohide', on ? 'true' : 'false'); } catch (e) {}
+    }
 
     function abcOnlineOn() {
         try { return localStorage.getItem('app_abc_online') === 'true'; } catch (e) { return false; }
@@ -4257,7 +4277,7 @@
 <li><b>🧩 Полный тренажёр</b> — все блоки на одном экране: выбор слова на слух, проверка произношения, сбор из букв.</li>
 <li><b>👂 Тренировка слуха</b> — одно слово по шагам: 1) послушать, 2) повторить вслух, 3) собрать из букв. В конце итог: исходное слово, что вы проговорили и что собрали, с подсветкой различий. Затем можно повторить это слово или перейти к следующему. Если включена настройка «Обязательно проговаривать слово», к сборке из букв можно перейти только после верного произношения (или трёх попыток).</li>
 <li><b>📝 Тест</b> — от 10 до 30 случайных слов подряд. Каждое слово звучит один раз, без повтора; вы проговариваете его или пропускаете. Верно или неверно, видно только в конце: результат, список слов и кнопка «Повторить ошибки».</li>
-<li><b>🔤 Азбука</b> — подсказка по первой букве, когда слово «вертится на языке». Нажмите первую букву: появятся слова из словаря (включая «Мои слова»), которые с неё начинаются; следующая буква сужает список. Нажатие на слово добавляет его в строку (если включено автоозвучивание, слово сразу произносится), «Сказать так» озвучивает всю строку, ⌫ убирает последнее слово. «Скрыть буквы» освобождает место для слов. «Свободный набор» показывает весь алфавит: слово можно набирать так, как вы его себе представляете, даже с ошибками, а приложение предложит похожие слова. Категория слов здесь не учитывается: поиск идёт по всем словам. Если в настройках включён онлайн-поиск, под списком появляется кнопка «Найти слова в интернете»: слова ищутся в Викисловаре (для английского ещё в Datamuse), для этого набранные буквы отправляются в эти сервисы. Выбранное слово запоминается на устройстве.</li>
+<li><b>🔤 Азбука</b> — подсказка по первой букве, когда слово «вертится на языке». Нажмите первую букву: появятся слова из словаря (включая «Мои слова»), которые с неё начинаются; следующая буква сужает список. Нажатие на слово добавляет его в строку (если включено автоозвучивание, слово сразу произносится), «Сказать так» озвучивает всю строку, ⌫ убирает последнее слово. «Скрыть буквы» освобождает место для слов (в настройках можно включить автосворачивание панели после каждой нажатой буквы; вернуть её — кнопка «Показать буквы»). «Свободный набор» показывает весь алфавит: слово можно набирать так, как вы его себе представляете, даже с ошибками, а приложение предложит похожие слова. Категория слов здесь не учитывается: поиск идёт по всем словам. Если в настройках включён онлайн-поиск, под списком появляется кнопка «Найти слова в интернете»: слова ищутся в Викисловаре (для английского ещё в Datamuse), для этого набранные буквы отправляются в эти сервисы. Выбранное слово запоминается на устройстве.</li>
 <li>Категория слов выбирается на стартовом экране. Кнопка 🏠 в заголовке возвращает к выбору режима.</li>
 </ul>
 
@@ -4323,7 +4343,7 @@
 <li><b>🧩 Повний тренажер</b> — усі блоки на одному екрані: вибір слова на слух, перевірка вимови, збирання з літер.</li>
 <li><b>👂 Тренування слуху</b> — одне слово по кроках: 1) послухати, 2) повторити вголос, 3) зібрати з літер. Наприкінці підсумок: вихідне слово, що ви промовили і що зібрали, з підсвічуванням відмінностей. Потім можна повторити це слово або перейти до наступного. Якщо ввімкнено налаштування «Обов’язково промовляти слово», до збирання з літер можна перейти лише після правильної вимови (або трьох спроб).</li>
 <li><b>📝 Тест</b> — від 10 до 30 випадкових слів поспіль. Кожне слово звучить один раз, без повтору; ви промовляєте його або пропускаєте. Правильно чи ні, видно лише наприкінці: результат, список слів і кнопка «Повторити помилки».</li>
-<li><b>🔤 Абетка</b> — підказка за першою літерою, коли слово «крутиться на язиці». Натисніть першу літеру: з’являться слова зі словника (разом із «Моїми словами»), що з неї починаються; наступна літера звужує список. Натискання на слово додає його до рядка (якщо ввімкнено автоозвучення, слово одразу промовляється), «Сказати так» озвучує весь рядок, ⌫ прибирає останнє слово. «Сховати літери» вивільняє місце для слів. «Вільний набір» показує всю абетку: слово можна набирати так, як ви його собі уявляєте, навіть з помилками, а застосунок запропонує схожі слова. Категорія слів тут не враховується: пошук іде по всіх словах. Якщо в налаштуваннях увімкнено онлайн-пошук, під списком з’являється кнопка «Знайти слова в інтернеті»: слова шукаються у Вікісловнику (для англійської ще в Datamuse), для цього набрані літери надсилаються цим сервісам. Обране слово запам’ятовується на пристрої.</li>
+<li><b>🔤 Абетка</b> — підказка за першою літерою, коли слово «крутиться на язиці». Натисніть першу літеру: з’являться слова зі словника (разом із «Моїми словами»), що з неї починаються; наступна літера звужує список. Натискання на слово додає його до рядка (якщо ввімкнено автоозвучення, слово одразу промовляється), «Сказати так» озвучує весь рядок, ⌫ прибирає останнє слово. «Сховати літери» вивільняє місце для слів (в налаштуваннях можна ввімкнути автозгортання панелі після кожної натиснутої літери; повернути її — кнопка «Показати літери»). «Вільний набір» показує всю абетку: слово можна набирати так, як ви його собі уявляєте, навіть з помилками, а застосунок запропонує схожі слова. Категорія слів тут не враховується: пошук іде по всіх словах. Якщо в налаштуваннях увімкнено онлайн-пошук, під списком з’являється кнопка «Знайти слова в інтернеті»: слова шукаються у Вікісловнику (для англійської ще в Datamuse), для цього набрані літери надсилаються цим сервісам. Обране слово запам’ятовується на пристрої.</li>
 <li>Категорія слів обирається на стартовому екрані. Кнопка 🏠 у заголовку повертає до вибору режиму.</li>
 </ul>
 
@@ -4389,7 +4409,7 @@
 <li><b>🧩 Full trainer</b> — all blocks on one screen: choose the word by ear, pronunciation check, assembling from letters.</li>
 <li><b>👂 Listening practice</b> — one word step by step: 1) listen, 2) repeat aloud, 3) assemble from letters. At the end you get a summary: the original word, what you said and what you assembled, with differences highlighted. Then you can repeat this word or move to the next one. If “Require saying the word aloud” is on, you can go to letter assembly only after a correct pronunciation (or three attempts).</li>
 <li><b>📝 Test</b> — 10 to 30 random words in a row. Each word is played once, with no replay; you say it or skip it. Whether you were right is shown only at the end: the score, a list of words and a “Repeat mistakes” button.</li>
-<li><b>🔤 ABC</b> — first-letter help for when a word is on the tip of your tongue. Tap the first letter: words from the dictionary (including “My words”) that start with it appear; the next letter narrows the list. Tapping a word adds it to the line (if auto-speak is on, the word is spoken at once), “Say it” speaks the whole line, ⌫ removes the last word. “Hide letters” makes room for more words. “Free typing” shows the whole alphabet: type the word the way you imagine it, mistakes included, and the app suggests similar words. The word category is not used here: the search covers all words. If online search is turned on in Settings, a “Find words online” button appears under the list: words are looked up in Wiktionary (and Datamuse for English), so the typed letters are sent to these services. A chosen word is remembered on the device.</li>
+<li><b>🔤 ABC</b> — first-letter help for when a word is on the tip of your tongue. Tap the first letter: words from the dictionary (including “My words”) that start with it appear; the next letter narrows the list. Tapping a word adds it to the line (if auto-speak is on, the word is spoken at once), “Say it” speaks the whole line, ⌫ removes the last word. “Hide letters” makes room for more words (Settings can collapse the panel automatically after each letter; bring it back with “Show letters”). “Free typing” shows the whole alphabet: type the word the way you imagine it, mistakes included, and the app suggests similar words. The word category is not used here: the search covers all words. If online search is turned on in Settings, a “Find words online” button appears under the list: words are looked up in Wiktionary (and Datamuse for English), so the typed letters are sent to these services. A chosen word is remembered on the device.</li>
 <li>Choose the word category on the start screen. The 🏠 button in the header returns to the mode selection.</li>
 </ul>
 
