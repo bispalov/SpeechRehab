@@ -4068,7 +4068,7 @@
             const r = abcMk('div', 'abc-row');
             r.append(
                 abcMk('button', 'assist-btn abc-say', '🔊 ' + t.say, () => abcSpeak(abcState.line)),
-                abcMk('button', 'assist-btn abc-del', '⌫', () => { abcState.line.pop(); abcRender(); })
+                abcMk('button', 'assist-btn abc-del', '⌫', () => { abcState.line.pop(); abcState.kbOff = false; abcRender(); })
             );
             el.append(r);
         }
@@ -4079,9 +4079,9 @@
             const r = abcMk('div', 'abc-row');
             r.append(
                 abcMk('div', 'abc-prefix', abcState.typed ? abcState.typed.toUpperCase() + '|' : '|'),
-                abcMk('button', 'assist-btn abc-del', '⌫', () => { abcState.typed = abcState.typed.slice(0, -1); abcRender(); })
+                abcMk('button', 'assist-btn abc-del', '⌫', () => { abcState.typed = abcState.typed.slice(0, -1); abcState.kbOff = false; abcRender(); })
             );
-            if (abcState.typed) r.append(abcMk('button', 'assist-btn abc-del', '✖', () => { abcState.typed = ''; abcRender(); }));
+            if (abcState.typed) r.append(abcMk('button', 'assist-btn abc-del', '✖', () => { abcState.typed = ''; abcState.kbOff = false; abcRender(); }));
             el.append(r);
             const words = abcFuzzy(abcState.typed);
             if (words.length) {
@@ -4102,7 +4102,7 @@
                 const r = abcMk('div', 'abc-row');
                 r.append(
                     abcMk('div', 'abc-prefix', pre.toUpperCase() + '…'),
-                    abcMk('button', 'assist-btn abc-del', '⌫', () => { abcState.prefix = pre.slice(0, -1); abcRender(); })
+                    abcMk('button', 'assist-btn abc-del', '⌫', () => { abcState.prefix = pre.slice(0, -1); abcState.kbOff = false; abcRender(); })
                 );
                 el.append(r);
                 const idx = [];
