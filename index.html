@@ -4009,6 +4009,7 @@
     function abcPick(w) {
         abcState.line.push(w);
         abcOnl = { key: '', st: undefined };
+        abcState.kbOff = false;   // после выбора слова панель букв возвращается
         abcState.prefix = '';
         abcState.typed = '';
         if (isChecked('autoSpeak')) abcSpeak([w]);
