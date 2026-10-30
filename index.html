@@ -61,14 +61,6 @@
             box-sizing: border-box;
             transition: background-color 0.3s, box-shadow 0.3s;
         }
-        .header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
         h1 {
             color: var(--text-color);
             font-size: 18px;
@@ -76,64 +68,54 @@
             text-align: left;
             flex-grow: 1;
         }
+        /* Шапка в стиле «Говоримо разом»: синяя полоса на всю ширину карточки,
+           название сверху, ниже ряд крупных кнопок со значками (подписи — на широком экране) */
+        .app-header {
+            margin: -20px -20px 16px;
+            padding: 10px 12px 12px;
+            background: #1e3a8a;
+            color: #ffffff;
+            border-radius: 12px 12px 0 0;
+            text-align: left;
+        }
         .app-title {
-            font-family: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
-            font-size: 1.5em;
-            font-weight: 700;
-            font-style: italic;
-            letter-spacing: 0.4px;
-            line-height: 1.2;
-            text-align: center;
-            flex-grow: 0;
-            margin: 0 0 14px;
-            color: #4a90e2;
-            background: linear-gradient(90deg, #4a90e2, #8e5bd8);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
+            margin: 0 0 8px;
+            padding: 2px 4px 0;
+            font-size: clamp(18px, 5.6vw, 24px);
+            font-weight: 800;
+            line-height: 1.15;
+            text-align: left;
+            color: #ffffff;
+            overflow-wrap: anywhere;
         }
-        .home-btn {
+        .hrow { display: flex; gap: 6px; }
+        .app-header .hb {
+            flex: 1 1 0;
             width: auto;
-            flex: 0 0 auto;
+            min-width: 0;
+            min-height: 50px;
             margin: 0;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: #4a90e2;
-            color: #fff;
-            border: none;
-            border-radius: 22px;
-            padding: 9px 18px;
-            font-size: 14px;
-            font-weight: bold;
-            white-space: nowrap;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.45);
-        }
-        .header-btns {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-left: auto;
-        }
-        .header-btns .settings-toggle-btn { white-space: nowrap; }
-        @media (max-width: 440px) {
-            .header-btns { gap: 6px; }
-            .header-btns .settings-toggle-btn { padding: 6px 9px; font-size: 0.85em; }
-        }
-        .settings-toggle-btn {
-            background: var(--option-btn-bg);
-            border: 1px solid var(--option-btn-border);
-            color: var(--option-btn-text);
-            padding: 6px 12px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: bold;
+            padding: 0 6px;
+            border: 0;
+            border-radius: 14px;
+            background: #ffffff26;
+            color: #ffffff;
+            font-size: clamp(20px, 6vw, 24px);
+            font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 4px;
-            width: auto;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        .app-header .hb:hover { background: #ffffff3d; }
+        .app-header .hb:focus-visible { outline: 4px solid #f2b705; outline-offset: 2px; }
+        .app-header .lbl { display: none; font-size: 16px; line-height: 1.15; white-space: nowrap; }
+        @media (min-width: 640px) {
+            .app-header .hb { min-height: 56px; }
+            .app-header .lbl { display: inline; }
+            .app-header #helpBtn { flex: 0 0 56px; }
         }
         .controls {
             margin-bottom: 15px;
@@ -954,15 +936,15 @@
 </div>
 
 <div class="container">
-    <h1 id="appTitle" class="app-title">Auditory Differentiation</h1>
-    <div class="header-row">
-        <button class="home-btn" id="homeBtn" onclick="goHome()" aria-label="Modes" title="Modes" style="display:none">🏠 <span id="homeBtnText">Modes</span></button>
-        <div class="header-btns">
-            <button class="settings-toggle-btn" id="statsBtn" onclick="openStats()">📊 Statistics</button>
-            <button class="settings-toggle-btn" id="settingsBtn" onclick="openSettings()">⚙️ Settings</button>
-            <button class="settings-toggle-btn" id="helpBtn" onclick="openHelp()" aria-label="Help" title="Help">❓</button>
+    <header class="app-header">
+        <h1 id="appTitle" class="app-title">Auditory Differentiation</h1>
+        <div class="hrow">
+            <button class="hb" id="homeBtn" onclick="goHome()" aria-label="Modes" title="Modes" style="display:none"><span class="ic">🏠</span><span class="lbl" id="homeBtnText">Modes</span></button>
+            <button class="hb" id="statsBtn" onclick="openStats()" aria-label="Statistics" title="Statistics"><span class="ic">📊</span><span class="lbl" id="statsBtnText">Statistics</span></button>
+            <button class="hb" id="settingsBtn" onclick="openSettings()" aria-label="Settings" title="Settings"><span class="ic">⚙️</span><span class="lbl" id="settingsBtnText">Settings</span></button>
+            <button class="hb" id="helpBtn" onclick="openHelp()" aria-label="Help" title="Help"><span class="ic">❓</span></button>
         </div>
-    </div>
+    </header>
 
     <div id="modeSelect" class="screen">
         <div class="step-title" id="modeIntro">Choose a training mode:</div>
@@ -1474,11 +1456,20 @@
         };
     }
 
+    // Подпись кнопки шапки: значок остаётся отдельно, текст — в подписи (видна на широком экране) и в подсказке/aria-label
+    function setHeaderLabel(id, full) {
+        const text = String(full).replace(/^\S+\s*/, '');
+        document.getElementById(id + 'Text').innerText = text;
+        const b = document.getElementById(id);
+        b.setAttribute('aria-label', text);
+        b.title = text;
+    }
+
     function updateI18nUI() {
         const t = i18n[currentLang];
         document.documentElement.lang = currentLang;
         document.getElementById('appTitle').innerText = t.appTitle;
-        document.getElementById('settingsBtn').innerText = t.settingsBtnText;
+        setHeaderLabel('settingsBtn', t.settingsBtnText);
         document.getElementById('labelLang').innerText = t.labelLang;
         document.getElementById('labelTheme').innerText = t.labelTheme;
         
@@ -2663,7 +2654,7 @@
     function updateExtraTexts() {
         const x = ex();
         updateOwnBtn();
-        document.getElementById('statsBtn').innerText = x.statsBtn;
+        setHeaderLabel('statsBtn', x.statsBtn);
         document.getElementById('ownPlayRefBtn').innerText = x.ownRef;
         document.getElementById('ownPlayMineBtn').innerText = x.ownMine;
         document.getElementById('ownPlayBothBtn').innerText = x.ownBoth;
