@@ -1,46 +1,37 @@
-// Версия кэша. При каждом изменении файлов приложения увеличивайте число —
-// тогда установленное приложение скачает новые файлы и обновится само.
-const V = 'govorim-v28',
-      F = [
-        '/Govorim/',
-        '/Govorim/index.html',
-        '/Govorim/manifest.json',
-        '/Govorim/icon-192.png',
-        '/Govorim/icon-512.png'
-      ];
+// Service worker: кэширует всё приложение, чтобы оно работало без интернета.
+// При любом изменении файлов приложения увеличивайте номер версии (v1 -> v2 ...).
+const CACHE = 'speech-rehab-v32';
+const ASSETS = [
+  '/SpeechRehab/',
+  '/SpeechRehab/index.html',
+  '/SpeechRehab/manifest.json',
+  '/SpeechRehab/accents.js',
+  '/SpeechRehab/dict-en.js',
+  '/SpeechRehab/dict-uk.js',
+  '/SpeechRehab/dict-ru.js',
+  '/SpeechRehab/icon-192.png',
+  '/SpeechRehab/icon-512.png'
+];
 
 self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(V)
-      // cache:'reload' — берём свежие файлы с сервера, а не из HTTP-кэша браузера
-      .then(c => c.addAll(F.map(u => new Request(u, { cache: 'reload' }))))
-      .then(() => self.skipWaiting())
-  );
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
-      .then(k => Promise.all(k.filter(x => x !== V).map(x => caches.delete(x))))
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  // Списки слов из репозитория (/Govorim/lex/…): сначала сеть, при успехе кладём в кэш, офлайн берём из кэша
-  if (new URL(e.request.url).pathname.startsWith('/Govorim/lex/')) {
-    e.respondWith(
-      caches.open(V).then(c =>
-        fetch(e.request)
-          .then(r => { if (r.ok) c.put(e.request, r.clone()); return r; })
-          .catch(() => c.match(e.request).then(r => r || Response.error()))
-      )
-    );
-    return;
-  }
+  // Запросы к другим сайтам (онлайн-поиск слов) идут напрямую, без кэша и подмены страницей приложения
+  if (new URL(e.request.url).origin !== self.location.origin) return;
   e.respondWith(
     caches.match(e.request, { ignoreSearch: true })
-      .then(r => r || fetch(e.request).catch(() => caches.match('/Govorim/index.html')))
+      .then(r => r || fetch(e.request).catch(() => caches.match('/SpeechRehab/index.html')))
   );
 });
