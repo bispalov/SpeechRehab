@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="uk" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auditory Differentiation & Speech Trainer</title>
+    <title>Чуємо слова · Hear Words</title>
     <link rel="manifest" href="/SpeechRehab/manifest.json">
     <meta name="theme-color" content="#141923">
     <link rel="icon" href="icon-192.png">
@@ -77,16 +77,19 @@
             z-index: 100;
             align-self: stretch;
             margin: -15px -15px 15px;
-            padding: 8px 12px 10px;
+            padding: 6px 10px;
             background: #1e3a8a;
             color: #ffffff;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
             text-align: left;
         }
-        .app-header-in { max-width: 600px; margin: 0 auto; }
+        /* компактная шапка: название слева, кнопки справа в одной строке */
+        .app-header-in { max-width: 600px; margin: 0 auto; display: flex; align-items: center; gap: 8px; }
         .app-title {
-            margin: 0 0 6px;
-            padding: 2px 4px 0;
+            flex: 1 1 auto;
+            min-width: 0;
+            margin: 0;
+            padding: 0 4px;
             font-size: clamp(18px, 5.6vw, 24px);
             white-space: nowrap;
             overflow: hidden;
@@ -95,35 +98,35 @@
             text-align: left;
             color: #ffffff;
         }
-        .hrow { display: flex; gap: 6px; }
+        .hrow { display: flex; gap: 6px; flex: 0 0 auto; }
         .app-header .hb {
-            flex: 1 1 0;
-            width: auto;
+            flex: 0 0 auto;
+            width: 46px;
+            height: 44px;
             min-width: 0;
-            min-height: 50px;
             margin: 0;
-            padding: 0 6px;
+            padding: 0;
             border: 0;
-            border-radius: 14px;
+            border-radius: 12px;
             background: #ffffff26;
             color: #ffffff;
-            font-size: clamp(20px, 6vw, 24px);
-            font-weight: 700;
+            font-size: 22px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
             cursor: pointer;
             touch-action: manipulation;
         }
         .app-header .hb:hover { background: #ffffff3d; }
         .app-header .hb:focus-visible { outline: 4px solid #f2b705; outline-offset: 2px; }
-        .app-header .lbl { display: none; font-size: 16px; line-height: 1.15; white-space: nowrap; }
-        @media (min-width: 640px) {
-            .app-header .hb { min-height: 56px; }
-            .app-header .lbl { display: inline; }
-            .app-header #helpBtn { flex: 0 0 56px; }
+        .app-header .lbl { display: none; }   /* подписи — только в подсказке и aria-label */
+        @media (max-width: 400px) {
+            .app-header { padding: 6px 8px; }
+            .app-header-in { gap: 6px; }
+            .hrow { gap: 4px; }
+            .app-header .hb { width: 40px; height: 42px; font-size: 20px; border-radius: 10px; }
         }
+
         .controls {
             margin-bottom: 15px;
             display: flex;
@@ -944,7 +947,7 @@
 
     <header class="app-header">
         <div class="app-header-in">
-        <h1 id="appTitle" class="app-title">Auditory Differentiation</h1>
+        <h1 id="appTitle" class="app-title">Hear Words</h1>
         <div class="hrow">
             <button class="hb" id="homeBtn" onclick="goHome()" aria-label="Modes" title="Modes" style="display:none"><span class="ic">🏠</span><span class="lbl" id="homeBtnText">Modes</span></button>
             <button class="hb" id="statsBtn" onclick="openStats()" aria-label="Statistics" title="Statistics"><span class="ic">📊</span><span class="lbl" id="statsBtnText">Statistics</span></button>
@@ -1070,7 +1073,7 @@
 
     const i18n = {
         en: {
-            appTitle: "Auditory Differentiation",
+            appTitle: "Hear Words",
             settingsBtnText: "⚙️ Settings",
             labelLang: "Interface Language:",
             labelTheme: "Theme:",
@@ -1126,7 +1129,7 @@
             skipRestBtn: "Resume Game Now"
         },
         uk: {
-            appTitle: "Слухова диференціація",
+            appTitle: "Чуємо слова",
             settingsBtnText: "⚙️ Налаштування",
             labelLang: "Мова інтерфейсу:",
             labelTheme: "Тема оформлення:",
@@ -1182,7 +1185,7 @@
             skipRestBtn: "Продовжити гру зараз"
         },
         ru: {
-            appTitle: "Слуховая дифференциация",
+            appTitle: "Слышим слова",
             settingsBtnText: "⚙️ Настройки",
             labelLang: "Язык интерфейса:",
             labelTheme: "Тема оформления:",
@@ -1494,6 +1497,7 @@
         const t = i18n[currentLang];
         document.documentElement.lang = currentLang;
         document.getElementById('appTitle').innerText = t.appTitle;
+        document.documentElement.lang = currentLang;
         fitAppTitle();
         setHeaderLabel('settingsBtn', t.settingsBtnText);
         document.getElementById('labelLang').innerText = t.labelLang;
@@ -3435,6 +3439,7 @@
             document.getElementById(SCREEN_IDS[k]).classList.toggle('hidden', k !== name);
         });
         document.getElementById('homeBtn').style.display = name === 'select' ? 'none' : '';
+        fitAppTitle();
         window.scrollTo(0, 0);
     }
 

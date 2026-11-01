@@ -1,7 +1,8 @@
 {
-  "name": "Слуховая дифференциация",
-  "short_name": "Дифференциация",
-  "description": "Речевая игра для реабилитации: слуховая дифференциация слов",
+  "name": "Чуємо слова",
+  "short_name": "Чуємо слова",
+  "description": "Мовна гра для реабілітації: слухова диференціація слів",
+  "lang": "uk",
   "start_url": "/SpeechRehab/index.html",
   "scope": "/SpeechRehab/",
   "display": "standalone",

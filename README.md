@@ -1,74 +1,6 @@
-# 🗣️ Auditory Differentiation & Speech Trainer
+# 🗣️ Чуємо слова · Hear Words
 
-A free, offline-friendly, single-file web app for **speech and hearing rehabilitation** — built for people with **aphasia**, apraxia of speech, and other speech/hearing disorders, as well as for speech therapists and caregivers working with them.
-
-🇬🇧 [English](#english) · 🇺🇦 [Українська](#українська)
-
----
-
-<a name="english"></a>
-## 🇬🇧 English
-
-### About
-
-This app helps people recognize and correctly pronounce words by ear. It was designed with rehabilitation in mind: large buttons, high contrast, simple controls, adjustable difficulty, and a "play / rest" timer so a therapy session doesn't turn into overexertion.
-
-The app runs entirely in the browser — no installation, no backend, no account. Open `index.html` and start practicing, or host it as a static page (e.g. GitHub Pages) or install it as a PWA on a phone.
-
-### ✨ Features
-
-- **Auditory differentiation exercises** — the app speaks a word aloud, and the user picks the correct word out of 2, 3, or 4 similar-sounding options (minimal pairs), training the ear to tell real words apart.
-- **Word-building / spelling task** — assemble the target word from its syllables, useful for speech and reading practice.
-- **ABC mode (first-letter hint)** — for the “it’s on the tip of my tongue” moment: tap the first letter and the app lists matching words from the dictionary; tap a word to hear it and add it to a line that can be read aloud. A second keyboard mode allows free typing, mistakes included, and suggests similar words. Optional online word search (Wiktionary, Datamuse for English) can be switched on in Settings; chosen words are remembered on the device. The letter panel can be set to collapse automatically after each tap.
-- **Text-to-speech (TTS)** — words are read aloud using the device's built-in voices, with adjustable speech speed.
-- **Voice selection by gender** — pick a specific male or female voice for each language when the device offers several; voices are grouped and labeled automatically (♀ Female / ♂ Male / Other), with extra reliability fixes for Android, where voices can otherwise fail to load.
-- **Speech recognition ("say it and check")** — the user pronounces the word into the microphone, and the app checks it against the target word using the browser's speech recognition.
-- **25 thematic word categories** — household items, food, body parts, emotions, family, animals, professions, city & transport, colors, numbers, verbs, adjectives, and more — plus an "all categories" mode.
-- **Three interface languages**: English, Ukrainian, and Russian — with a matching dictionary and speech recognition locale for each.
-- **Adjustable difficulty**: 2 / 3 / 4 answer options per question (Easy / Medium / Hard).
-- **Play / Rest timer** — configurable session and break lengths, with a rest overlay, to support therapy pacing and prevent fatigue.
-- **Gentle mode (on by default)** — no red errors: a wrong option simply fades out and the word is spoken again until the user finds the answer; correct answers get short praise and a light vibration on phones.
-- **Picture support (emoji)** — a picture next to each answer option and a large one after the answer, for about 45% of the words; can be switched off.
-- **Step-by-step hints** — 💡 first syllable → the word by syllables → the highlighted answer.
-- **🐢 Speak by syllables** — the word is spoken slowly, syllable by syllable, then as a whole.
-- **Auto-speak** the new word (optional) with a slow speech speed by default.
-- **Progress stats** — running count of correct answers (and total attempts in classic mode).
-- **Light / dark theme**, responsive layout for phones and tablets.
-- **Works offline** as an installable PWA (manifest + icons); all settings (language, voice, theme, timer, category, etc.) are saved locally on the device.
-
-### 🚀 Getting started
-
-1. Download or clone this repository.
-2. Open `index.html` in a modern browser (Chrome/Edge recommended for the best text-to-speech and speech-recognition support), or deploy the folder to any static host / GitHub Pages.
-3. Optional: install it to your home screen as a PWA for offline use on a phone.
-
-No build tools, servers, or dependencies are required — it's a single self-contained HTML file.
-
-### 🎯 Who is it for
-
-- People recovering from stroke, TBI, or other conditions causing aphasia or speech/hearing difficulties.
-- Speech and language therapists (SLPs) looking for a free auditory-discrimination drill tool.
-- Family members and caregivers supporting at-home practice.
-
-### ⚠️ Disclaimer
-
-This is a practice tool, not a medical device. It does not diagnose or treat any condition and is not a substitute for guidance from a qualified speech-language pathologist or physician.
-
-### 🤝 Contributing
-
-Issues and pull requests are welcome — additional languages, dictionary words, accessibility improvements, and bug reports all help.
-
-### ✍️ Authorship
-
-All of the code of this app was written by the AI assistant Claude (Anthropic) on the assignment and under the direction of the project's author: the idea, the requirements, practical testing and the decision to publish belong to the author.
-
-The phrases and help texts in Russian, Ukrainian and English were also prepared by the AI assistant. They have not been reviewed by native speakers or specialists, so before using the app with a specific person they should be read through, especially the medical wording. The app is not a medical device and does not replace a doctor or a speech-language pathologist.
-
-### 📄 License
-
-The app is distributed under the [MIT License](LICENSE): you may freely use, copy, modify and distribute it, including in your own projects. There is one condition: keep the license text and the copyright notice in your copies. We would also be grateful if you left a link to the original repository.
-
-The app is provided "as is", without warranty of any kind.
+🇺🇦 [Українська](#українська) · 🇬🇧 [English](#english) · 🇷🇺 [Русский](#русский-авторство-и-лицензия)
 
 ---
 
@@ -77,11 +9,20 @@ The app is provided "as is", without warranty of any kind.
 
 ### Про проєкт
 
+**«Чуємо слова»** (англ. *Hear Words*, рос. «Слышим слова»; раніше — *Auditory Differentiation & Speech Trainer*) — безкоштовний застосунок для реабілітації мовлення та слуху.
+
 Цей застосунок допомагає розпізнавати слова на слух і правильно їх вимовляти. Він створений спеціально для реабілітації мовлення та слуху — для людей з **афазією**, апраксією мовлення та іншими порушеннями мовлення й слуху, а також для логопедів і рідних, які їм допомагають.
 
 Інтерфейс адаптований під потреби реабілітації: великі кнопки, високий контраст, прості елементи керування, регульована складність та таймер «гра / відпочинок», щоб заняття не перетворювалось на перевтому.
 
 Застосунок повністю працює в браузері — без встановлення, без сервера, без реєстрації. Просто відкрийте `index.html` і починайте тренуватися, або розмістіть його як статичну сторінку (наприклад, на GitHub Pages), або встановіть як PWA на телефон.
+
+### 🧭 Режими тренування
+
+- **🧩 Повний тренажер** — усі блоки: вибір слова на слух, перевірка вимови, складання зі складів і літер, підказки.
+- **👂 Тренування на слух** — одне слово крок за кроком: послухати, повторити вголос, скласти з літер; підсумок наприкінці.
+- **📝 Тест** — 10–30 випадкових слів поспіль; кожне слово звучить один раз, а користувач вимовляє його; наприкінці — результат.
+- **🔤 Абетка** — підказка за першою літерою, коли слово «крутиться на язиці».
 
 ### ✨ Можливості
 
@@ -108,9 +49,24 @@ The app is provided "as is", without warranty of any kind.
 
 1. Завантажте або клонуйте цей репозиторій.
 2. Відкрийте `index.html` у сучасному браузері (рекомендовано Chrome/Edge для найкращої підтримки синтезу й розпізнавання мовлення), або розмістіть папку на будь-якому статичному хостингу чи GitHub Pages.
-3. За бажанням: встановіть застосунок на головний екран телефону як PWA для офлайн-використання.
+3. За бажанням: встановіть застосунок на головний екран телефону як PWA для офлайн-використання (у Chrome на Android: меню ⋮ → «Установити застосунок» / «Додати на головний екран»).
 
-Жодних інструментів збірки, серверів чи залежностей не потрібно — це один самодостатній HTML-файл.
+Жодних інструментів збірки, серверів чи залежностей не потрібно — це набір статичних файлів.
+
+**Мова.** Під час першого запуску мова інтерфейсу відповідає мові пристрою (українська, російська чи англійська; в інших випадках — англійська). Змінити її можна в «Налаштуваннях», вибір запам'ятовується. Маніфест застосунку українською: після встановлення під іконкою відображається назва «Чуємо слова».
+
+### 📁 Файли репозиторію
+
+Для роботи застосунку потрібні:
+
+- `index.html` — сам застосунок;
+- `manifest.json`, `sw.js`, `icon-192.png`, `icon-512.png` — встановлення як PWA та робота офлайн;
+- `accents.js` — таблиця наголосів;
+- `dict-uk.js`, `dict-ru.js`, `dict-en.js` — словники.
+
+Необов'язково: `extra-dict.json` — додатковий словник, який підвантажується за наявності інтернету. Файли `README.md` і `LICENSE` застосунку не потрібні, але потрібні для опису й ліцензії проєкту.
+
+Шляхи в `manifest.json` і `sw.js` вказані як `/SpeechRehab/…`, тому репозиторій (або папка на хостингу) має називатися `SpeechRehab`. Після будь-яких змін у файлах збільшуйте номер версії кешу в `sw.js` (`CACHE`), інакше встановлені застосунки не оновляться.
 
 ### 🎯 Для кого цей застосунок
 
@@ -140,7 +96,98 @@ The app is provided "as is", without warranty of any kind.
 
 ---
 
-## 🇷🇺 Русский
+<a name="english"></a>
+## 🇬🇧 English
+
+### About
+
+**Hear Words** (Ukrainian «Чуємо слова», Russian «Слышим слова»; formerly *Auditory Differentiation & Speech Trainer*) is a free app for speech and hearing rehabilitation.
+
+This app helps people recognize and correctly pronounce words by ear. It was designed with rehabilitation in mind: large buttons, high contrast, simple controls, adjustable difficulty, and a "play / rest" timer so a therapy session doesn't turn into overexertion.
+
+The app runs entirely in the browser — no installation, no backend, no account. Open `index.html` and start practicing, or host it as a static page (e.g. GitHub Pages) or install it as a PWA on a phone.
+
+### 🧭 Training modes
+
+- **🧩 Full trainer** — all blocks: choose the word by ear, pronunciation check, assembling from syllables and letters, hints.
+- **👂 Listening practice** — one word step by step: listen, repeat aloud, assemble from letters; a summary at the end.
+- **📝 Test** — 10 to 30 random words in a row; each word is played once and the user says it; a result at the end.
+- **🔤 ABC** — first-letter help for when a word is on the tip of your tongue.
+
+### ✨ Features
+
+- **Auditory differentiation exercises** — the app speaks a word aloud, and the user picks the correct word out of 2, 3, or 4 similar-sounding options (minimal pairs), training the ear to tell real words apart.
+- **Word-building / spelling task** — assemble the target word from its syllables, useful for speech and reading practice.
+- **ABC mode (first-letter hint)** — for the “it’s on the tip of my tongue” moment: tap the first letter and the app lists matching words from the dictionary; tap a word to hear it and add it to a line that can be read aloud. A second keyboard mode allows free typing, mistakes included, and suggests similar words. Optional online word search (Wiktionary, Datamuse for English) can be switched on in Settings; chosen words are remembered on the device. The letter panel can be set to collapse automatically after each tap.
+- **Text-to-speech (TTS)** — words are read aloud using the device's built-in voices, with adjustable speech speed.
+- **Voice selection by gender** — pick a specific male or female voice for each language when the device offers several; voices are grouped and labeled automatically (♀ Female / ♂ Male / Other), with extra reliability fixes for Android, where voices can otherwise fail to load.
+- **Speech recognition ("say it and check")** — the user pronounces the word into the microphone, and the app checks it against the target word using the browser's speech recognition.
+- **25 thematic word categories** — household items, food, body parts, emotions, family, animals, professions, city & transport, colors, numbers, verbs, adjectives, and more — plus an "all categories" mode.
+- **Three interface languages**: English, Ukrainian, and Russian — with a matching dictionary and speech recognition locale for each.
+- **Adjustable difficulty**: 2 / 3 / 4 answer options per question (Easy / Medium / Hard).
+- **Play / Rest timer** — configurable session and break lengths, with a rest overlay, to support therapy pacing and prevent fatigue.
+- **Gentle mode (on by default)** — no red errors: a wrong option simply fades out and the word is spoken again until the user finds the answer; correct answers get short praise and a light vibration on phones.
+- **Picture support (emoji)** — a picture next to each answer option and a large one after the answer, for about 45% of the words; can be switched off.
+- **Step-by-step hints** — 💡 first syllable → the word by syllables → the highlighted answer.
+- **🐢 Speak by syllables** — the word is spoken slowly, syllable by syllable, then as a whole.
+- **Auto-speak** the new word (optional) with a slow speech speed by default.
+- **Progress stats** — running count of correct answers (and total attempts in classic mode).
+- **Light / dark theme**, responsive layout for phones and tablets.
+- **Works offline** as an installable PWA (manifest + icons); all settings (language, voice, theme, timer, category, etc.) are saved locally on the device.
+
+### 🚀 Getting started
+
+1. Download or clone this repository.
+2. Open `index.html` in a modern browser (Chrome/Edge recommended for the best text-to-speech and speech-recognition support), or deploy the folder to any static host / GitHub Pages.
+3. Optional: install it to your home screen as a PWA for offline use on a phone (Chrome on Android: menu ⋮ → “Install app” / “Add to Home screen”).
+
+No build tools, servers, or dependencies are required — it is a set of static files.
+
+**Language.** On first launch the interface language follows the device language (Ukrainian, Russian or English; English otherwise). It can be changed in Settings and the choice is remembered. The app manifest is in Ukrainian, so after installation the name under the icon is «Чуємо слова».
+
+### 📁 Repository files
+
+The app needs:
+
+- `index.html` — the app itself;
+- `manifest.json`, `sw.js`, `icon-192.png`, `icon-512.png` — PWA installation and offline use;
+- `accents.js` — the stress table;
+- `dict-uk.js`, `dict-ru.js`, `dict-en.js` — the dictionaries.
+
+Optional: `extra-dict.json` — an additional dictionary loaded when the internet is available. `README.md` and `LICENSE` are not used by the app but belong to the project.
+
+Paths in `manifest.json` and `sw.js` are set to `/SpeechRehab/…`, so the repository (or hosting folder) must be named `SpeechRehab`. After changing any file, increase the cache version (`CACHE`) in `sw.js`, otherwise installed copies will not update.
+
+### 🎯 Who is it for
+
+- People recovering from stroke, TBI, or other conditions causing aphasia or speech/hearing difficulties.
+- Speech and language therapists (SLPs) looking for a free auditory-discrimination drill tool.
+- Family members and caregivers supporting at-home practice.
+
+### ⚠️ Disclaimer
+
+This is a practice tool, not a medical device. It does not diagnose or treat any condition and is not a substitute for guidance from a qualified speech-language pathologist or physician.
+
+### 🤝 Contributing
+
+Issues and pull requests are welcome — additional languages, dictionary words, accessibility improvements, and bug reports all help.
+
+### ✍️ Authorship
+
+All of the code of this app was written by the AI assistant Claude (Anthropic) on the assignment and under the direction of the project's author: the idea, the requirements, practical testing and the decision to publish belong to the author.
+
+The phrases and help texts in Russian, Ukrainian and English were also prepared by the AI assistant. They have not been reviewed by native speakers or specialists, so before using the app with a specific person they should be read through, especially the medical wording. The app is not a medical device and does not replace a doctor or a speech-language pathologist.
+
+### 📄 License
+
+The app is distributed under the [MIT License](LICENSE): you may freely use, copy, modify and distribute it, including in your own projects. There is one condition: keep the license text and the copyright notice in your copies. We would also be grateful if you left a link to the original repository.
+
+The app is provided "as is", without warranty of any kind.
+
+---
+
+<a name="русский-авторство-и-лицензия"></a>
+## 🇷🇺 Русский (авторство и лицензия)
 
 ### ✍️ Об авторстве
 
