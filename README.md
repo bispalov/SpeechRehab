@@ -23,7 +23,7 @@
 - **👂 Тренування на слух** — одне слово крок за кроком: послухати, повторити вголос, скласти з літер; підсумок наприкінці.
 - **📝 Тест** — 10–30 випадкових слів поспіль; кожне слово звучить один раз, а користувач вимовляє його; наприкінці — результат.
 - **🔤 Абетка** — підказка за першою літерою, коли слово «крутиться на язиці».
-- **🗣 Мої фрази** — тренування власних фраз: скажіть фразу, застосунок порівняє її за словами, покаже правильні й неправильні слова, допоможе виправити фразу й повторити. Список фраз можна зберегти у файл і завантажити; записи голосу не зберігаються, оцінка умовна (розпізнавання мовлення браузера недосконале).
+- **🗣 Мої фрази** — тренування власних фраз. Нову фразу можна просто сказати: застосунок розбере її на слова, позначить сумнівні знаком «?», запропонує варіанти, озвучить виправлену фразу, а ви повторите її вголос і почуєте голосову оцінку; потім фразу можна додати до списку. Власні фрази також можна вписувати, тренувати з порівнянням за словами та виправленням. Список фраз можна зберегти у файл і завантажити; записи голосу не зберігаються, оцінка умовна (розпізнавання мовлення браузера недосконале).
 
 ### ✨ Можливості
 
@@ -114,7 +114,7 @@ The app runs entirely in the browser — no installation, no backend, no account
 - **👂 Listening practice** — one word step by step: listen, repeat aloud, assemble from letters; a summary at the end.
 - **📝 Test** — 10 to 30 random words in a row; each word is played once and the user says it; a result at the end.
 - **🔤 ABC** — first-letter help for when a word is on the tip of your tongue.
-- **🗣 My phrases** — practice with your own phrases: say a phrase, the app compares it word by word, shows right and wrong words, and helps fix the phrase and say it again. The phrase list can be saved to and loaded from a file; voice recordings are not saved, and the score is approximate (browser speech recognition is imperfect).
+- **🗣 My phrases** — practice with your own phrases. Just say a new phrase: the app splits it into words, marks doubtful ones with “?”, offers options, speaks the corrected phrase, you repeat it aloud and hear a spoken verdict; then the phrase can be added to the list. Own phrases can also be typed in and practised with a word-by-word comparison and fixing. The phrase list can be saved to and loaded from a file; voice recordings are not saved, and the score is approximate (browser speech recognition is imperfect).
 
 ### ✨ Features
 
