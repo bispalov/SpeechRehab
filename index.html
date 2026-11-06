@@ -954,6 +954,41 @@
         </div>
 
         <div class="control-group">
+            <label class="checkbox-label" for="setHearSimple">
+                <input type="checkbox" id="setHearSimple" onchange="extraSettingChanged('hearSimple')">
+                <span id="labelHearSimple"></span>
+            </label>
+        </div>
+
+        <div class="control-group">
+            <label class="checkbox-label" for="setHearTap">
+                <input type="checkbox" id="setHearTap" onchange="extraSettingChanged('hearTap')">
+                <span id="labelHearTap"></span>
+            </label>
+        </div>
+
+        <div class="control-group">
+            <label class="checkbox-label" for="setPhrShow">
+                <input type="checkbox" id="setPhrShow" onchange="extraSettingChanged('show')">
+                <span id="labelPhrShow"></span>
+            </label>
+        </div>
+
+        <div class="control-group">
+            <label class="checkbox-label" for="setPhrVoice">
+                <input type="checkbox" id="setPhrVoice" onchange="extraSettingChanged('voice')">
+                <span id="labelPhrVoice"></span>
+            </label>
+        </div>
+
+        <div class="control-group">
+            <label class="checkbox-label" for="setPhrAuto">
+                <input type="checkbox" id="setPhrAuto" onchange="extraSettingChanged('auto')">
+                <span id="labelPhrAuto"></span>
+            </label>
+        </div>
+
+        <div class="control-group">
             <label class="checkbox-label" for="timerEnabled">
                 <input type="checkbox" id="timerEnabled" checked onchange="toggleTimerFeature()">
                 <span id="labelTimerEnable">Use "Play / Rest" timer</span>
@@ -3556,7 +3591,7 @@
         window.scrollTo(0, 0);
     }
 
-    function startMode(m) {
+    function startMode(m, opt) {
         warmupSpeechSynthesis();
         modeLang = currentLang;
         if (m === 'full') {
@@ -3571,7 +3606,7 @@
             abcOpen();
         } else if (m === 'hear') {
             showScreen('hear');
-            HP.open(true);
+            HP.open(true, !!(opt && opt.back));
         } else if (m === 'phr') {
             showScreen('phr');
             phrOpen();
@@ -3608,6 +3643,32 @@
         modeCatChanged = true;
     }
 
+    // Настройки режимов «Подсказка по сказанному» и «Мои фразы» живут в общих настройках приложения
+    const EXTRA_SET = {
+        ru: { hearSimple: '🎤 Подсказка по сказанному: упрощённый вид (после распознавания все слова сразу попадают во фразу)', hearTap: '🎤 Подсказка по сказанному: слово из списка — нажатие говорит, удержание добавляет во фразу', show: '🗣 Мои фразы: показывать текст фразы при повторении (если выключить, фраза только звучит)', voice: '🗣 Мои фразы: голосом говорить, правильно ли повторена фраза', auto: '🗣 Мои фразы: сразу озвучивать фразу при открытии' },
+        uk: { hearSimple: '🎤 Підказка за сказаним: спрощений вигляд (після розпізнавання всі слова одразу потрапляють до фрази)', hearTap: '🎤 Підказка за сказаним: слово зі списку — натискання говорить, утримання додає до фрази', show: '🗣 Мої фрази: показувати текст фрази під час повторення (якщо вимкнути, фраза лише звучить)', voice: '🗣 Мої фрази: голосом говорити, чи правильно повторено фразу', auto: '🗣 Мої фрази: одразу озвучувати фразу при відкритті' },
+        en: { hearSimple: '🎤 Suggestions from what was said: simple view (after recognition all words go straight into the phrase)', hearTap: '🎤 Suggestions from what was said: word from the list — tap speaks, hold adds to the phrase', show: '🗣 My phrases: show the phrase text while repeating (if off, the phrase is only spoken)', voice: '🗣 My phrases: say aloud whether the phrase was repeated correctly', auto: '🗣 My phrases: speak the phrase as soon as it opens' }
+    };
+    function syncExtraSettings() {
+        const t = EXTRA_SET[currentLang] || EXTRA_SET.ru, ps0 = phrSet();
+        const map = [['LabelHearSimple', 'labelHearSimple', t.hearSimple], ['', 'labelHearTap', t.hearTap], ['', 'labelPhrShow', t.show], ['', 'labelPhrVoice', t.voice], ['', 'labelPhrAuto', t.auto]];
+        map.forEach(m => { const e = document.getElementById(m[1]); if (e) e.innerText = m[2]; });
+        const chk = (id, v) => { const e = document.getElementById(id); if (e) e.checked = v; };
+        let simple = true, tap = false;
+        try { simple = localStorage.getItem('sr.hear.simple') !== 'false'; tap = localStorage.getItem('sr.hear.tap') === 'true'; } catch (e) {}
+        chk('setHearSimple', simple); chk('setHearTap', tap);
+        chk('setPhrShow', ps0.show); chk('setPhrVoice', ps0.voice); chk('setPhrAuto', ps0.auto);
+    }
+    function extraSettingChanged(k) {
+        const id = { hearSimple: 'setHearSimple', hearTap: 'setHearTap', show: 'setPhrShow', voice: 'setPhrVoice', auto: 'setPhrAuto' }[k];
+        const v = document.getElementById(id).checked;
+        if (k === 'hearSimple') { try { localStorage.setItem('sr.hear.simple', String(v)); } catch (e) {} }
+        else if (k === 'hearTap') { try { localStorage.setItem('sr.hear.tap', String(v)); } catch (e) {} }
+        else phrSetSave(k, v);
+        if (screenName === 'hear') HP.rerender();
+        else if (screenName === 'phr') phrRender(true);
+    }
+
     function refreshModeTexts() {
         const t = mt();
         // смена языка во время тренировки: слова другого языка, поэтому возврат к выбору режима
@@ -3625,6 +3686,7 @@
         document.getElementById('modeQuizDesc').innerText = t.quizDesc;
         document.getElementById('modeAbcTitle').innerText = abcT().title;
         document.getElementById('modeAbcDesc').innerText = abcT().desc;
+        syncExtraSettings();
         document.getElementById('modeHearTitle').innerText = hearCard().t;
         document.getElementById('modeHearDesc').innerText = hearCard().d;
         document.getElementById('modePhrTitle').innerText = phT().title;
@@ -4028,7 +4090,7 @@
             more: 'Найдено слов: {n}. Нажмите следующую букву, чтобы сузить список.',
             none: 'Слов на эти буквы нет', type: 'Набирайте слово так, как вы его себе представляете (можно с ошибками):',
             fit: 'Подходящие буквы', free: 'Свободный набор', show: 'Показать буквы', hide: 'Скрыть буквы', say: 'Сказать так',
-            online: "Найти слова в интернете", onlineRes: "Слова из интернета — нажмите, чтобы выбрать:", onlineNone: "В интернете подходящих слов не нашлось.", searching: "Ищу варианты…", err: "Не удалось связаться с сервисом словарей. Проверьте интернет.", autoHide: "Азбука: сворачивать панель с буквами после каждой нажатой буквы, чтобы было больше места для слов. Вернуть её можно кнопкой «Показать буквы».", setOnline: "Азбука: искать слова онлайн (Викисловарь; для английского ещё Datamuse). Бесплатно, ключ не нужен. Набранные буквы отправляются этим сервисам. Выбранные слова запоминаются на устройстве."
+            online: "Найти слова в интернете", onlineRes: "Слова из интернета — нажмите, чтобы выбрать:", onlineNone: "В интернете подходящих слов не нашлось.", searching: "Ищу варианты…", err: "Не удалось связаться с сервисом словарей. Проверьте интернет.", autoHide: "Азбука: сворачивать панель с буквами после каждой нажатой буквы, чтобы было больше места для слов. Вернуть её можно кнопкой «Показать буквы».", setOnline: "Азбука и «Подсказка по сказанному»: искать слова онлайн (Викисловарь; для английского ещё Datamuse). Бесплатно, ключ не нужен. Набранные буквы отправляются этим сервисам. Выбранные слова запоминаются на устройстве."
         },
         uk: {
             title: '🔤 Абетка',
@@ -4037,7 +4099,7 @@
             more: 'Знайдено слів: {n}. Натисніть наступну літеру, щоб звузити список.',
             none: 'Слів на ці літери немає', type: 'Набирайте слово так, як ви його собі уявляєте (можна з помилками):',
             fit: 'Відповідні літери', free: 'Вільний набір', show: 'Показати літери', hide: 'Сховати літери', say: 'Сказати так',
-            online: "Знайти слова в інтернеті", onlineRes: "Слова з інтернету — натисніть, щоб обрати:", onlineNone: "В інтернеті відповідних слів не знайшлося.", searching: "Шукаю варіанти…", err: "Не вдалося зв’язатися із сервісом словників. Перевірте інтернет.", autoHide: "Абетка: згортати панель з літерами після кожної натиснутої літери, щоб було більше місця для слів. Повернути її можна кнопкою «Показати літери».", setOnline: "Абетка: шукати слова онлайн (Вікісловник; для англійської ще Datamuse). Безкоштовно, ключ не потрібен. Набрані літери надсилаються цим сервісам. Обрані слова запам’ятовуються на пристрої."
+            online: "Знайти слова в інтернеті", onlineRes: "Слова з інтернету — натисніть, щоб обрати:", onlineNone: "В інтернеті відповідних слів не знайшлося.", searching: "Шукаю варіанти…", err: "Не вдалося зв’язатися із сервісом словників. Перевірте інтернет.", autoHide: "Абетка: згортати панель з літерами після кожної натиснутої літери, щоб було більше місця для слів. Повернути її можна кнопкою «Показати літери».", setOnline: "Абетка і «Підказка за сказаним»: шукати слова онлайн (Вікісловник; для англійської ще Datamuse). Безкоштовно, ключ не потрібен. Набрані літери надсилаються цим сервісам. Обрані слова запам’ятовуються на пристрої."
         },
         en: {
             title: '🔤 ABC',
@@ -4046,7 +4108,7 @@
             more: 'Words found: {n}. Tap the next letter to narrow the list.',
             none: 'No words for these letters', type: 'Type the word the way you imagine it (mistakes are fine):',
             fit: 'Matching letters', free: 'Free typing', show: 'Show letters', hide: 'Hide letters', say: 'Say it',
-            online: "Find words online", onlineRes: "Words from the internet — tap to choose:", onlineNone: "No matching words were found online.", searching: "Looking for options…", err: "Could not reach the dictionary service. Check the internet.", autoHide: "ABC: collapse the letter panel after each letter you tap, to leave more room for words. Bring it back with the “Show letters” button.", setOnline: "ABC: look up words online (Wiktionary; for English also Datamuse). Free, no key needed. The typed letters are sent to these services. Chosen words are remembered on the device."
+            online: "Find words online", onlineRes: "Words from the internet — tap to choose:", onlineNone: "No matching words were found online.", searching: "Looking for options…", err: "Could not reach the dictionary service. Check the internet.", autoHide: "ABC: collapse the letter panel after each letter you tap, to leave more room for words. Bring it back with the “Show letters” button.", setOnline: "ABC and “Suggestions from what was said”: look up words online (Wiktionary; for English also Datamuse). Free, no key needed. The typed letters are sent to these services. Chosen words are remembered on the device."
         }
     };
 
@@ -4681,7 +4743,7 @@
         try { localStorage.setItem('sr.phr.set', JSON.stringify(s)); } catch (e) {}
     }
     // Новая фраза: режим «Подсказка по сказанному» (перенесён из «Говорим вместе»)
-    function phrNewStart() { startMode('hear'); }
+    function phrNewStart() { startMode('hear', { back: true }); }
     // Тренировка фразы, собранной в режиме «Подсказка по сказанному»
     function phrTrainFromHear(text) {
         if (phr.loadedLang !== currentLang) phrLoad();
@@ -4750,14 +4812,6 @@
         fi.type = 'file'; fi.id = 'phrFile'; fi.accept = '.json,.txt,text/plain,application/json'; fi.style.display = 'none';
         fi.onchange = () => { if (fi.files && fi.files[0]) phrImport(fi.files[0]); };
         el.append(fi);
-        const st = phrSet(), sp = abcMk('div', 'ph-set');
-        [['show', ps().setShow], ['voice', ps().setVoice], ['auto', ps().setAuto]].forEach(([key, label]) => {
-            const lb = document.createElement('label'); lb.className = 'ph-setrow';
-            const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = st[key];
-            cb.onchange = () => phrSetSave(key, cb.checked);
-            lb.append(cb, abcMk('span', null, label)); sp.append(lb);
-        });
-        el.append(sp);
         el.append(abcMk('div', 'step-note ph-note', t.note));
     }
 
@@ -4886,6 +4940,7 @@
     const h = (tag, cls, txt, fn) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; if (fn) e.onclick = fn; return e; };
     const HU = {
 "ru": {
+"m_backphr": "← К «Моим фразам»",
 "m_words": "Слова из словаря — нажмите, и слово прозвучит:",
 "w_err": "Не удалось связаться с сервисом словарей. Проверьте интернет.",
 "wOnline": "Найти слова в интернете",
@@ -4936,6 +4991,7 @@
 "st_online": "Искать слова онлайн (Викисловарь; для английского ещё Datamuse). Бесплатно, ключ не нужен. Слова отправляются этим сервисам."
 },
 "uk": {
+"m_backphr": "← До «Моїх фраз»",
 "m_words": "Слова зі словника — натисніть, і слово пролунає:",
 "w_err": "Не вдалося зв’язатися із сервісом словників. Перевірте інтернет.",
 "wOnline": "Знайти слова в інтернеті",
@@ -4986,6 +5042,7 @@
 "st_online": "Шукати слова онлайн (Вікісловник; для англійської ще Datamuse). Безкоштовно, ключ не потрібен. Слова надсилаються цим сервісам."
 },
 "en": {
+"m_backphr": "← To “My phrases”",
 "m_words": "Words from the dictionary — tap and the word is spoken:",
 "w_err": "Could not reach the dictionary service. Check the internet.",
 "wOnline": "Find words online",
@@ -5794,22 +5851,11 @@ function fillFromHeard(){
         stopRec();
         phrTrainFromHear(t2);
     }
-    function settingsBox(body) {
-        const bx = h('div', 'hset');
-        bx.append(h('div', 'note', u('st_title')));
-        [['sr.hear.simple', 'st_simple', () => S.simple], ['sr.hear.tap', 'st_tap', () => S.wordTap], ['app_abc_online', 'st_online', () => S.online]].forEach(([key, lab, get]) => {
-            const lb = h('label', 'chk'), cb = document.createElement('input');
-            cb.type = 'checkbox'; cb.checked = get();
-            cb.onchange = () => { setS(key, cb.checked); try { const c2 = document.getElementById('abcOnlineChk'); if (c2) c2.checked = abcOnlineOn(); } catch (e) {} renderScreen(); };
-            lb.append(cb, h('span', null, u(lab)));
-            bx.append(lb);
-        });
-        body.append(bx);
-    }
     const hearNoteOpen = { sug: false };
     function renderScreen() {
         const m = document.getElementById('hearScreen');
         m.innerHTML = '';
+        if (backBtn) m.append(h('button', 'abc-kbt ph-back', u('m_backphr'), () => { showScreen('phr'); phrOpen(); }));
         m.append(h('div', 'step-title', u('m_title')));
         const nb = h('div', 'notebox'), np = h('p', 'note', u('m_note'));
         const lnk = h('button', 'lnk', '', null);
@@ -5819,11 +5865,12 @@ function fillFromHeard(){
         if (!simpleHear()) m.append(nb);
         const body = h('div'); body.id = 'hearBody'; m.append(body);
         drawSuggestTab(body);
-        settingsBox(body);
     }
     // fresh: начать с чистого листа; иначе вернуться к тому, что было (например, после тренировки)
-    function open(fresh) {
+    let backBtn = false;
+    function open(fresh, back) {
         lang = currentLang;
+        if (back !== undefined) backBtn = back;
         if (phr.loadedLang !== currentLang) phrLoad();
         loadBundledLex(lang);
         stopRec();
@@ -5833,7 +5880,7 @@ function fillFromHeard(){
         renderScreen();
         window.scrollTo(0, 0);
     }
-    return { open, stop: stopRec, refresh: refreshHear };
+    return { open, stop: stopRec, refresh: refreshHear, rerender: renderScreen };
     })();
 
     const helpI18n = {
@@ -5848,8 +5895,8 @@ function fillFromHeard(){
 <li><b>👂 Тренировка слуха</b> — одно слово по шагам: 1) послушать, 2) повторить вслух, 3) собрать из букв. В конце итог: исходное слово, что вы проговорили и что собрали, с подсветкой различий. Затем можно повторить это слово или перейти к следующему. Если включена настройка «Обязательно проговаривать слово», к сборке из букв можно перейти только после верного произношения (или трёх попыток).</li>
 <li><b>📝 Тест</b> — от 10 до 30 случайных слов подряд. Каждое слово звучит один раз, без повтора; вы проговариваете его или пропускаете. Верно или неверно, видно только в конце: результат, список слов и кнопка «Повторить ошибки».</li>
 <li><b>🔤 Азбука</b> — подсказка по первой букве, когда слово «вертится на языке». Нажмите первую букву: появятся слова из словаря (включая «Мои слова»), которые с неё начинаются; следующая буква сужает список. Нажатие на слово добавляет его в строку (если включено автоозвучивание, слово сразу произносится), «Сказать так» озвучивает всю строку, ⌫ убирает последнее слово. «Скрыть буквы» освобождает место для слов (в настройках можно включить автосворачивание панели после каждой нажатой буквы; вернуть её — кнопка «Показать буквы»). «Свободный набор» показывает весь алфавит: слово можно набирать так, как вы его себе представляете, даже с ошибками, а приложение предложит похожие слова. Категория слов здесь не учитывается: поиск идёт по всем словам. Если в настройках включён онлайн-поиск, под списком появляется кнопка «Найти слова в интернете»: слова ищутся в Викисловаре (для английского ещё в Datamuse), для этого набранные буквы отправляются в эти сервисы. Выбранное слово запоминается на устройстве.</li>
-<li><b>🎤 Подсказка по сказанному</b> — перенесён из приложения «Говорим вместе» (вкладка «Говорит человек»). Нажмите «Говорить» и скажите фразу как получится. Приложение разберёт её на слова и соберёт в рамку; слова, которых нет в словаре, помечены «?». Нажмите на слово с «?»: появятся варианты (подбираются по звучанию, по соседним словам, по вашим прежним исправлениям; при включённом онлайн-поиске слов ещё и из интернета), можно оставить слово как есть или убрать его. Слова без «?» убираются нажатием, а порядок меняется удержанием и перетаскиванием. Кнопка «Я, в, на, не…» добавляет служебные слова, «Очистить» сбрасывает экран. Если среди ваших «Мои фразы» есть похожие, они появятся как подсказки. Затем нажмите «Сказать» (фраза прозвучит) или «🎯 Тренировать произношение»: приложение озвучит фразу, вы повторите её вслух, читая с экрана, и приложение голосом скажет, верно ли («Молодец!» или «Почти, попробуйте ещё раз»). Неверные слова можно исправить, повторять можно сколько угодно, а готовую фразу кнопкой «Добавить в Мои фразы» сохранить для следующих повторов. В нижней части экрана настройки: упрощённый вид (слова сразу попадают во фразу), поведение нажатия на слово из списка и онлайн-поиск слов. Слова распознаются как «?» относительно словаря приложения; для более точных подсказок можно положить рядом с index.html частотные списки lex/ru.txt, lex/uk.txt, lex/en.txt (по одному слову в строке, как в «Говорим вместе»). Выученные слова, исправления и частые фразы хранятся только на этом устройстве.</li>
-<li><b>🗣 Мои фразы</b> — тренировка собственных фраз. Новую фразу можно сказать в режиме «Подсказка по сказанному» (кнопка «Сказать новую фразу»), а собранную фразу сохранить сюда. Фразу можно также вписать вручную (или добавить примеры, или загрузить список из файла: одна фраза в строке) и открыть её. В настройках режима можно скрыть текст фразы при повторении (останется только озвучивание), отключить голосовую оценку и автоматическое озвучивание. Нажмите «Сказать фразу» и произнесите её целиком. Приложение сравнит сказанное с нужной фразой по словам: верные слова зелёные, похожие жёлтые, неверные, пропущенные и лишние красные. Сначала показывается, сколько слов получилось верно. Нажмите на жёлтое или красное слово и выберите правильное из нескольких вариантов; когда вся фраза исправлена, приложение произнесёт её, и можно сказать ещё раз. Если распознавание ошиблось, а вы сказали верно, нажмите «Я сказал(а) верно». Распознавание речи в браузере не идеально, особенно при нарушенной речи, поэтому оценка условная; лучше заниматься вместе с логопедом. Фразы и счётчики попыток хранятся только на устройстве; записи голоса не сохраняются. «Сохранить в файл» и «Загрузить из файла» переносят список фраз на другое устройство.</li>
+<li><b>🎤 Подсказка по сказанному</b> — перенесён из приложения «Говорим вместе» (вкладка «Говорит человек»). Нажмите «Говорить» и скажите фразу как получится. Приложение разберёт её на слова и соберёт в рамку; слова, которых нет в словаре, помечены «?». Нажмите на слово с «?»: появятся варианты (подбираются по звучанию, по соседним словам, по вашим прежним исправлениям; при включённом онлайн-поиске слов ещё и из интернета), можно оставить слово как есть или убрать его. Слова без «?» убираются нажатием, а порядок меняется удержанием и перетаскиванием. Кнопка «Я, в, на, не…» добавляет служебные слова, «Очистить» сбрасывает экран. Если среди ваших «Мои фразы» есть похожие, они появятся как подсказки. Затем нажмите «Сказать» (фраза прозвучит) или «🎯 Тренировать произношение»: приложение озвучит фразу, вы повторите её вслух, читая с экрана, и приложение голосом скажет, верно ли («Молодец!» или «Почти, попробуйте ещё раз»). Неверные слова можно исправить, повторять можно сколько угодно, а готовую фразу кнопкой «Добавить в Мои фразы» сохранить для следующих повторов. Упрощённый вид, поведение нажатия на слово из списка и онлайн-поиск слов включаются в ⚙️ настройках. Слова распознаются как «?» относительно словаря приложения; для более точных подсказок можно положить рядом с index.html частотные списки lex/ru.txt, lex/uk.txt, lex/en.txt (по одному слову в строке, как в «Говорим вместе»). Выученные слова, исправления и частые фразы хранятся только на этом устройстве.</li>
+<li><b>🗣 Мои фразы</b> — тренировка собственных фраз. Новую фразу можно сказать в режиме «Подсказка по сказанному» (кнопка «Сказать новую фразу»), а собранную фразу сохранить сюда. Фразу можно также вписать вручную (или добавить примеры, или загрузить список из файла: одна фраза в строке) и открыть её. В ⚙️ настройках можно скрыть текст фразы при повторении (останется только озвучивание), отключить голосовую оценку и автоматическое озвучивание. Нажмите «Сказать фразу» и произнесите её целиком. Приложение сравнит сказанное с нужной фразой по словам: верные слова зелёные, похожие жёлтые, неверные, пропущенные и лишние красные. Сначала показывается, сколько слов получилось верно. Нажмите на жёлтое или красное слово и выберите правильное из нескольких вариантов; когда вся фраза исправлена, приложение произнесёт её, и можно сказать ещё раз. Если распознавание ошиблось, а вы сказали верно, нажмите «Я сказал(а) верно». Распознавание речи в браузере не идеально, особенно при нарушенной речи, поэтому оценка условная; лучше заниматься вместе с логопедом. Фразы и счётчики попыток хранятся только на устройстве; записи голоса не сохраняются. «Сохранить в файл» и «Загрузить из файла» переносят список фраз на другое устройство.</li>
 <li>Категория слов выбирается на стартовом экране. Кнопка 🏠 в заголовке возвращает к выбору режима.</li>
 </ul>
 
@@ -5888,6 +5935,7 @@ function fillFromHeard(){
 <li><b>Строгая проверка речи</b> — в ответе не должно быть других слов. Слово должно совпасть точно; похожее, но неточное слово не засчитывается.</li>
 <li><b>Обязательно проговаривать слово</b> — пока слово не произнесено верно, «Следующее слово» не срабатывает, а страница возвращается к блоку проговаривания. После трёх неудачных попыток переход открывается, чтобы не застрять.</li>
 <li><b>Таймер «Игра / Отдых»</b> — после времени игры включается пауза для отдыха; длительность задаётся в минутах.</li>
+<li><b>🎤 Подсказка по сказанному и 🗣 Мои фразы</b> — упрощённый вид и поведение нажатия на слово в подсказках; показ текста фразы при повторении, голосовая оценка и автоозвучивание в «Моих фразах». Онлайн-поиск слов общий с «Азбукой».</li>
 <li><b>📚 Мои слова</b> — окно для добавления своих слов в словарь (описание ниже).</li>
 </ul>
 
@@ -5916,8 +5964,8 @@ function fillFromHeard(){
 <li><b>👂 Тренування слуху</b> — одне слово по кроках: 1) послухати, 2) повторити вголос, 3) зібрати з літер. Наприкінці підсумок: вихідне слово, що ви промовили і що зібрали, з підсвічуванням відмінностей. Потім можна повторити це слово або перейти до наступного. Якщо ввімкнено налаштування «Обов’язково промовляти слово», до збирання з літер можна перейти лише після правильної вимови (або трьох спроб).</li>
 <li><b>📝 Тест</b> — від 10 до 30 випадкових слів поспіль. Кожне слово звучить один раз, без повтору; ви промовляєте його або пропускаєте. Правильно чи ні, видно лише наприкінці: результат, список слів і кнопка «Повторити помилки».</li>
 <li><b>🔤 Абетка</b> — підказка за першою літерою, коли слово «крутиться на язиці». Натисніть першу літеру: з’являться слова зі словника (разом із «Моїми словами»), що з неї починаються; наступна літера звужує список. Натискання на слово додає його до рядка (якщо ввімкнено автоозвучення, слово одразу промовляється), «Сказати так» озвучує весь рядок, ⌫ прибирає останнє слово. «Сховати літери» вивільняє місце для слів (в налаштуваннях можна ввімкнути автозгортання панелі після кожної натиснутої літери; повернути її — кнопка «Показати літери»). «Вільний набір» показує всю абетку: слово можна набирати так, як ви його собі уявляєте, навіть з помилками, а застосунок запропонує схожі слова. Категорія слів тут не враховується: пошук іде по всіх словах. Якщо в налаштуваннях увімкнено онлайн-пошук, під списком з’являється кнопка «Знайти слова в інтернеті»: слова шукаються у Вікісловнику (для англійської ще в Datamuse), для цього набрані літери надсилаються цим сервісам. Обране слово запам’ятовується на пристрої.</li>
-<li><b>🎤 Підказка за сказаним</b> — перенесено із застосунку «Говоримо разом» (вкладка «Говорить людина»). Натисніть «Говорити» й скажіть фразу, як вийде. Застосунок розбере її на слова й збере в рамку; слова, яких немає у словнику, позначено «?». Натисніть на слово з «?»: з’являться варіанти (добираються за звучанням, за сусідніми словами, за вашими попередніми виправленнями; за ввімкненого онлайн-пошуку слів ще й з інтернету), можна залишити слово як є або прибрати. Слова без «?» прибираються натисканням, а порядок змінюється утриманням і перетягуванням. Кнопка «Я, в, на, не…» додає службові слова, «Очистити» скидає екран. Якщо серед ваших «Моїх фраз» є схожі, вони з’являться як підказки. Потім натисніть «Сказати» (фраза пролунає) або «🎯 Тренувати вимову»: застосунок озвучить фразу, ви повторите її вголос, читаючи з екрана, і застосунок голосом скаже, чи правильно («Молодець!» або «Майже, спробуйте ще раз»). Неправильні слова можна виправити, повторювати можна скільки завгодно, а готову фразу кнопкою «Додати до Моїх фраз» зберегти для наступних повторів. Унизу екрана налаштування: спрощений вигляд (слова одразу потрапляють до фрази), поведінка натискання на слово зі списку й онлайн-пошук слів. Слова розпізнаються як «?» відносно словника застосунку; для точніших підказок можна покласти поруч з index.html частотні списки lex/ru.txt, lex/uk.txt, lex/en.txt (одне слово в рядку, як у «Говоримо разом»). Вивчені слова, виправлення й часті фрази зберігаються лише на цьому пристрої.</li>
-<li><b>🗣 Мої фрази</b> — тренування власних фраз. Нову фразу можна сказати в режимі «Підказка за сказаним» (кнопка «Сказати нову фразу»), а зібрану фразу зберегти сюди. Фразу можна й вписати вручну (або додати приклади, або завантажити список із файлу: одна фраза в рядку) та відкрити її. У налаштуваннях режиму можна сховати текст фрази під час повторення (залишиться лише озвучення), вимкнути голосову оцінку й автоматичне озвучення. Натисніть «Сказати фразу» й промовте її цілком. Застосунок порівняє сказане з потрібною фразою по словах: правильні слова зелені, схожі жовті, неправильні, пропущені й зайві червоні. Спочатку показується, скільки слів вийшло правильно. Натисніть на жовте або червоне слово й оберіть правильне з кількох варіантів; коли всю фразу виправлено, застосунок промовить її, і можна сказати ще раз. Якщо розпізнавання помилилося, а ви сказали правильно, натисніть «Я сказав(ла) правильно». Розпізнавання мовлення в браузері не ідеальне, особливо при порушеному мовленні, тому оцінка умовна; краще займатися разом із логопедом. Фрази й лічильники спроб зберігаються лише на пристрої; записи голосу не зберігаються. «Зберегти у файл» і «Завантажити з файлу» переносять список фраз на інший пристрій.</li>
+<li><b>🎤 Підказка за сказаним</b> — перенесено із застосунку «Говоримо разом» (вкладка «Говорить людина»). Натисніть «Говорити» й скажіть фразу, як вийде. Застосунок розбере її на слова й збере в рамку; слова, яких немає у словнику, позначено «?». Натисніть на слово з «?»: з’являться варіанти (добираються за звучанням, за сусідніми словами, за вашими попередніми виправленнями; за ввімкненого онлайн-пошуку слів ще й з інтернету), можна залишити слово як є або прибрати. Слова без «?» прибираються натисканням, а порядок змінюється утриманням і перетягуванням. Кнопка «Я, в, на, не…» додає службові слова, «Очистити» скидає екран. Якщо серед ваших «Моїх фраз» є схожі, вони з’являться як підказки. Потім натисніть «Сказати» (фраза пролунає) або «🎯 Тренувати вимову»: застосунок озвучить фразу, ви повторите її вголос, читаючи з екрана, і застосунок голосом скаже, чи правильно («Молодець!» або «Майже, спробуйте ще раз»). Неправильні слова можна виправити, повторювати можна скільки завгодно, а готову фразу кнопкою «Додати до Моїх фраз» зберегти для наступних повторів. Спрощений вигляд, поведінка натискання на слово зі списку й онлайн-пошук слів вмикаються в ⚙️ налаштуваннях. Слова розпізнаються як «?» відносно словника застосунку; для точніших підказок можна покласти поруч з index.html частотні списки lex/ru.txt, lex/uk.txt, lex/en.txt (одне слово в рядку, як у «Говоримо разом»). Вивчені слова, виправлення й часті фрази зберігаються лише на цьому пристрої.</li>
+<li><b>🗣 Мої фрази</b> — тренування власних фраз. Нову фразу можна сказати в режимі «Підказка за сказаним» (кнопка «Сказати нову фразу»), а зібрану фразу зберегти сюди. Фразу можна й вписати вручну (або додати приклади, або завантажити список із файлу: одна фраза в рядку) та відкрити її. У ⚙️ налаштуваннях можна сховати текст фрази під час повторення (залишиться лише озвучення), вимкнути голосову оцінку й автоматичне озвучення. Натисніть «Сказати фразу» й промовте її цілком. Застосунок порівняє сказане з потрібною фразою по словах: правильні слова зелені, схожі жовті, неправильні, пропущені й зайві червоні. Спочатку показується, скільки слів вийшло правильно. Натисніть на жовте або червоне слово й оберіть правильне з кількох варіантів; коли всю фразу виправлено, застосунок промовить її, і можна сказати ще раз. Якщо розпізнавання помилилося, а ви сказали правильно, натисніть «Я сказав(ла) правильно». Розпізнавання мовлення в браузері не ідеальне, особливо при порушеному мовленні, тому оцінка умовна; краще займатися разом із логопедом. Фрази й лічильники спроб зберігаються лише на пристрої; записи голосу не зберігаються. «Зберегти у файл» і «Завантажити з файлу» переносять список фраз на інший пристрій.</li>
 <li>Категорія слів обирається на стартовому екрані. Кнопка 🏠 у заголовку повертає до вибору режиму.</li>
 </ul>
 
@@ -5956,6 +6004,7 @@ function fillFromHeard(){
 <li><b>Сувора перевірка мовлення</b> — у відповіді не має бути інших слів. Слово має збігтися точно; схоже, але неточне слово не зараховується.</li>
 <li><b>Обов’язково промовляти слово</b> — доки слово не вимовлено правильно, «Наступне слово» не спрацьовує, а сторінка повертається до блоку промовляння. Після трьох невдалих спроб перехід відкривається, щоб не застрягти.</li>
 <li><b>Таймер «Гра / Відпочинок»</b> — після часу гри вмикається пауза для відпочинку; тривалість задається в хвилинах.</li>
+<li><b>🎤 Підказка за сказаним і 🗣 Мої фрази</b> — спрощений вигляд і поведінка натискання на слово в підказках; показ тексту фрази під час повторення, голосова оцінка й автоозвучення в «Моїх фразах». Онлайн-пошук слів спільний з «Абеткою».</li>
 <li><b>📚 Мої слова</b> — вікно для додавання своїх слів до словника (опис нижче).</li>
 </ul>
 
@@ -5984,8 +6033,8 @@ function fillFromHeard(){
 <li><b>👂 Listening practice</b> — one word step by step: 1) listen, 2) repeat aloud, 3) assemble from letters. At the end you get a summary: the original word, what you said and what you assembled, with differences highlighted. Then you can repeat this word or move to the next one. If “Require saying the word aloud” is on, you can go to letter assembly only after a correct pronunciation (or three attempts).</li>
 <li><b>📝 Test</b> — 10 to 30 random words in a row. Each word is played once, with no replay; you say it or skip it. Whether you were right is shown only at the end: the score, a list of words and a “Repeat mistakes” button.</li>
 <li><b>🔤 ABC</b> — first-letter help for when a word is on the tip of your tongue. Tap the first letter: words from the dictionary (including “My words”) that start with it appear; the next letter narrows the list. Tapping a word adds it to the line (if auto-speak is on, the word is spoken at once), “Say it” speaks the whole line, ⌫ removes the last word. “Hide letters” makes room for more words (Settings can collapse the panel automatically after each letter; bring it back with “Show letters”). “Free typing” shows the whole alphabet: type the word the way you imagine it, mistakes included, and the app suggests similar words. The word category is not used here: the search covers all words. If online search is turned on in Settings, a “Find words online” button appears under the list: words are looked up in Wiktionary (and Datamuse for English), so the typed letters are sent to these services. A chosen word is remembered on the device.</li>
-<li><b>🎤 Suggestions from what was said</b> — ported from the “Let’s talk together” app (the “The person speaks” tab). Tap “Speak” and say a phrase however it comes out. The app splits it into words and gathers them in a frame; words that are not in the dictionary are marked “?”. Tap a word with “?”: options appear (chosen by sound, by neighbouring words and by your earlier corrections; with online word search on, also from the internet), and you can keep the word as it is or remove it. Words without “?” are removed by a tap, and the order is changed by holding and dragging. The “I, in, on, not…” button adds function words, “Clear” resets the screen. If your “My phrases” contain similar ones, they appear as suggestions. Then tap “Say” (the phrase is spoken) or “🎯 Practise pronunciation”: the app speaks the phrase, you repeat it aloud reading from the screen, and the app tells you by voice whether it was right (“Well done!” or “Almost, try again”). Wrong words can be fixed, you can repeat as often as you like, and the finished phrase can be saved with “Add to My phrases” for later practice. Settings are at the bottom of the screen: simple view (words go straight into the phrase), how a tap on a listed word behaves, and online word search. “?” is relative to the app’s dictionary; for more precise suggestions you can put frequency lists lex/ru.txt, lex/uk.txt, lex/en.txt next to index.html (one word per line, as in “Let’s talk together”). Learned words, corrections and frequent phrases are kept only on this device.</li>
-<li><b>🗣 My phrases</b> — practice with your own phrases. A new phrase can be said in the “Suggestions from what was said” mode (the “Say a new phrase” button), and the assembled phrase saved here. You can also type a phrase by hand (or add examples, or load a list from a file: one phrase per line) and open it. The mode’s settings can hide the phrase text while repeating (only the speech remains), and turn off the spoken verdict and automatic speaking. Tap “Say the phrase” and say it in full. The app compares what was said with the target phrase word by word: correct words are green, similar ones yellow, wrong, missing and extra ones red. It first shows how many words were right. Tap a yellow or red word and choose the right one from a few options; when the whole phrase is fixed, the app speaks it and you can say it again. If recognition got it wrong but you said it correctly, tap “I said it correctly”. Browser speech recognition is not perfect, especially with impaired speech, so the score is approximate; it is best done together with a therapist. Phrases and try counters are kept only on the device; voice recordings are not saved. “Save to file” and “Load from file” move the list of phrases to another device.</li>
+<li><b>🎤 Suggestions from what was said</b> — ported from the “Let’s talk together” app (the “The person speaks” tab). Tap “Speak” and say a phrase however it comes out. The app splits it into words and gathers them in a frame; words that are not in the dictionary are marked “?”. Tap a word with “?”: options appear (chosen by sound, by neighbouring words and by your earlier corrections; with online word search on, also from the internet), and you can keep the word as it is or remove it. Words without “?” are removed by a tap, and the order is changed by holding and dragging. The “I, in, on, not…” button adds function words, “Clear” resets the screen. If your “My phrases” contain similar ones, they appear as suggestions. Then tap “Say” (the phrase is spoken) or “🎯 Practise pronunciation”: the app speaks the phrase, you repeat it aloud reading from the screen, and the app tells you by voice whether it was right (“Well done!” or “Almost, try again”). Wrong words can be fixed, you can repeat as often as you like, and the finished phrase can be saved with “Add to My phrases” for later practice. Simple view, how a tap on a listed word behaves and online word search are switched on in ⚙️ Settings. “?” is relative to the app’s dictionary; for more precise suggestions you can put frequency lists lex/ru.txt, lex/uk.txt, lex/en.txt next to index.html (one word per line, as in “Let’s talk together”). Learned words, corrections and frequent phrases are kept only on this device.</li>
+<li><b>🗣 My phrases</b> — practice with your own phrases. A new phrase can be said in the “Suggestions from what was said” mode (the “Say a new phrase” button), and the assembled phrase saved here. You can also type a phrase by hand (or add examples, or load a list from a file: one phrase per line) and open it. ⚙️ Settings can hide the phrase text while repeating (only the speech remains), and turn off the spoken verdict and automatic speaking. Tap “Say the phrase” and say it in full. The app compares what was said with the target phrase word by word: correct words are green, similar ones yellow, wrong, missing and extra ones red. It first shows how many words were right. Tap a yellow or red word and choose the right one from a few options; when the whole phrase is fixed, the app speaks it and you can say it again. If recognition got it wrong but you said it correctly, tap “I said it correctly”. Browser speech recognition is not perfect, especially with impaired speech, so the score is approximate; it is best done together with a therapist. Phrases and try counters are kept only on the device; voice recordings are not saved. “Save to file” and “Load from file” move the list of phrases to another device.</li>
 <li>Choose the word category on the start screen. The 🏠 button in the header returns to the mode selection.</li>
 </ul>
 
@@ -6024,6 +6073,7 @@ function fillFromHeard(){
 <li><b>Strict speech check</b> — no other words allowed in the answer. The word must match exactly; a similar but inexact word is not accepted.</li>
 <li><b>Require saying the word aloud</b> — “Next word” does not work until the word is pronounced correctly, and the page scrolls back to the speaking block. After three failed attempts it unlocks so you never get stuck.</li>
 <li><b>Play / Rest timer</b> — after the play time a rest break starts; durations are set in minutes.</li>
+<li><b>🎤 Suggestions from what was said and 🗣 My phrases</b> — simple view and how a tap on a word behaves in the suggestions; showing the phrase text while repeating, the spoken verdict and automatic speaking in “My phrases”. Online word search is shared with ABC.</li>
 <li><b>📚 My words</b> — a window for adding your own words to the dictionary (described below).</li>
 </ul>
 
