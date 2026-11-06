@@ -1,6 +1,6 @@
 // Service worker: кэширует всё приложение, чтобы оно работало без интернета.
 // При любом изменении файлов приложения увеличивайте номер версии (v1 -> v2 ...).
-const CACHE = 'speech-rehab-v34';
+const CACHE = 'speech-rehab-v35';
 const ASSETS = [
   '/SpeechRehab/',
   '/SpeechRehab/index.html',
@@ -32,6 +32,13 @@ self.addEventListener('fetch', e => {
   if (new URL(e.request.url).origin !== self.location.origin) return;
   e.respondWith(
     caches.match(e.request, { ignoreSearch: true })
-      .then(r => r || fetch(e.request).catch(() => caches.match('/SpeechRehab/index.html')))
+      .then(r => r || fetch(e.request).then(res => {
+        // необязательные частотные списки lex/*.txt сохраняем в кэш, чтобы они работали без интернета
+        if (res.ok && /\/SpeechRehab\/lex\/[a-z]+\.txt$/.test(new URL(e.request.url).pathname)) {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, copy));
+        }
+        return res;
+      }).catch(() => caches.match('/SpeechRehab/index.html')))
   );
 });

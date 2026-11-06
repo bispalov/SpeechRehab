@@ -23,6 +23,7 @@
 - **👂 Тренування на слух** — одне слово крок за кроком: послухати, повторити вголос, скласти з літер; підсумок наприкінці.
 - **📝 Тест** — 10–30 випадкових слів поспіль; кожне слово звучить один раз, а користувач вимовляє його; наприкінці — результат.
 - **🔤 Абетка** — підказка за першою літерою, коли слово «крутиться на язиці».
+- **🎤 Підказка за сказаним** — перенесено із застосунку «Говоримо разом» (вкладка «Говорить людина»): скажіть фразу, застосунок розбере її на слова, позначить сумнівні знаком «?», запропонує варіанти й запам’ятає ваші виправлення. Зібрану фразу можна потренувати вголос: застосунок озвучить її, ви повторите, а голос скаже, чи правильно; готову фразу можна зберегти в «Мої фрази». Необов’язково: файли `lex/uk.txt`, `lex/ru.txt`, `lex/en.txt` (частотні списки слів) роблять підказки точнішими.
 - **🗣 Мої фрази** — тренування власних фраз. Нову фразу можна просто сказати: застосунок розбере її на слова, позначить сумнівні знаком «?», запропонує варіанти, озвучить виправлену фразу, а ви повторите її вголос і почуєте голосову оцінку; потім фразу можна додати до списку. Власні фрази також можна вписувати, тренувати з порівнянням за словами та виправленням. Список фраз можна зберегти у файл і завантажити; записи голосу не зберігаються, оцінка умовна (розпізнавання мовлення браузера недосконале).
 
 ### ✨ Можливості
@@ -114,6 +115,7 @@ The app runs entirely in the browser — no installation, no backend, no account
 - **👂 Listening practice** — one word step by step: listen, repeat aloud, assemble from letters; a summary at the end.
 - **📝 Test** — 10 to 30 random words in a row; each word is played once and the user says it; a result at the end.
 - **🔤 ABC** — first-letter help for when a word is on the tip of your tongue.
+- **🎤 Suggestions from what was said** — ported from the “Let’s talk together” app (the “The person speaks” tab): say a phrase, the app splits it into words, marks doubtful ones with “?”, offers options and remembers your corrections. The assembled phrase can be practised aloud: the app speaks it, you repeat it, and a voice tells you whether it was right; the finished phrase can be saved to “My phrases”. Optional: `lex/uk.txt`, `lex/ru.txt`, `lex/en.txt` (word-frequency lists) make the suggestions more precise.
 - **🗣 My phrases** — practice with your own phrases. Just say a new phrase: the app splits it into words, marks doubtful ones with “?”, offers options, speaks the corrected phrase, you repeat it aloud and hear a spoken verdict; then the phrase can be added to the list. Own phrases can also be typed in and practised with a word-by-word comparison and fixing. The phrase list can be saved to and loaded from a file; voice recordings are not saved, and the score is approximate (browser speech recognition is imperfect).
 
 ### ✨ Features
