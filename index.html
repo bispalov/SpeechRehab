@@ -725,6 +725,28 @@
         .abc-word { width: 100%; min-height: 60px; padding: 6px 10px; border-radius: 12px; border: 3px solid var(--option-btn-border); background: var(--option-btn-bg); color: var(--text-color); font-size: clamp(20px, 6vw, 26px); font-weight: 700; cursor: pointer; overflow-wrap: anywhere; }
         .abc-word:hover, .abc-word:active { background: var(--option-btn-hover); }
         .abc-online { width: 100%; min-height: 48px; border-radius: 10px; border: 2px solid var(--option-btn-border); background: var(--option-btn-bg); color: var(--option-btn-text); font-size: 16px; font-weight: bold; cursor: pointer; }
+        .ph-input { flex: 1; min-width: 0; min-height: 52px; box-sizing: border-box; font-size: 18px; padding: 0 12px; border-radius: 10px; border: 2px solid var(--input-border); background: var(--input-bg); color: var(--text-color); }
+        .abc-row .assist-btn.ph-add { font-size: 18px; }
+        .ph-item { display: flex; gap: 8px; align-items: stretch; }
+        .ph-open { flex: 1; min-width: 0; text-align: left; display: flex; flex-direction: column; gap: 2px; min-height: 60px; padding: 8px 12px; border-radius: 12px; border: 3px solid var(--option-btn-border); background: var(--option-btn-bg); color: var(--text-color); cursor: pointer; }
+        .ph-open-t { font-size: clamp(18px, 5.2vw, 24px); font-weight: 700; overflow-wrap: anywhere; }
+        .ph-open-s { font-size: 0.85em; opacity: 0.7; }
+        .ph-item .ph-del { width: auto; min-width: 56px; padding: 0 12px; font-size: 22px; border-radius: 10px; background-color: #6c757d; }
+        .ph-note { margin-top: 6px; }
+        .ph-back { flex: 0 0 auto; align-self: flex-start; width: auto; padding: 0 14px; }
+        .ph-box { background: var(--word-box-bg); border-radius: 12px; padding: 14px 12px; text-align: center; }
+        .ph-target { font-size: clamp(24px, 7vw, 34px); font-weight: 800; line-height: 1.25; overflow-wrap: anywhere; }
+        .ph-say { min-height: 60px; font-size: 1.2em; }
+        .ph-score { text-align: center; font-weight: 700; font-size: 1.05em; }
+        .ph-great { color: #2e9e4f; }
+        .ph-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+        .ph-chip { width: auto; min-width: 56px; min-height: 52px; padding: 6px 14px; border-radius: 12px; border: 3px solid var(--input-border); background: var(--card-bg); color: var(--text-color); font-size: clamp(20px, 6vw, 26px); font-weight: 700; cursor: pointer; overflow-wrap: anywhere; }
+        .ph-chip.ok, .ph-chip.fixed { border-color: #2e9e4f; background: rgba(46, 158, 79, 0.16); }
+        .ph-chip.near { border-color: #e0a020; background: rgba(224, 160, 32, 0.2); }
+        .ph-chip.bad, .ph-chip.miss { border-color: #d64545; background: rgba(214, 69, 69, 0.15); }
+        .ph-chip.extra { border-style: dashed; border-color: #d64545; text-decoration: line-through; opacity: 0.85; }
+        .ph-chip.sel { outline: 3px solid var(--option-btn-border); outline-offset: 2px; }
+        .abc-word.ph-gone { opacity: 0.3; }
         .abc-kb { position: sticky; bottom: 0; z-index: 3; background: var(--card-bg); border-top: 2px solid var(--input-border); padding: 8px 0 4px; margin-top: 4px; }
         .abc-kbh { display: flex; gap: 6px; margin-bottom: 6px; }
         .abc-kbt { flex: 1; width: auto; min-width: 0; min-height: 40px; border-radius: 10px; background: var(--card-bg); border: 2px solid var(--input-border); color: var(--text-color); font-size: 15px; font-weight: 700; padding: 0 6px; cursor: pointer; }
@@ -981,11 +1003,16 @@
             <span class="mode-title" id="modeAbcTitle"></span>
             <span class="mode-desc" id="modeAbcDesc"></span>
         </button>
+        <button class="mode-card" onclick="startMode('phr')">
+            <span class="mode-title" id="modePhrTitle"></span>
+            <span class="mode-desc" id="modePhrDesc"></span>
+        </button>
     </div>
 
     <div id="listenScreen" class="screen hidden"></div>
     <div id="quizScreen" class="screen hidden"></div>
     <div id="abcScreen" class="screen hidden"></div>
+    <div id="phrScreen" class="screen hidden"></div>
 
     <div id="fullTrainer" class="screen hidden">
     <div class="stats-row">
@@ -3417,7 +3444,7 @@
 
     function mt() { return modeI18n[currentLang] || modeI18n.ru; }
 
-    const SCREEN_IDS = { select: 'modeSelect', listen: 'listenScreen', quiz: 'quizScreen', abc: 'abcScreen', full: 'fullTrainer' };
+    const SCREEN_IDS = { select: 'modeSelect', listen: 'listenScreen', quiz: 'quizScreen', abc: 'abcScreen', full: 'fullTrainer', phr: 'phrScreen' };
     let screenName = 'select', modeLang = null, modeCatChanged = false, modeRec = null;
     const quiz = { words: [], i: 0, results: [], active: false, answered: false, cur: null };
 
@@ -3456,6 +3483,9 @@
         } else if (m === 'abc') {
             showScreen('abc');
             abcOpen();
+        } else if (m === 'phr') {
+            showScreen('phr');
+            phrOpen();
         } else {
             showScreen('quiz');
             renderQuizSetup();
@@ -3492,7 +3522,7 @@
     function refreshModeTexts() {
         const t = mt();
         // смена языка во время тренировки: слова другого языка, поэтому возврат к выбору режима
-        if ((screenName === 'listen' || screenName === 'quiz' || screenName === 'abc') && modeLang !== currentLang) {
+        if ((screenName === 'listen' || screenName === 'quiz' || screenName === 'abc' || screenName === 'phr') && modeLang !== currentLang) {
             quiz.active = false;
             showScreen('select');
         }
@@ -3506,6 +3536,8 @@
         document.getElementById('modeQuizDesc').innerText = t.quizDesc;
         document.getElementById('modeAbcTitle').innerText = abcT().title;
         document.getElementById('modeAbcDesc').innerText = abcT().desc;
+        document.getElementById('modePhrTitle').innerText = phT().title;
+        document.getElementById('modePhrDesc').innerText = phT().desc;
         document.getElementById('labelAbcOnline').innerText = abcT().setOnline;
         document.getElementById('abcOnlineChk').checked = abcOnlineOn();
         document.getElementById('labelAbcAutoHide').innerText = abcT().autoHide;
@@ -4289,6 +4321,376 @@
         abcPick(learned || w);
     }
 
+    // ===== Мои фразы: тренировка собственных фраз =====
+    // Человек выбирает свою фразу, произносит её, приложение сравнивает сказанное с нужным по словам,
+    // показывает верные и неверные слова и помогает собрать фразу правильно. Хранилище: ключи sr.phr.<язык>.
+    // Записи голоса не сохраняются: только текст фраз и счётчики попыток.
+    const phrI18n = {
+        ru: {
+            title: '🗣 Мои фразы',
+            desc: 'Свои фразы для тренировки: скажите фразу, посмотрите, какие слова получились, исправьте и повторите.',
+            addPh: 'Впишите свою фразу', add: '➕ Добавить', examples: 'Добавить примеры фраз',
+            empty: 'Пока нет фраз. Впишите свою или добавьте примеры. Фразы можно подготовить вместе с близким человеком или логопедом.',
+            tries: 'попыток', okn: 'верно', del: '🗑', delq: 'Удалить эту фразу?',
+            exp: '📤 Сохранить в файл', imp: '📥 Загрузить из файла', impOk: 'Добавлено фраз: {n}', impBad: 'Не удалось прочитать файл.',
+            note: 'Оценка условная: распознавание речи в браузере может ошибаться или «угадывать» слова. Это тренировка, а не проверка и не диагностика; лучше заниматься вместе с логопедом. Записи голоса не сохраняются.',
+            back: '← К фразам', listen: '🔊 Послушать', slow: '🐢 Медленно', say: '🎙 Сказать фразу', again: '🎙 Ещё раз', listening: '⏺ Слушаю…',
+            heard: 'Вы сказали:', nothing: 'Ничего не расслышал',
+            good: 'Верно слов: {k} из {n}', great: '🎉 Фраза сказана верно!',
+            fixHint: 'Нажмите на жёлтое или красное слово и выберите правильное.', pickFor: 'Какое слово здесь нужно?',
+            fixedAll: '✔ Фраза собрана правильно. Скажите её сами ещё раз.', miss: 'нет слова', gone: 'лишнее слово: нажмите, чтобы убрать',
+            wrong: 'Не то слово. Попробуйте другое.',
+            count: '✔ Я сказал(а) верно', counted: 'Записано как удачная попытка', next: '➡ Другая фраза', fixBtn: '✏️ Исправить фразу'
+        },
+        uk: {
+            title: '🗣 Мої фрази',
+            desc: 'Власні фрази для тренування: скажіть фразу, подивіться, які слова вийшли, виправте й повторіть.',
+            addPh: 'Впишіть свою фразу', add: '➕ Додати', examples: 'Додати приклади фраз',
+            empty: 'Поки немає фраз. Впишіть свою або додайте приклади. Фрази можна підготувати разом із близькою людиною чи логопедом.',
+            tries: 'спроб', okn: 'вдало', del: '🗑', delq: 'Видалити цю фразу?',
+            exp: '📤 Зберегти у файл', imp: '📥 Завантажити з файлу', impOk: 'Додано фраз: {n}', impBad: 'Не вдалося прочитати файл.',
+            note: 'Оцінка умовна: розпізнавання мовлення в браузері може помилятися або «вгадувати» слова. Це тренування, а не перевірка й не діагностика; краще займатися разом із логопедом. Записи голосу не зберігаються.',
+            back: '← До фраз', listen: '🔊 Послухати', slow: '🐢 Повільно', say: '🎙 Сказати фразу', again: '🎙 Ще раз', listening: '⏺ Слухаю…',
+            heard: 'Ви сказали:', nothing: 'Нічого не розчув',
+            good: 'Правильних слів: {k} з {n}', great: '🎉 Фразу сказано правильно!',
+            fixHint: 'Натисніть на жовте або червоне слово й оберіть правильне.', pickFor: 'Яке слово тут потрібне?',
+            fixedAll: '✔ Фразу зібрано правильно. Скажіть її самі ще раз.', miss: 'немає слова', gone: 'зайве слово: натисніть, щоб прибрати',
+            wrong: 'Не те слово. Спробуйте інше.',
+            count: '✔ Я сказав(ла) правильно', counted: 'Записано як вдалу спробу', next: '➡ Інша фраза', fixBtn: '✏️ Виправити фразу'
+        },
+        en: {
+            title: '🗣 My phrases',
+            desc: 'Your own phrases to practise: say a phrase, see which words came out, fix them and try again.',
+            addPh: 'Type your own phrase', add: '➕ Add', examples: 'Add example phrases',
+            empty: 'No phrases yet. Type your own or add examples. Phrases can be prepared together with a relative or a therapist.',
+            tries: 'tries', okn: 'correct', del: '🗑', delq: 'Delete this phrase?',
+            exp: '📤 Save to file', imp: '📥 Load from file', impOk: 'Phrases added: {n}', impBad: 'Could not read the file.',
+            note: 'The score is approximate: browser speech recognition can make mistakes or “guess” words. This is practice, not a test or a diagnosis; it is best done together with a therapist. Voice recordings are not saved.',
+            back: '← To phrases', listen: '🔊 Listen', slow: '🐢 Slowly', say: '🎙 Say the phrase', again: '🎙 Again', listening: '⏺ Listening…',
+            heard: 'You said:', nothing: 'Could not hear anything',
+            good: 'Correct words: {k} of {n}', great: '🎉 The phrase was said correctly!',
+            fixHint: 'Tap a yellow or red word and choose the right one.', pickFor: 'Which word is needed here?',
+            fixedAll: '✔ The phrase is correct now. Say it yourself once more.', miss: 'missing', gone: 'extra word: tap to remove',
+            wrong: 'Not this word. Try another.',
+            count: '✔ I said it correctly', counted: 'Counted as a successful try', next: '➡ Another phrase', fixBtn: '✏️ Fix the phrase'
+        }
+    };
+    const PHR_EXAMPLES = {
+        ru: ['Дайте мне воды', 'Мне нужно позвонить дочери', 'Доброе утро'],
+        uk: ['Дайте мені води', 'Мені потрібно зателефонувати доньці', 'Добрий ранок'],
+        en: ['Please give me some water', 'I need to call my daughter', 'Good morning']
+    };
+    function phT() { return phrI18n[currentLang] || phrI18n.ru; }
+
+    const phr = { view: 'list', list: [], idx: -1, res: null, listening: false, msg: '', loadedLang: null };
+
+    function phrLoad() {
+        phr.loadedLang = currentLang;
+        let a = [];
+        try { a = JSON.parse(localStorage.getItem('sr.phr.' + currentLang)) || []; } catch (e) {}
+        phr.list = (Array.isArray(a) ? a : []).filter(x => x && typeof x.t === 'string' && x.t.trim())
+            .map(x => ({ t: x.t.trim().slice(0, 200), n: x.n | 0, k: x.k | 0, l: x.l | 0 }));
+    }
+    function phrSave() {
+        try { localStorage.setItem('sr.phr.' + (phr.loadedLang || currentLang), JSON.stringify(phr.list)); } catch (e) {}
+    }
+    function phrAddText(raw) {
+        const t = String(raw || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+        if (!t || phr.list.length >= 300) return false;
+        if (phr.list.some(x => x.t.toLowerCase() === t.toLowerCase())) return false;
+        phr.list.push({ t, n: 0, k: 0, l: 0 });
+        return true;
+    }
+
+    // ----- сравнение по словам -----
+    function phrWords(s) {
+        return String(s).replace(/[“”«»"„]/g, ' ').split(/\s+/)
+            .map(w => w.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '')).filter(Boolean);
+    }
+    function phrNorm(w) { return w.toLowerCase().replace(/ё/g, 'е').replace(/[’ʼ`]/g, "'"); }
+    function phrSim(a, b) {
+        if (a === b) return 1;
+        const m = Math.max(a.length, b.length);
+        return m ? Math.max(0, 1 - abcLev(a, b, m) / m) : 0;
+    }
+    // Выравнивание слов нужной фразы T и услышанной H (массивы нормализованных слов)
+    function phrAlign(T, H) {
+        const n = T.length, m = H.length, GAP = 0.8;
+        const D = [], B = [];
+        for (let i = 0; i <= n; i++) { D.push(new Array(m + 1).fill(0)); B.push(new Array(m + 1).fill(0)); }
+        for (let i = 1; i <= n; i++) { D[i][0] = i * GAP; B[i][0] = 2; }
+        for (let j = 1; j <= m; j++) { D[0][j] = j * GAP; B[0][j] = 3; }
+        for (let i = 1; i <= n; i++) for (let j = 1; j <= m; j++) {
+            const s = phrSim(T[i - 1], H[j - 1]);
+            const sub = D[i - 1][j - 1] + (s === 1 ? 0 : (s >= 0.5 ? 1 - s : 1));
+            const del = D[i - 1][j] + GAP, ins = D[i][j - 1] + GAP;
+            if (sub <= del && sub <= ins) { D[i][j] = sub; B[i][j] = 1; }
+            else if (del <= ins) { D[i][j] = del; B[i][j] = 2; }
+            else { D[i][j] = ins; B[i][j] = 3; }
+        }
+        const rows = [];
+        let i = n, j = m;
+        while (i > 0 || j > 0) {
+            const b = B[i][j];
+            if (b === 1) {
+                const s = phrSim(T[i - 1], H[j - 1]);
+                rows.push({ ti: i - 1, hi: j - 1, st: s === 1 ? 'ok' : (s >= 0.5 ? 'near' : 'bad') });
+                i--; j--;
+            } else if (b === 2) { rows.push({ ti: i - 1, hi: -1, st: 'miss' }); i--; }
+            else { rows.push({ ti: -1, hi: j - 1, st: 'extra' }); j--; }
+        }
+        rows.reverse();
+        return { rows, cost: D[n][m], ok: rows.filter(r => r.st === 'ok').length };
+    }
+
+    // Лучший из вариантов распознавания (браузер даёт до трёх)
+    function phrCompare(target, alts) {
+        const TW = phrWords(target), T = TW.map(phrNorm);
+        let best = null, bestH = null;
+        (alts.length ? alts : ['']).forEach(a => {
+            const HW = phrWords(a), H = HW.map(phrNorm);
+            const al = phrAlign(T, H);
+            if (!best || al.ok > best.ok || (al.ok === best.ok && al.cost < best.cost)) { best = al; bestH = { HW, text: a }; }
+        });
+        const rows = best.rows.map(r => ({
+            st: r.st,
+            t: r.ti >= 0 ? TW[r.ti] : '',
+            h: r.hi >= 0 ? bestH.HW[r.hi] : '',
+            fixed: r.st === 'ok'
+        }));
+        return { rows, heard: bestH.text, nT: TW.length, k: best.ok, counted: false, spoken: false, pick: -1 };
+    }
+
+    // Варианты для слова: правильное + похожие по звучанию из словаря и слова этой же фразы
+    function phrOptions(word, phraseWords) {
+        const w = word.toLowerCase(), k = abcKey(w);
+        if (abcState.src !== getActiveDictionary()) abcBuildDict();
+        const near = [];
+        for (let i = 0; i < abcState.keys.length; i++) {
+            const kk = abcState.keys[i], dw = abcState.dict[i];
+            if (kk === k || dw.indexOf(' ') >= 0 || kk.length < 2) continue;
+            if (Math.abs(kk.length - k.length) > 2) continue;
+            const d = abcLev(k, kk, 2);
+            if (d <= 2) near.push([d, dw]);
+        }
+        near.sort((a, b) => a[0] - b[0]);
+        const out = [w], seen = new Set([k]);
+        const add = x => { const kx = abcKey(x); if (x && !seen.has(kx) && out.length < 5) { seen.add(kx); out.push(x.toLowerCase()); } };
+        near.slice(0, 6).sort(() => Math.random() - 0.5).slice(0, 2).forEach(x => add(x[1]));
+        phraseWords.filter(x => abcKey(x) !== k).sort(() => Math.random() - 0.5).slice(0, 1).forEach(add);
+        // если вариантов мало, добавляем случайные слова близкой длины
+        for (let g = 0; g < 40 && out.length < 4 && abcState.dict.length; g++) {
+            const dw = abcState.dict[Math.floor(Math.random() * abcState.dict.length)];
+            if (dw.indexOf(' ') < 0 && Math.abs(abcKey(dw).length - k.length) <= 2) add(dw);
+        }
+        return shuffleArray(out);
+    }
+
+    function phrSpeakText(text, slow) {
+        if (!('speechSynthesis' in window)) { alert('TTS is not supported in this browser.'); return; }
+        warmupSpeechSynthesis();
+        window.speechSynthesis.cancel();
+        const words = phrWords(text);
+        if (!words.length) return;
+        if (slow) {
+            words.forEach(w => window.speechSynthesis.speak(makeUtterance(getPhoneticRepresentation(w.toLowerCase()) || w, 0.7)));
+        } else {
+            window.speechSynthesis.speak(makeUtterance(words.map(w => getPhoneticRepresentation(w.toLowerCase()) || w).join(' '), 1));
+        }
+    }
+
+    function phrOpen() {
+        if (phr.loadedLang !== currentLang) phrLoad();
+        phr.view = 'list'; phr.idx = -1; phr.res = null; phr.listening = false; phr.msg = '';
+        phrRender();
+    }
+    function phrEnter(i) {
+        phr.idx = i; phr.view = 'do'; phr.res = null; phr.listening = false; phr.msg = '';
+        phrRender();
+        phrSpeakText(phr.list[i].t, false);
+    }
+    function phrMark(ok) {
+        const p = phr.list[phr.idx];
+        p.n++; if (ok) p.k++;
+        p.l = Date.now();
+        phrSave();
+    }
+    function phrSay() {
+        if (phr.listening) return;
+        const p = phr.list[phr.idx];
+        phr.listening = true; phr.msg = ''; phrRender(true);
+        recognizeOnce(null, r => {
+            if (screenName !== 'phr' || phr.view !== 'do') return;
+            phr.listening = false;
+            if (r.error) { phr.res = null; phr.msg = recErrorText(r.error); phrRender(true); return; }
+            const res = phrCompare(p.t, r.alts && r.alts.length ? r.alts : [r.transcript]);
+            const allOk = res.rows.every(x => x.st === 'ok');
+            res.counted = allOk;
+            phr.res = res;
+            phrMark(allOk);
+            phrRender(true);
+        });
+    }
+    function phrPick(rowIdx, word) {
+        const row = phr.res.rows[rowIdx];
+        if (abcKey(word) === abcKey(row.t)) {
+            row.fixed = true; row.h = row.t; row.opts = null; phr.res.pick = -1; phr.msg = '';
+            phrSpeakText(row.t, false);
+        } else {
+            phr.res.wrongTried = (phr.res.wrongTried || new Set()); phr.res.wrongTried.add(rowIdx + ':' + abcKey(word));
+            phr.msg = phT().wrong;
+        }
+        phrRender(true);
+    }
+    function phrAllFixed() { return phr.res && phr.res.rows.every(r => r.fixed); }
+
+    function phrRender(keep) {
+        const t = phT();
+        const el = document.getElementById('phrScreen');
+        el.innerHTML = '';
+        if (phr.view === 'list') phrRenderList(el, t); else phrRenderDo(el, t);
+        if (!keep) window.scrollTo(0, 0);
+    }
+
+    function phrRenderList(el, t) {
+        el.append(abcMk('div', 'step-title', t.title));
+        const form = abcMk('div', 'abc-row');
+        const inp = document.createElement('input');
+        inp.type = 'text'; inp.id = 'phrInput'; inp.className = 'ph-input'; inp.maxLength = 200;
+        inp.placeholder = t.addPh; inp.autocomplete = 'off';
+        const doAdd = () => { if (phrAddText(inp.value)) { phrSave(); phrRender(true); } else inp.focus(); };
+        inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); doAdd(); } };
+        form.append(inp, abcMk('button', 'assist-btn ph-add', t.add, doAdd));
+        el.append(form);
+        if (!phr.list.length) {
+            el.append(abcMk('div', 'step-note', t.empty));
+            el.append(abcMk('button', 'abc-online', t.examples, () => {
+                (PHR_EXAMPLES[currentLang] || PHR_EXAMPLES.ru).forEach(phrAddText); phrSave(); phrRender(true);
+            }));
+        }
+        phr.list.forEach((p, i) => {
+            const r = abcMk('div', 'ph-item');
+            const b = abcMk('button', 'ph-open', null, () => phrEnter(i));
+            b.append(abcMk('span', 'ph-open-t', p.t), abcMk('span', 'ph-open-s', p.n ? (t.tries + ': ' + p.n + ' · ' + t.okn + ': ' + p.k) : ''));
+            r.append(b, abcMk('button', 'assist-btn abc-del ph-del', t.del, () => {
+                if (!confirm(t.delq + '\n' + p.t)) return;
+                phr.list.splice(i, 1); phrSave(); phrRender(true);
+            }));
+            el.append(r);
+        });
+        const tools = abcMk('div', 'abc-kbh');
+        tools.append(abcMk('button', 'abc-kbt', t.exp, phrExport), abcMk('button', 'abc-kbt', t.imp, () => document.getElementById('phrFile').click()));
+        el.append(tools);
+        if (phr.msg) el.append(abcMk('div', 'step-note', phr.msg));
+        const fi = document.createElement('input');
+        fi.type = 'file'; fi.id = 'phrFile'; fi.accept = '.json,.txt,text/plain,application/json'; fi.style.display = 'none';
+        fi.onchange = () => { if (fi.files && fi.files[0]) phrImport(fi.files[0]); };
+        el.append(fi);
+        el.append(abcMk('div', 'step-note ph-note', t.note));
+    }
+
+    function phrExport() {
+        const data = { app: 'speechrehab-phrases', v: 1, lang: currentLang, phrases: phr.list.map(p => ({ t: p.t })) };
+        const blob = new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'phrases-' + currentLang + '.json';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    }
+    function phrImport(file) {
+        const rd = new FileReader();
+        rd.onload = () => {
+            let items = null;
+            const txt = String(rd.result || '');
+            try {
+                const j = JSON.parse(txt);
+                const arr = Array.isArray(j) ? j : (j && Array.isArray(j.phrases) ? j.phrases : null);
+                if (arr) items = arr.map(x => typeof x === 'string' ? x : (x && x.t)).filter(x => typeof x === 'string');
+            } catch (e) { /* не JSON: считаем обычным текстом */ }
+            if (!items) items = txt.split(/\r?\n/);
+            let n = 0;
+            items.forEach(x => { if (phrAddText(x)) n++; });
+            phrSave();
+            phr.msg = n || items.some(x => String(x).trim()) ? phT().impOk.replace('{n}', n) : phT().impBad;
+            phrRender(true);
+        };
+        rd.onerror = () => { phr.msg = phT().impBad; phrRender(true); };
+        rd.readAsText(file);
+    }
+
+    function phrRenderDo(el, t) {
+        const p = phr.list[phr.idx];
+        if (!p) { phr.view = 'list'; phrRenderList(el, t); return; }
+        el.append(abcMk('button', 'abc-kbt ph-back', t.back, phrOpen));
+        const box = abcMk('div', 'ph-box');
+        box.append(abcMk('div', 'ph-target', p.t));
+        el.append(box);
+        const r1 = abcMk('div', 'abc-row');
+        r1.append(
+            abcMk('button', 'assist-btn abc-say', t.listen, () => phrSpeakText(p.t, false)),
+            abcMk('button', 'assist-btn abc-say', t.slow, () => phrSpeakText(p.t, true))
+        );
+        el.append(r1);
+        const res = phr.res;
+        const sayBtn = abcMk('button', 'primary-btn ph-say', phr.listening ? t.listening : (res ? t.again : t.say), phrSay);
+        sayBtn.disabled = phr.listening;
+        el.append(sayBtn);
+        if (phr.msg) el.append(abcMk('div', 'step-note', phr.msg));
+        if (!res) return;
+
+        el.append(abcMk('div', 'abc-sec', t.heard + ' ' + (res.heard ? '«' + res.heard + '»' : t.nothing)));
+        const allOkNow = res.rows.every(r => r.st === 'ok');
+        el.append(abcMk('div', 'ph-score ' + (allOkNow ? 'ph-great' : ''), allOkNow ? t.great : t.good.replace('{k}', res.k).replace('{n}', res.nT)));
+
+        const chips = abcMk('div', 'ph-chips');
+        res.rows.forEach((row, i) => {
+            if (row.fixed && row.st === 'extra') return;   // убранное лишнее слово
+            let label = row.h || '…', cls = row.st;
+            if (row.fixed && row.st !== 'ok') { cls = 'fixed'; label = row.t; }
+            if (row.st === 'miss' && !row.fixed) label = '＋ ' + t.miss;
+            const b = abcMk('button', 'ph-chip ' + cls + (phr.res.pick === i ? ' sel' : ''), label, () => {
+                if (row.fixed) { phrSpeakText(row.t || row.h, false); return; }
+                if (row.st === 'extra') { row.fixed = true; phr.res.pick = -1; phrRender(true); return; }
+                phr.res.pick = phr.res.pick === i ? -1 : i;
+                if (phr.res.pick === i && !row.opts) row.opts = phrOptions(row.t, res.rows.map(x => x.t).filter(Boolean));
+                phr.msg = '';
+                phrRender(true);
+            });
+            if (row.st === 'extra' && !row.fixed) b.title = t.gone;
+            chips.append(b);
+        });
+        el.append(chips);
+
+        if (!allOkNow && !phrAllFixed()) {
+            el.append(abcMk('div', 'step-note', t.fixHint));
+            if (res.pick >= 0) {
+                const row = res.rows[res.pick];
+                el.append(abcMk('div', 'abc-sec', t.pickFor));
+                const g = abcMk('div', 'abc-words');
+                row.opts.forEach(w => {
+                    const gone = res.wrongTried && res.wrongTried.has(res.pick + ':' + abcKey(w));
+                    const b = abcMk('button', 'abc-word' + (gone ? ' ph-gone' : ''), w, () => phrPick(res.pick, w));
+                    g.append(b);
+                });
+                el.append(g);
+            }
+        }
+        if (!allOkNow && phrAllFixed()) {
+            el.append(abcMk('div', 'ph-score ph-great', t.fixedAll));
+            if (!res.spoken) { res.spoken = true; setTimeout(() => { if (screenName === 'phr') phrSpeakText(p.t, false); }, 500); }
+        }
+        const acts = abcMk('div', 'abc-row');
+        if (!allOkNow && !res.counted) acts.append(abcMk('button', 'assist-btn abc-say', t.count, () => {
+            res.counted = true; p.k++; p.l = Date.now(); phrSave(); phr.msg = t.counted; phrRender(true);
+        }));
+        acts.append(abcMk('button', 'assist-btn abc-say', t.next, () => {
+            const n = phr.list.length;
+            if (n > 1) phrEnter((phr.idx + 1 + Math.floor(Math.random() * (n - 1))) % n); else phrOpen();
+        }));
+        el.append(acts);
+    }
+
     const helpI18n = {
         ru: {
             btn: 'Справка', title: 'Справка', close: 'Закрыть',
@@ -4301,6 +4703,7 @@
 <li><b>👂 Тренировка слуха</b> — одно слово по шагам: 1) послушать, 2) повторить вслух, 3) собрать из букв. В конце итог: исходное слово, что вы проговорили и что собрали, с подсветкой различий. Затем можно повторить это слово или перейти к следующему. Если включена настройка «Обязательно проговаривать слово», к сборке из букв можно перейти только после верного произношения (или трёх попыток).</li>
 <li><b>📝 Тест</b> — от 10 до 30 случайных слов подряд. Каждое слово звучит один раз, без повтора; вы проговариваете его или пропускаете. Верно или неверно, видно только в конце: результат, список слов и кнопка «Повторить ошибки».</li>
 <li><b>🔤 Азбука</b> — подсказка по первой букве, когда слово «вертится на языке». Нажмите первую букву: появятся слова из словаря (включая «Мои слова»), которые с неё начинаются; следующая буква сужает список. Нажатие на слово добавляет его в строку (если включено автоозвучивание, слово сразу произносится), «Сказать так» озвучивает всю строку, ⌫ убирает последнее слово. «Скрыть буквы» освобождает место для слов (в настройках можно включить автосворачивание панели после каждой нажатой буквы; вернуть её — кнопка «Показать буквы»). «Свободный набор» показывает весь алфавит: слово можно набирать так, как вы его себе представляете, даже с ошибками, а приложение предложит похожие слова. Категория слов здесь не учитывается: поиск идёт по всем словам. Если в настройках включён онлайн-поиск, под списком появляется кнопка «Найти слова в интернете»: слова ищутся в Викисловаре (для английского ещё в Datamuse), для этого набранные буквы отправляются в эти сервисы. Выбранное слово запоминается на устройстве.</li>
+<li><b>🗣 Мои фразы</b> — тренировка собственных фраз. Впишите фразу (или добавьте примеры, или загрузите список из файла: одна фраза в строке) и откройте её. Нажмите «Сказать фразу» и произнесите её целиком. Приложение сравнит сказанное с нужной фразой по словам: верные слова зелёные, похожие жёлтые, неверные, пропущенные и лишние красные. Сначала показывается, сколько слов получилось верно. Нажмите на жёлтое или красное слово и выберите правильное из нескольких вариантов; когда вся фраза исправлена, приложение произнесёт её, и можно сказать ещё раз. Если распознавание ошиблось, а вы сказали верно, нажмите «Я сказал(а) верно». Распознавание речи в браузере не идеально, особенно при нарушенной речи, поэтому оценка условная; лучше заниматься вместе с логопедом. Фразы и счётчики попыток хранятся только на устройстве; записи голоса не сохраняются. «Сохранить в файл» и «Загрузить из файла» переносят список фраз на другое устройство.</li>
 <li>Категория слов выбирается на стартовом экране. Кнопка 🏠 в заголовке возвращает к выбору режима.</li>
 </ul>
 
@@ -4367,6 +4770,7 @@
 <li><b>👂 Тренування слуху</b> — одне слово по кроках: 1) послухати, 2) повторити вголос, 3) зібрати з літер. Наприкінці підсумок: вихідне слово, що ви промовили і що зібрали, з підсвічуванням відмінностей. Потім можна повторити це слово або перейти до наступного. Якщо ввімкнено налаштування «Обов’язково промовляти слово», до збирання з літер можна перейти лише після правильної вимови (або трьох спроб).</li>
 <li><b>📝 Тест</b> — від 10 до 30 випадкових слів поспіль. Кожне слово звучить один раз, без повтору; ви промовляєте його або пропускаєте. Правильно чи ні, видно лише наприкінці: результат, список слів і кнопка «Повторити помилки».</li>
 <li><b>🔤 Абетка</b> — підказка за першою літерою, коли слово «крутиться на язиці». Натисніть першу літеру: з’являться слова зі словника (разом із «Моїми словами»), що з неї починаються; наступна літера звужує список. Натискання на слово додає його до рядка (якщо ввімкнено автоозвучення, слово одразу промовляється), «Сказати так» озвучує весь рядок, ⌫ прибирає останнє слово. «Сховати літери» вивільняє місце для слів (в налаштуваннях можна ввімкнути автозгортання панелі після кожної натиснутої літери; повернути її — кнопка «Показати літери»). «Вільний набір» показує всю абетку: слово можна набирати так, як ви його собі уявляєте, навіть з помилками, а застосунок запропонує схожі слова. Категорія слів тут не враховується: пошук іде по всіх словах. Якщо в налаштуваннях увімкнено онлайн-пошук, під списком з’являється кнопка «Знайти слова в інтернеті»: слова шукаються у Вікісловнику (для англійської ще в Datamuse), для цього набрані літери надсилаються цим сервісам. Обране слово запам’ятовується на пристрої.</li>
+<li><b>🗣 Мої фрази</b> — тренування власних фраз. Впишіть фразу (або додайте приклади, або завантажте список із файлу: одна фраза в рядку) і відкрийте її. Натисніть «Сказати фразу» й промовте її цілком. Застосунок порівняє сказане з потрібною фразою по словах: правильні слова зелені, схожі жовті, неправильні, пропущені й зайві червоні. Спочатку показується, скільки слів вийшло правильно. Натисніть на жовте або червоне слово й оберіть правильне з кількох варіантів; коли всю фразу виправлено, застосунок промовить її, і можна сказати ще раз. Якщо розпізнавання помилилося, а ви сказали правильно, натисніть «Я сказав(ла) правильно». Розпізнавання мовлення в браузері не ідеальне, особливо при порушеному мовленні, тому оцінка умовна; краще займатися разом із логопедом. Фрази й лічильники спроб зберігаються лише на пристрої; записи голосу не зберігаються. «Зберегти у файл» і «Завантажити з файлу» переносять список фраз на інший пристрій.</li>
 <li>Категорія слів обирається на стартовому екрані. Кнопка 🏠 у заголовку повертає до вибору режиму.</li>
 </ul>
 
@@ -4433,6 +4837,7 @@
 <li><b>👂 Listening practice</b> — one word step by step: 1) listen, 2) repeat aloud, 3) assemble from letters. At the end you get a summary: the original word, what you said and what you assembled, with differences highlighted. Then you can repeat this word or move to the next one. If “Require saying the word aloud” is on, you can go to letter assembly only after a correct pronunciation (or three attempts).</li>
 <li><b>📝 Test</b> — 10 to 30 random words in a row. Each word is played once, with no replay; you say it or skip it. Whether you were right is shown only at the end: the score, a list of words and a “Repeat mistakes” button.</li>
 <li><b>🔤 ABC</b> — first-letter help for when a word is on the tip of your tongue. Tap the first letter: words from the dictionary (including “My words”) that start with it appear; the next letter narrows the list. Tapping a word adds it to the line (if auto-speak is on, the word is spoken at once), “Say it” speaks the whole line, ⌫ removes the last word. “Hide letters” makes room for more words (Settings can collapse the panel automatically after each letter; bring it back with “Show letters”). “Free typing” shows the whole alphabet: type the word the way you imagine it, mistakes included, and the app suggests similar words. The word category is not used here: the search covers all words. If online search is turned on in Settings, a “Find words online” button appears under the list: words are looked up in Wiktionary (and Datamuse for English), so the typed letters are sent to these services. A chosen word is remembered on the device.</li>
+<li><b>🗣 My phrases</b> — practice with your own phrases. Type a phrase (or add examples, or load a list from a file: one phrase per line) and open it. Tap “Say the phrase” and say it in full. The app compares what was said with the target phrase word by word: correct words are green, similar ones yellow, wrong, missing and extra ones red. It first shows how many words were right. Tap a yellow or red word and choose the right one from a few options; when the whole phrase is fixed, the app speaks it and you can say it again. If recognition got it wrong but you said it correctly, tap “I said it correctly”. Browser speech recognition is not perfect, especially with impaired speech, so the score is approximate; it is best done together with a therapist. Phrases and try counters are kept only on the device; voice recordings are not saved. “Save to file” and “Load from file” move the list of phrases to another device.</li>
 <li>Choose the word category on the start screen. The 🏠 button in the header returns to the mode selection.</li>
 </ul>
 
