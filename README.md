@@ -20,6 +20,7 @@
 ### 🧭 Режими тренування
 
 - **🧩 Повний тренажер** — усі блоки: вибір слова на слух, перевірка вимови, складання зі складів і літер, підказки.
+- **🔢 Перелічення** — називання рядів по порядку, уперед і назад: дні тижня, місяці, пори року, частини доби, кольори веселки, числа 1–10, 1–20, десятки до 100 та власні ряди. Завдання «Весь ряд» і «Продовжити»; застосунок показує й голосом каже, що правильно, що пропущено й що зайве. Напрямок, показ ряду та голосова оцінка налаштовуються.
 - **👂 Тренування на слух** — одне слово крок за кроком: послухати, повторити вголос, скласти з літер; підсумок наприкінці.
 - **📝 Тест** — 10–30 випадкових слів поспіль; кожне слово звучить один раз, а користувач вимовляє його; наприкінці — результат.
 - **🔤 Абетка** — підказка за першою літерою, коли слово «крутиться на язиці».
@@ -112,6 +113,7 @@ The app runs entirely in the browser — no installation, no backend, no account
 ### 🧭 Training modes
 
 - **🧩 Full trainer** — all blocks: choose the word by ear, pronunciation check, assembling from syllables and letters, hints.
+- **🔢 Sequences** — saying series in order, forwards and backwards: days of the week, months, seasons, parts of the day, colours of the rainbow, numbers 1–10, 1–20, tens up to 100, and your own series. Tasks “Whole series” and “Continue”; the app shows and says by voice what was right, missing or extra. Direction, showing the series and the spoken verdict are configurable.
 - **👂 Listening practice** — one word step by step: listen, repeat aloud, assemble from letters; a summary at the end.
 - **📝 Test** — 10 to 30 random words in a row; each word is played once and the user says it; a result at the end.
 - **🔤 ABC** — first-letter help for when a word is on the tip of your tongue.

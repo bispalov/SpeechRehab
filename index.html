@@ -827,6 +827,15 @@
         #hearScreen .hrow{width:100%;text-align:left;min-height:48px;padding:8px 12px;margin:4px 0;border-radius:12px;background:var(--card-bg);border:2px solid var(--border);color:var(--ink);font-size:18px;font-weight:600;overflow-wrap:anywhere}
         #hearScreen .mini{min-height:44px;min-width:44px;padding:0 12px;border-radius:12px;background:var(--card-bg);border:2px solid var(--border);color:var(--ink);font-size:18px;font-weight:700}
         #hearScreen .wd{min-height:64px;padding:6px 10px;border-radius:14px;background:var(--card-bg);border:3px solid var(--accent);color:var(--ink);font-size:clamp(20px,6vw,26px);font-weight:700;overflow-wrap:anywhere}
+        .ser-grid { display: flex; flex-direction: column; gap: 8px; }
+        .ser-item { width: 100%; }
+        .ser-seg { display: flex; gap: 8px; margin: 6px 0; }
+        .ser-seg button { flex: 1; min-height: 48px; border-radius: 10px; border: 3px solid var(--option-btn-border); background: var(--option-btn-bg); color: var(--text-color); font-size: 1em; font-weight: 700; cursor: pointer; }
+        .ser-seg button.on { background: var(--option-btn-border); color: #fff; }
+        .ser-hint { font-size: clamp(17px, 4.8vw, 20px); font-weight: 700; margin-bottom: 8px; }
+        .ser-row { margin-top: 6px; }
+        .primary-btn.rec { background: #B3261E; }
+        .ph-chip.hl { outline: 4px solid #e0a020; outline-offset: 2px; }
         .abc-kb { position: sticky; bottom: 0; z-index: 3; background: var(--card-bg); border-top: 2px solid var(--input-border); padding: 8px 0 4px; margin-top: 4px; }
         .abc-kbh { display: flex; gap: 6px; margin-bottom: 6px; }
         .abc-kbt { flex: 1; width: auto; min-width: 0; min-height: 40px; border-radius: 10px; background: var(--card-bg); border: 2px solid var(--input-border); color: var(--text-color); font-size: 15px; font-weight: 700; padding: 0 6px; cursor: pointer; }
@@ -950,6 +959,29 @@
             <label class="checkbox-label" for="abcAutoHideChk">
                 <input type="checkbox" id="abcAutoHideChk" onchange="abcAutoHideChanged()">
                 <span id="labelAbcAutoHide"></span>
+            </label>
+        </div>
+
+        <div class="control-group">
+            <label for="serDirSelect" id="labelSerDir"></label>
+            <select id="serDirSelect" onchange="extraSettingChanged('serDir')">
+                <option value="fwd" id="optSerFwd"></option>
+                <option value="both" id="optSerBoth"></option>
+                <option value="back" id="optSerBack"></option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label class="checkbox-label" for="setSerShow">
+                <input type="checkbox" id="setSerShow" onchange="extraSettingChanged('serShow')">
+                <span id="labelSerShow"></span>
+            </label>
+        </div>
+
+        <div class="control-group">
+            <label class="checkbox-label" for="setSerVoice">
+                <input type="checkbox" id="setSerVoice" onchange="extraSettingChanged('serVoice')">
+                <span id="labelSerVoice"></span>
             </label>
         </div>
 
@@ -1106,6 +1138,10 @@
             <span class="mode-title" id="modeFullTitle"></span>
             <span class="mode-desc" id="modeFullDesc"></span>
         </button>
+        <button class="mode-card" onclick="startMode('ser')">
+            <span class="mode-title" id="modeSerTitle"></span>
+            <span class="mode-desc" id="modeSerDesc"></span>
+        </button>
         <button class="mode-card" onclick="startMode('listen')">
             <span class="mode-title" id="modeListenTitle"></span>
             <span class="mode-desc" id="modeListenDesc"></span>
@@ -1133,6 +1169,7 @@
     <div id="abcScreen" class="screen hidden"></div>
     <div id="phrScreen" class="screen hidden"></div>
     <div id="hearScreen" class="screen hidden"></div>
+    <div id="serScreen" class="screen hidden"></div>
 
     <div id="fullTrainer" class="screen hidden">
     <div class="stats-row">
@@ -3564,7 +3601,7 @@
 
     function mt() { return modeI18n[currentLang] || modeI18n.ru; }
 
-    const SCREEN_IDS = { select: 'modeSelect', listen: 'listenScreen', quiz: 'quizScreen', abc: 'abcScreen', full: 'fullTrainer', phr: 'phrScreen', hear: 'hearScreen' };
+    const SCREEN_IDS = { select: 'modeSelect', listen: 'listenScreen', quiz: 'quizScreen', abc: 'abcScreen', full: 'fullTrainer', phr: 'phrScreen', hear: 'hearScreen', ser: 'serScreen' };
     let screenName = 'select', modeLang = null, modeCatChanged = false, modeRec = null;
     const quiz = { words: [], i: 0, results: [], active: false, answered: false, cur: null };
 
@@ -3582,6 +3619,7 @@
     function showScreen(name) {
         stopModeSpeech();
         try { HP.stop(); } catch (e) {}
+        try { serStop(); } catch (e) {}
         screenName = name;
         Object.keys(SCREEN_IDS).forEach(k => {
             document.getElementById(SCREEN_IDS[k]).classList.toggle('hidden', k !== name);
@@ -3604,6 +3642,9 @@
         } else if (m === 'abc') {
             showScreen('abc');
             abcOpen();
+        } else if (m === 'ser') {
+            showScreen('ser');
+            serOpen();
         } else if (m === 'hear') {
             showScreen('hear');
             HP.open(true, !!(opt && opt.back));
@@ -3650,6 +3691,7 @@
         en: { hearSimple: '🎤 Suggestions from what was said: simple view (after recognition all words go straight into the phrase)', hearTap: '🎤 Suggestions from what was said: word from the list — tap speaks, hold adds to the phrase', show: '🗣 My phrases: show the phrase text while repeating (if off, the phrase is only spoken)', voice: '🗣 My phrases: say aloud whether the phrase was repeated correctly', auto: '🗣 My phrases: speak the phrase as soon as it opens' }
     };
     function syncExtraSettings() {
+        syncSerSettings();
         const t = EXTRA_SET[currentLang] || EXTRA_SET.ru, ps0 = phrSet();
         const map = [['LabelHearSimple', 'labelHearSimple', t.hearSimple], ['', 'labelHearTap', t.hearTap], ['', 'labelPhrShow', t.show], ['', 'labelPhrVoice', t.voice], ['', 'labelPhrAuto', t.auto]];
         map.forEach(m => { const e = document.getElementById(m[1]); if (e) e.innerText = m[2]; });
@@ -3659,7 +3701,29 @@
         chk('setHearSimple', simple); chk('setHearTap', tap);
         chk('setPhrShow', ps0.show); chk('setPhrVoice', ps0.voice); chk('setPhrAuto', ps0.auto);
     }
+    const SER_SET = {
+        ru: { dir: '🔢 Перечисления: в каком направлении тренироваться', fwd: 'Только вперёд', both: 'Вперёд и назад (выбор на экране)', back: 'Только назад', show: '🔢 Перечисления: показывать ряд на экране (если выключить, ряд можно открыть кнопкой)', voice: '🔢 Перечисления: голосом говорить, правильно ли названо' },
+        uk: { dir: '🔢 Перелічення: у якому напрямку тренуватися', fwd: 'Лише уперед', both: 'Уперед і назад (вибір на екрані)', back: 'Лише назад', show: '🔢 Перелічення: показувати ряд на екрані (якщо вимкнути, ряд можна відкрити кнопкою)', voice: '🔢 Перелічення: голосом говорити, чи правильно названо' },
+        en: { dir: '🔢 Sequences: which direction to practise', fwd: 'Forwards only', both: 'Forwards and backwards (chosen on the screen)', back: 'Backwards only', show: '🔢 Sequences: show the series on the screen (if off, it can be opened with a button)', voice: '🔢 Sequences: say aloud whether it was right' }
+    };
+    function syncSerSettings() {
+        const t = SER_SET[currentLang] || SER_SET.ru, p = serPref();
+        const set = (id, v) => { const e = document.getElementById(id); if (e) e.innerText = v; };
+        set('labelSerDir', t.dir); set('optSerFwd', t.fwd); set('optSerBoth', t.both); set('optSerBack', t.back); set('labelSerShow', t.show); set('labelSerVoice', t.voice);
+        const sel = document.getElementById('serDirSelect'); if (sel) sel.value = p.dir;
+        const c1 = document.getElementById('setSerShow'); if (c1) c1.checked = p.show;
+        const c2 = document.getElementById('setSerVoice'); if (c2) c2.checked = p.voice;
+    }
     function extraSettingChanged(k) {
+        if (k === 'serDir' || k === 'serShow' || k === 'serVoice') {
+            try {
+                if (k === 'serDir') localStorage.setItem('sr.ser.dir', document.getElementById('serDirSelect').value);
+                if (k === 'serShow') localStorage.setItem('sr.ser.show', String(document.getElementById('setSerShow').checked));
+                if (k === 'serVoice') localStorage.setItem('sr.ser.voice', String(document.getElementById('setSerVoice').checked));
+            } catch (e) {}
+            if (screenName === 'ser') { if (ser.view === 'do') { const p = serPref(); if (p.dir === 'back') ser.dir = 'rev'; else if (p.dir === 'fwd') ser.dir = 'fwd'; serNewTask(); } serRender(true); }
+            return;
+        }
         const id = { hearSimple: 'setHearSimple', hearTap: 'setHearTap', show: 'setPhrShow', voice: 'setPhrVoice', auto: 'setPhrAuto' }[k];
         const v = document.getElementById(id).checked;
         if (k === 'hearSimple') { try { localStorage.setItem('sr.hear.simple', String(v)); } catch (e) {} }
@@ -3672,7 +3736,7 @@
     function refreshModeTexts() {
         const t = mt();
         // смена языка во время тренировки: слова другого языка, поэтому возврат к выбору режима
-        if ((screenName === 'listen' || screenName === 'quiz' || screenName === 'abc' || screenName === 'phr' || screenName === 'hear') && modeLang !== currentLang) {
+        if ((screenName === 'listen' || screenName === 'quiz' || screenName === 'abc' || screenName === 'phr' || screenName === 'hear' || screenName === 'ser') && modeLang !== currentLang) {
             quiz.active = false;
             showScreen('select');
         }
@@ -3687,6 +3751,8 @@
         document.getElementById('modeAbcTitle').innerText = abcT().title;
         document.getElementById('modeAbcDesc').innerText = abcT().desc;
         syncExtraSettings();
+        document.getElementById('modeSerTitle').innerText = sT().title;
+        document.getElementById('modeSerDesc').innerText = sT().desc;
         document.getElementById('modeHearTitle').innerText = hearCard().t;
         document.getElementById('modeHearDesc').innerText = hearCard().d;
         document.getElementById('modePhrTitle').innerText = phT().title;
@@ -4932,6 +4998,380 @@
     }
 
 
+    // ===== Перечисления: дни недели, месяцы, числа и другие ряды, вперёд и назад =====
+    // Человек выбирает ряд, называет его по порядку; приложение сравнивает сказанное с рядом, показывает и голосом говорит,
+    // что верно и что нет. Хранилище: sr.ser.* (свои ряды sr.ser.my.<язык>, результаты sr.ser.st.<язык>).
+    const SER_T = {
+        ru: {
+            title: '🔢 Перечисления', desc: 'Дни недели, месяцы, числа и другие ряды: назовите по порядку, вперёд или назад, и узнайте, что верно.',
+            pick: 'Выберите перечисление', own: '＋ Своё перечисление', ownTitle: 'Своё перечисление', ownName: 'Название (например, «Семья»)',
+            ownItems: 'Слова по порядку: через запятую или с новой строки (не меньше трёх)', save: 'Сохранить', cancel: 'Отмена',
+            ownBad: 'Нужно название и хотя бы три слова.', del: '🗑', delq: 'Удалить это перечисление?', tries: 'попыток', okn: 'верно',
+            back: '← К перечислениям', fwd: '→ Вперёд', rev: '← Назад', whole: 'Весь ряд', cont: 'Продолжить',
+            hintWhole: 'Назовите по порядку: от «{a}» до «{b}».', hintWholeRev: 'Назовите в обратном порядке: от «{a}» до «{b}».',
+            hintCont: 'Продолжите после слов: {w}', listen: '🔊 Послушать', say: '🎙 Говорить', done: '✔ Закончил(а)', listening: '⏺ Слушаю… назовите всё по порядку',
+            again: '🎙 Ещё раз', heard: 'Вы сказали:', nothing: 'Ничего не расслышал', good: 'Верно: {k} из {n}', great: '🎉 Всё верно!',
+            miss: 'пропущено', extra: 'лишнее', showRow: '👁 Показать ряд', next: '➡ Другое перечисление', count: '✔ Я сказал(а) верно', counted: 'Записано как удачная попытка',
+            tapHear: 'Нажмите на слово, чтобы услышать его.', right: 'Правильный ряд:', start: 'Дано:'
+        },
+        uk: {
+            title: '🔢 Перелічення', desc: 'Дні тижня, місяці, числа й інші ряди: назвіть по порядку, уперед або назад, і дізнайтеся, що правильно.',
+            pick: 'Оберіть перелічення', own: '＋ Своє перелічення', ownTitle: 'Своє перелічення', ownName: 'Назва (наприклад, «Родина»)',
+            ownItems: 'Слова по порядку: через кому або з нового рядка (не менше трьох)', save: 'Зберегти', cancel: 'Скасувати',
+            ownBad: 'Потрібна назва й принаймні три слова.', del: '🗑', delq: 'Видалити це перелічення?', tries: 'спроб', okn: 'вдало',
+            back: '← До перелічень', fwd: '→ Уперед', rev: '← Назад', whole: 'Весь ряд', cont: 'Продовжити',
+            hintWhole: 'Назвіть по порядку: від «{a}» до «{b}».', hintWholeRev: 'Назвіть у зворотному порядку: від «{a}» до «{b}».',
+            hintCont: 'Продовжте після слів: {w}', listen: '🔊 Послухати', say: '🎙 Говорити', done: '✔ Закінчив(ла)', listening: '⏺ Слухаю… назвіть усе по порядку',
+            again: '🎙 Ще раз', heard: 'Ви сказали:', nothing: 'Нічого не розчув', good: 'Правильно: {k} з {n}', great: '🎉 Усе правильно!',
+            miss: 'пропущено', extra: 'зайве', showRow: '👁 Показати ряд', next: '➡ Інше перелічення', count: '✔ Я сказав(ла) правильно', counted: 'Записано як вдалу спробу',
+            tapHear: 'Натисніть на слово, щоб почути його.', right: 'Правильний ряд:', start: 'Дано:'
+        },
+        en: {
+            title: '🔢 Sequences', desc: 'Days of the week, months, numbers and other series: say them in order, forwards or backwards, and see what was right.',
+            pick: 'Choose a sequence', own: '＋ Your own sequence', ownTitle: 'Your own sequence', ownName: 'Name (for example “Family”)',
+            ownItems: 'Words in order: separated by commas or new lines (at least three)', save: 'Save', cancel: 'Cancel',
+            ownBad: 'A name and at least three words are needed.', del: '🗑', delq: 'Delete this sequence?', tries: 'tries', okn: 'correct',
+            back: '← To sequences', fwd: '→ Forwards', rev: '← Backwards', whole: 'Whole series', cont: 'Continue',
+            hintWhole: 'Say them in order: from “{a}” to “{b}”.', hintWholeRev: 'Say them in reverse order: from “{a}” to “{b}”.',
+            hintCont: 'Continue after: {w}', listen: '🔊 Listen', say: '🎙 Speak', done: '✔ Finished', listening: '⏺ Listening… say it all in order',
+            again: '🎙 Again', heard: 'You said:', nothing: 'Could not hear anything', good: 'Correct: {k} of {n}', great: '🎉 All correct!',
+            miss: 'missing', extra: 'extra', showRow: '👁 Show the series', next: '➡ Another sequence', count: '✔ I said it correctly', counted: 'Counted as a successful try',
+            tapHear: 'Tap a word to hear it.', right: 'The right series:', start: 'Given:'
+        }
+    };
+    const SER_VOICE = {
+        ru: { ok: ['Правильно!', 'Молодец!', 'Отлично!'], part: 'Почти. Не получилось: {w}.', none: 'Не расслышал. Попробуйте ещё раз.' },
+        uk: { ok: ['Правильно!', 'Молодець!', 'Чудово!'], part: 'Майже. Не вийшло: {w}.', none: 'Не розчув. Спробуйте ще раз.' },
+        en: { ok: ['Correct!', 'Well done!', 'Excellent!'], part: 'Almost. Not right: {w}.', none: 'I could not hear you. Try again.' }
+    };
+    function sT() { return SER_T[currentLang] || SER_T.ru; }
+
+    // Числа словами 0–100 (распознавание часто выдаёт цифры)
+    const SER_NUMS = {
+        ru: { u: ['ноль', 'один', 'два', 'три', 'четыре', 'пять', 'шесть', 'семь', 'восемь', 'девять'], t: ['десять', 'одиннадцать', 'двенадцать', 'тринадцать', 'четырнадцать', 'пятнадцать', 'шестнадцать', 'семнадцать', 'восемнадцать', 'девятнадцать'], d: ['', '', 'двадцать', 'тридцать', 'сорок', 'пятьдесят', 'шестьдесят', 'семьдесят', 'восемьдесят', 'девяносто'], h: 'сто' },
+        uk: { u: ['нуль', 'один', 'два', 'три', 'чотири', "п'ять", 'шість', 'сім', 'вісім', "дев'ять"], t: ['десять', 'одинадцять', 'дванадцять', 'тринадцять', 'чотирнадцять', "п'ятнадцять", 'шістнадцять', 'сімнадцять', 'вісімнадцять', "дев'ятнадцять"], d: ['', '', 'двадцять', 'тридцять', 'сорок', "п'ятдесят", 'шістдесят', 'сімдесят', 'вісімдесят', "дев'яносто"], h: 'сто' },
+        en: { u: ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'], t: ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'], d: ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'], h: 'one hundred' }
+    };
+    function serNum(n, l) {
+        const w = SER_NUMS[l || currentLang] || SER_NUMS.ru;
+        if (n < 10) return w.u[n];
+        if (n < 20) return w.t[n - 10];
+        if (n < 100) return w.d[Math.floor(n / 10)] + (n % 10 ? ((l || currentLang) === 'en' ? '-' : ' ') + w.u[n % 10] : '');
+        if (n === 100) return w.h;
+        return String(n);
+    }
+    function serRange(a, b, step) { const o = []; for (let i = a; i <= b; i += step || 1) o.push(serNum(i)); return o; }
+    function serBuiltin() {
+        const D = {
+            ru: {
+                days: ['понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье'],
+                months: ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'],
+                seasons: ['зима', 'весна', 'лето', 'осень'], parts: ['утро', 'день', 'вечер', 'ночь'],
+                rainbow: ['красный', 'оранжевый', 'жёлтый', 'зелёный', 'голубой', 'синий', 'фиолетовый'],
+                n: ['Дни недели', 'Месяцы года', 'Времена года', 'Части суток', 'Цвета радуги', 'Числа 1–10', 'Числа 1–20', 'Десятки 10–100']
+            },
+            uk: {
+                days: ['понеділок', 'вівторок', 'середа', 'четвер', "п'ятниця", 'субота', 'неділя'],
+                months: ['січень', 'лютий', 'березень', 'квітень', 'травень', 'червень', 'липень', 'серпень', 'вересень', 'жовтень', 'листопад', 'грудень'],
+                seasons: ['зима', 'весна', 'літо', 'осінь'], parts: ['ранок', 'день', 'вечір', 'ніч'],
+                rainbow: ['червоний', 'помаранчевий', 'жовтий', 'зелений', 'блакитний', 'синій', 'фіолетовий'],
+                n: ['Дні тижня', 'Місяці року', 'Пори року', 'Частини доби', 'Кольори веселки', 'Числа 1–10', 'Числа 1–20', 'Десятки 10–100']
+            },
+            en: {
+                days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+                months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+                seasons: ['winter', 'spring', 'summer', 'autumn'], parts: ['morning', 'afternoon', 'evening', 'night'],
+                rainbow: ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet'],
+                n: ['Days of the week', 'Months of the year', 'Seasons', 'Parts of the day', 'Colours of the rainbow', 'Numbers 1–10', 'Numbers 1–20', 'Tens 10–100']
+            }
+        }[currentLang] || null;
+        const d = D || {};
+        const n = d.n || [];
+        return [
+            { id: 'days', e: '📅', name: n[0], items: d.days }, { id: 'months', e: '🗓️', name: n[1], items: d.months },
+            { id: 'seasons', e: '🍂', name: n[2], items: d.seasons }, { id: 'parts', e: '🌅', name: n[3], items: d.parts },
+            { id: 'rainbow', e: '🌈', name: n[4], items: d.rainbow },
+            { id: 'n10', e: '🔢', name: n[5], items: serRange(1, 10) }, { id: 'n20', e: '🔢', name: n[6], items: serRange(1, 20) },
+            { id: 'tens', e: '🔟', name: n[7], items: serRange(10, 100, 10) }
+        ];
+    }
+
+    const ser = { view: 'list', sid: null, dir: 'fwd', mode: 'whole', given: 0, listening: false, buf: '', res: null, msg: '', reveal: false, form: false, empty: 0, stopping: false, err: null, loaded: null, my: [] };
+    function serMyLoad() {
+        ser.loaded = currentLang;
+        let a = []; try { a = JSON.parse(localStorage.getItem('sr.ser.my.' + currentLang)) || []; } catch (e) {}
+        ser.my = (Array.isArray(a) ? a : []).filter(x => x && x.name && Array.isArray(x.items) && x.items.length >= 3);
+    }
+    function serMySave() { try { localStorage.setItem('sr.ser.my.' + ser.loaded, JSON.stringify(ser.my)); } catch (e) {} }
+    function serAll() { return serBuiltin().concat(ser.my.map(x => ({ id: x.id, e: '⭐', name: x.name, items: x.items, custom: true }))); }
+    function serStats() { try { return JSON.parse(localStorage.getItem('sr.ser.st.' + currentLang)) || {}; } catch (e) { return {}; } }
+    function serStat(sid, dir, ok) {
+        const st = serStats(), k = sid + ':' + dir;
+        const x = st[k] || { n: 0, k: 0, l: 0 };
+        x.n++; if (ok) x.k++; x.l = Date.now(); st[k] = x;
+        try { localStorage.setItem('sr.ser.st.' + currentLang, JSON.stringify(st)); } catch (e) {}
+    }
+    function serPref() {
+        let dir = 'both', show = true, voice = true;
+        try { dir = localStorage.getItem('sr.ser.dir') || 'both'; show = localStorage.getItem('sr.ser.show') !== 'false'; voice = localStorage.getItem('sr.ser.voice') !== 'false'; } catch (e) {}
+        return { dir, show, voice };
+    }
+    function serCur() { return serAll().find(x => x.id === ser.sid); }
+    // Ряд в выбранном направлении
+    function serSeries() { const s = serCur(); if (!s) return []; return ser.dir === 'rev' ? s.items.slice().reverse() : s.items.slice(); }
+
+    function serTokens(text) {
+        return String(text).toLowerCase().replace(/\d+/g, m => ' ' + serNum(parseInt(m, 10)) + ' ')
+            .replace(/[“”«»"„.,;:!?()]/g, ' ').split(/[\s\-–—]+/).map(phrNorm).filter(Boolean);
+    }
+    // Сравнение сказанного с рядом: статус каждого слова ряда и лишние слова
+    function serEval(items, text) {
+        const T = [], owner = [], last = [];
+        items.forEach((it, i) => { const tk = serTokens(it); tk.forEach(w => { T.push(w); owner.push(i); }); last[i] = T.length - 1; });
+        const H = serTokens(text);
+        const al = phrAlign(T, H);
+        const rank = { ok: 0, near: 1, bad: 2, miss: 3 };
+        const agg = items.map(() => ({ s: 'ok', h: [] }));
+        const seq = [];
+        al.rows.forEach(r => {
+            if (r.ti >= 0) {
+                const a = agg[owner[r.ti]];
+                if (rank[r.st] > rank[a.s]) a.s = r.st;
+                if (r.hi >= 0) a.h.push(H[r.hi]);
+                if (last[owner[r.ti]] === r.ti) seq.push({ i: owner[r.ti], st: a.s, h: a.h.join(' ') });
+            } else seq.push({ i: -1, st: 'extra', h: H[r.hi] });
+        });
+        const k = seq.filter(x => x.i >= 0 && x.st === 'ok').length;
+        return { seq, k, n: items.length, heard: String(text).trim(), allOk: seq.every(x => x.st === 'ok') && items.length > 0 };
+    }
+
+    function serSpeak(text, rate) {
+        if (!('speechSynthesis' in window)) return;
+        warmupSpeechSynthesis();
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(makeUtterance(getPhoneticRepresentation(text.toLowerCase()) || text, rate || 1));
+    }
+    // Озвучить ряд по словам с подсветкой
+    function serSpeakSeries(items) {
+        if (!('speechSynthesis' in window)) return;
+        warmupSpeechSynthesis();
+        window.speechSynthesis.cancel();
+        const mark = i => { document.querySelectorAll('#serScreen .ph-chip.hl').forEach(e => e.classList.remove('hl')); const e = i >= 0 ? document.querySelector('#serScreen [data-hl="' + i + '"]') : null; if (e) e.classList.add('hl'); };
+        items.forEach((w, i) => {
+            const u = makeUtterance(getPhoneticRepresentation(w.toLowerCase()) || w, 0.85);
+            u.onstart = () => mark(i);
+            if (i === items.length - 1) u.onend = () => mark(-1);
+            window.speechSynthesis.speak(u);
+        });
+    }
+    function serVoice(text) {
+        if (!serPref().voice || !('speechSynthesis' in window)) return;
+        warmupSpeechSynthesis();
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(makeUtterance(text, 1));
+    }
+
+    function serOpen() {
+        if (ser.loaded !== currentLang) serMyLoad();
+        serStop();
+        Object.assign(ser, { view: 'list', sid: null, res: null, msg: '', form: false, listening: false });
+        serRender();
+    }
+    function serStop() {
+        ser.listening = false; ser.stopping = false;
+        stopModeRec();
+    }
+    function serStart(sid) {
+        const pref = serPref();
+        ser.sid = sid; ser.view = 'do'; ser.res = null; ser.msg = ''; ser.reveal = false; ser.listening = false;
+        ser.dir = pref.dir === 'back' ? 'rev' : 'fwd';
+        ser.mode = 'whole';
+        serNewTask();
+        serRender();
+    }
+    // Для «Продолжить»: сколько первых слов дано
+    function serNewTask() {
+        const n = serSeries().length;
+        ser.given = ser.mode === 'cont' ? Math.min(Math.max(2, n - 2), 2 + Math.floor(Math.random() * Math.max(1, Math.min(3, n - 3)))) : 0;
+        ser.res = null; ser.msg = ''; ser.reveal = false;
+    }
+    function serTarget() { return serSeries().slice(ser.given); }
+
+    function serListen() {
+        if (ser.listening) return;
+        const SRc = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SRc) { ser.msg = recErrorText('unsupported'); serRender(true); return; }
+        stopModeRec();
+        try { window.speechSynthesis.cancel(); } catch (e) {}
+        Object.assign(ser, { listening: true, buf: '', empty: 0, stopping: false, err: null, msg: '', res: null });
+        serRender(true);
+        serSession(SRc);
+    }
+    // Короткие сеансы подряд: так надёжнее, чем одно длинное распознавание, и пауза между словами не обрывает ответ
+    function serSession(SRc) {
+        const r = new SRc();
+        modeRec = r;
+        r.lang = currentLang === 'uk' ? 'uk-UA' : (currentLang === 'ru' ? 'ru-RU' : 'en-US');
+        r.interimResults = false; r.continuous = false; r.maxAlternatives = 1;
+        let got = false;
+        r.onresult = e => {
+            for (let i = 0; i < e.results.length; i++) { const x = e.results[i]; if (x && x[0] && x[0].transcript) { ser.buf += ' ' + x[0].transcript.trim(); got = true; } }
+        };
+        r.onerror = e => { if (e.error !== 'no-speech' && e.error !== 'aborted') ser.err = e.error; };
+        r.onend = () => {
+            if (r._aborted || screenName !== 'ser' || !ser.listening) return;
+            if (modeRec === r) modeRec = null;
+            if (ser.err) { ser.listening = false; ser.msg = recErrorText(ser.err); serRender(true); return; }
+            if (got) ser.empty = 0; else ser.empty++;
+            // конец ответа: нажата «Закончил(а)» или после слов наступила тишина
+            if (ser.stopping || (ser.buf.trim() && ser.empty >= 1) || ser.empty >= 2) { serFinish(); return; }
+            serSession(SRc);
+        };
+        try { r.start(); } catch (e) { serFinish(); }
+    }
+    function serFinish() {
+        const wasListening = ser.listening;
+        ser.listening = false; ser.stopping = false;
+        stopModeRec();
+        if (!wasListening || screenName !== 'ser') return;
+        const items = serTarget();
+        if (!ser.buf.trim()) { ser.res = null; ser.msg = sT().nothing; serRender(true); serVoice((SER_VOICE[currentLang] || SER_VOICE.ru).none); return; }
+        const res = serEval(items, ser.buf);
+        res.counted = res.allOk;
+        ser.res = res;
+        serStat(ser.sid, ser.dir + (ser.mode === 'cont' ? 'c' : ''), res.allOk);
+        serRender(true);
+        const V = SER_VOICE[currentLang] || SER_VOICE.ru;
+        if (res.allOk) serVoice(V.ok[Math.floor(Math.random() * V.ok.length)]);
+        else if (res.k === 0 && !res.seq.some(x => x.st === 'near')) serVoice(V.part.replace('{w}', items.slice(0, 2).join(', ')));
+        else {
+            const bad = res.seq.filter(x => x.i >= 0 && x.st !== 'ok').slice(0, 2).map(x => items[x.i]);
+            serVoice(V.part.replace('{w}', bad.join(', ')));
+        }
+    }
+
+    function serRender(keep) {
+        const el = document.getElementById('serScreen');
+        el.innerHTML = '';
+        if (ser.view === 'list') serRenderList(el); else serRenderDo(el);
+        if (!keep) window.scrollTo(0, 0);
+    }
+    function serRenderList(el) {
+        const t = sT();
+        el.append(abcMk('div', 'step-title', t.title));
+        if (ser.form) { serRenderForm(el); return; }
+        el.append(abcMk('div', 'step-note', t.pick));
+        const st = serStats();
+        const grid = abcMk('div', 'ser-grid');
+        serAll().forEach(s => {
+            let n = 0, k = 0;
+            Object.keys(st).forEach(key => { if (key.indexOf(s.id + ':') === 0) { n += st[key].n; k += st[key].k; } });
+            const b = abcMk('button', 'ph-open ser-item', null, () => serStart(s.id));
+            b.append(abcMk('span', 'ph-open-t', s.e + ' ' + s.name), abcMk('span', 'ph-open-s', s.items.length + (n ? ' · ' + t.tries + ': ' + n + ' · ' + t.okn + ': ' + k : '')));
+            if (s.custom) {
+                const w = abcMk('div', 'ph-item');
+                const d = abcMk('button', 'assist-btn abc-del ph-del', t.del, () => { if (!confirm(t.delq + '\n' + s.name)) return; ser.my = ser.my.filter(x => x.id !== s.id); serMySave(); serRender(true); });
+                b.style.flex = '1';
+                w.append(b, d); grid.append(w);
+            } else grid.append(b);
+        });
+        el.append(grid);
+        el.append(abcMk('button', 'abc-online', t.own, () => { ser.form = true; ser.msg = ''; serRender(); }));
+    }
+    function serRenderForm(el) {
+        const t = sT();
+        el.append(abcMk('div', 'abc-sec', t.ownTitle));
+        const name = document.createElement('input');
+        name.type = 'text'; name.className = 'ph-input'; name.id = 'serName'; name.maxLength = 40; name.placeholder = t.ownName; name.style.width = '100%'; name.style.boxSizing = 'border-box';
+        const items = document.createElement('textarea');
+        items.id = 'serItems'; items.rows = 5; items.className = 'ph-input'; items.placeholder = t.ownItems; items.style.cssText = 'width:100%;box-sizing:border-box;padding:10px 12px;margin-top:8px;min-height:120px';
+        el.append(name, items);
+        if (ser.msg) el.append(abcMk('div', 'step-note', ser.msg));
+        const r = abcMk('div', 'abc-row');
+        r.append(
+            abcMk('button', 'assist-btn abc-say', t.save, () => {
+                const nm = name.value.replace(/\s+/g, ' ').trim().slice(0, 40);
+                const arr = items.value.split(/[,;\n]+/).map(x => x.replace(/\s+/g, ' ').trim().slice(0, 40)).filter(Boolean).slice(0, 40);
+                if (!nm || arr.length < 3) { ser.msg = t.ownBad; serRender(true); return; }
+                ser.my.push({ id: 'my' + Date.now(), name: nm, items: arr });
+                serMySave(); ser.form = false; ser.msg = ''; serRender();
+            }),
+            abcMk('button', 'assist-btn abc-say', t.cancel, () => { ser.form = false; ser.msg = ''; serRender(); })
+        );
+        el.append(r);
+    }
+
+    function serRenderDo(el) {
+        const t = sT(), pref = serPref(), s = serCur();
+        if (!s) { ser.view = 'list'; serRenderList(el); return; }
+        el.append(abcMk('button', 'abc-kbt ph-back', t.back, () => { serStop(); serOpen(); }));
+        el.append(abcMk('div', 'step-title', s.e + ' ' + s.name));
+        const items = serSeries();
+        // направление и вид задания
+        const dirs = abcMk('div', 'ser-seg');
+        if (pref.dir === 'both') {
+            [['fwd', t.fwd], ['rev', t.rev]].forEach(([d, lab]) => dirs.append(abcMk('button', ser.dir === d ? 'on' : '', lab, () => { if (ser.listening) return; ser.dir = d; serNewTask(); serRender(true); })));
+            el.append(dirs);
+        } else {
+            el.append(abcMk('div', 'step-note', pref.dir === 'back' ? t.rev : t.fwd));
+        }
+        const modes = abcMk('div', 'ser-seg');
+        [['whole', t.whole], ['cont', t.cont]].forEach(([m, lab]) => modes.append(abcMk('button', ser.mode === m ? 'on' : '', lab, () => { if (ser.listening) return; ser.mode = m; serNewTask(); serRender(true); })));
+        el.append(modes);
+        // задание
+        let hint;
+        if (ser.mode === 'cont') hint = t.hintCont.replace('{w}', items.slice(0, ser.given).join(', ') + ' …');
+        else hint = (ser.dir === 'rev' ? t.hintWholeRev : t.hintWhole).replace('{a}', items[0]).replace('{b}', items[items.length - 1]);
+        const box = abcMk('div', 'ph-box');
+        box.append(abcMk('div', 'ser-hint', hint));
+        const showAll = (pref.show || ser.reveal) && !ser.res;
+        const row = abcMk('div', 'ph-chips ser-row');
+        items.forEach((w, i) => {
+            const given = i < ser.given;
+            if (!given && !showAll) return;
+            const b = abcMk('button', 'ph-chip ' + (given ? 'ok' : ''), w, () => serSpeak(w, 1));
+            b.dataset.hl = i;
+            row.append(b);
+        });
+        if (row.childNodes.length) box.append(row);
+        if (!showAll && !ser.res) box.append(abcMk('button', 'abc-kbt ph-reveal', t.showRow, () => { ser.reveal = true; serRender(true); }));
+        el.append(box);
+        const r1 = abcMk('div', 'abc-row');
+        r1.append(abcMk('button', 'assist-btn abc-say', t.listen, () => serSpeakSeries(ser.mode === 'cont' ? items : items)));
+        el.append(r1);
+        const mic = ser.listening
+            ? abcMk('button', 'primary-btn ph-say rec', t.done, () => { ser.stopping = true; const r = modeRec; if (r) { try { r.stop(); } catch (e) { serFinish(); } } else serFinish(); })
+            : abcMk('button', 'primary-btn ph-say', ser.res ? t.again : t.say, serListen);
+        el.append(mic);
+        if (ser.listening) el.append(abcMk('div', 'step-note', t.listening));
+        if (ser.msg) el.append(abcMk('div', 'step-note', ser.msg));
+        const res = ser.res;
+        if (!res) return;
+        const target = serTarget();
+        el.append(abcMk('div', 'abc-sec', t.heard + ' «' + res.heard + '»'));
+        el.append(abcMk('div', 'ph-score ' + (res.allOk ? 'ph-great' : ''), res.allOk ? t.great : t.good.replace('{k}', res.k).replace('{n}', res.n)));
+        const chips = abcMk('div', 'ph-chips');
+        res.seq.forEach(x => {
+            if (x.st === 'extra') { chips.append(abcMk('button', 'ph-chip extra', x.h, null)); return; }
+            const word = target[x.i];
+            let label = word, cls = x.st === 'ok' ? 'ok' : x.st;
+            if (x.st !== 'ok') label = word + (x.st === 'miss' ? ' (' + t.miss + ')' : (x.h ? ' ← ' + x.h : ''));
+            chips.append(abcMk('button', 'ph-chip ' + cls, label, () => serSpeak(word, 1)));
+        });
+        el.append(chips);
+        if (!res.allOk) el.append(abcMk('div', 'step-note', t.tapHear));
+        const acts = abcMk('div', 'abc-row');
+        if (!res.allOk && !res.counted) acts.append(abcMk('button', 'assist-btn abc-say', t.count, () => {
+            res.counted = true; serStat(ser.sid, ser.dir + (ser.mode === 'cont' ? 'c' : ''), true); ser.msg = t.counted; serRender(true);
+        }));
+        acts.append(abcMk('button', 'assist-btn abc-say', t.listen, () => serSpeakSeries(target)));
+        el.append(acts);
+        const a2 = abcMk('div', 'abc-row');
+        if (ser.mode === 'cont') a2.append(abcMk('button', 'assist-btn abc-say', t.cont, () => { serNewTask(); serRender(); }));
+        a2.append(abcMk('button', 'assist-btn abc-say', t.next, () => { serStop(); serOpen(); }));
+        el.append(a2);
+    }
+
     // ===== Режим «Подсказка по сказанному» (вкладка «Говорит человек») — перенос из «Говорим вместе» =====
     // Человек говорит, приложение разбирает сказанное по словам, помечает сомнительные «?», предлагает варианты, помнит исправления,
     // а собранную фразу можно сразу потренировать вслух. Все данные только на устройстве, ключи хранилища начинаются с sr.
@@ -5923,6 +6363,7 @@ function fillFromHeard(){
 <li><b>🧩 Полный тренажёр</b> — все блоки на одном экране: выбор слова на слух, проверка произношения, сбор из букв.</li>
 <li><b>👂 Тренировка слуха</b> — одно слово по шагам: 1) послушать, 2) повторить вслух, 3) собрать из букв. В конце итог: исходное слово, что вы проговорили и что собрали, с подсветкой различий. Затем можно повторить это слово или перейти к следующему. Если включена настройка «Обязательно проговаривать слово», к сборке из букв можно перейти только после верного произношения (или трёх попыток).</li>
 <li><b>📝 Тест</b> — от 10 до 30 случайных слов подряд. Каждое слово звучит один раз, без повтора; вы проговариваете его или пропускаете. Верно или неверно, видно только в конце: результат, список слов и кнопка «Повторить ошибки».</li>
+<li><b>🔢 Перечисления</b> — тренировка называния рядов по порядку: дни недели, месяцы, времена года, части суток, цвета радуги, числа 1–10, 1–20 и десятки до 100. Можно добавить своё перечисление (например, имена родных). Выберите ряд, нажмите «Говорить» и назовите всё по порядку, затем «Закончил(а)» (или просто помолчите). Приложение покажет и голосом скажет, что верно, что пропущено и что лишнее; нажатие на слово озвучивает его. Ряд можно сначала послушать (слова подсвечиваются), назвать вперёд или назад и выбрать задание «Продолжить»: даются первые слова, остальное называете сами. Если распознавание ошиблось, нажмите «Я сказал(а) верно». Числа, которые браузер записал цифрами, распознаются как слова. В ⚙️ настройках выбираются направление (только вперёд, вперёд и назад, только назад), показ ряда на экране и голосовая оценка. Результаты хранятся только на устройстве, записи голоса не сохраняются.</li>
 <li><b>🔤 Азбука</b> — подсказка по первой букве, когда слово «вертится на языке». Нажмите первую букву: появятся слова из словаря (включая «Мои слова»), которые с неё начинаются; следующая буква сужает список. Нажатие на слово добавляет его в строку (если включено автоозвучивание, слово сразу произносится), «Сказать так» озвучивает всю строку, ⌫ убирает последнее слово. «Скрыть буквы» освобождает место для слов (в настройках можно включить автосворачивание панели после каждой нажатой буквы; вернуть её — кнопка «Показать буквы»). «Свободный набор» показывает весь алфавит: слово можно набирать так, как вы его себе представляете, даже с ошибками, а приложение предложит похожие слова. Категория слов здесь не учитывается: поиск идёт по всем словам. Если в настройках включён онлайн-поиск, под списком появляется кнопка «Найти слова в интернете»: слова ищутся в Викисловаре (для английского ещё в Datamuse), для этого набранные буквы отправляются в эти сервисы. Выбранное слово запоминается на устройстве.</li>
 <li><b>🎤 Подсказка по сказанному</b> — перенесён из приложения «Говорим вместе» (вкладка «Говорит человек»). Нажмите «Говорить» и скажите фразу как получится. Приложение разберёт её на слова и соберёт в рамку; слова, которых нет в словаре, помечены «?». Нажмите на слово с «?»: появятся варианты (подбираются по звучанию, по соседним словам, по вашим прежним исправлениям; при включённом онлайн-поиске слов ещё и из интернета), можно оставить слово как есть или убрать его. Слова без «?» убираются нажатием, а порядок меняется удержанием и перетаскиванием. Кнопка «Я, в, на, не…» добавляет служебные слова, «Очистить» сбрасывает экран. Подсказки берутся из «Мои фразы» и из встроенных бытовых фраз (например, «Я хочу в туалет»): по ним учитывается контекст, поэтому для искажённого слова вроде «толя» после «в» предлагается «туалет». Слова подбираются и по согласным: узнанные «т» и «л» подходят к слову «туалет». Затем нажмите «Сказать» (фраза прозвучит) или «🎯 Тренировать произношение»: приложение озвучит фразу, вы повторите её вслух, читая с экрана, и приложение голосом скажет, верно ли («Молодец!» или «Почти, попробуйте ещё раз»). Неверные слова можно исправить, повторять можно сколько угодно, а готовую фразу кнопкой «Добавить в Мои фразы» сохранить для следующих повторов. Упрощённый вид, поведение нажатия на слово из списка и онлайн-поиск слов включаются в ⚙️ настройках. Слова распознаются как «?» относительно словаря приложения; для более точных подсказок можно положить рядом с index.html частотные списки lex/ru.txt, lex/uk.txt, lex/en.txt (по одному слову в строке, как в «Говорим вместе»). Выученные слова, исправления и частые фразы хранятся только на этом устройстве.</li>
 <li><b>🗣 Мои фразы</b> — тренировка собственных фраз. Новую фразу можно сказать в режиме «Подсказка по сказанному» (кнопка «Сказать новую фразу»), а собранную фразу сохранить сюда. Фразу можно также вписать вручную (или добавить примеры, или загрузить список из файла: одна фраза в строке) и открыть её. В ⚙️ настройках можно скрыть текст фразы при повторении (останется только озвучивание), отключить голосовую оценку и автоматическое озвучивание. Нажмите «Сказать фразу» и произнесите её целиком. Приложение сравнит сказанное с нужной фразой по словам: верные слова зелёные, похожие жёлтые, неверные, пропущенные и лишние красные. Сначала показывается, сколько слов получилось верно. Нажмите на жёлтое или красное слово и выберите правильное из нескольких вариантов; когда вся фраза исправлена, приложение произнесёт её, и можно сказать ещё раз. Если распознавание ошиблось, а вы сказали верно, нажмите «Я сказал(а) верно». Распознавание речи в браузере не идеально, особенно при нарушенной речи, поэтому оценка условная; лучше заниматься вместе с логопедом. Фразы и счётчики попыток хранятся только на устройстве; записи голоса не сохраняются. «Сохранить в файл» и «Загрузить из файла» переносят список фраз на другое устройство.</li>
@@ -5992,6 +6433,7 @@ function fillFromHeard(){
 <li><b>🧩 Повний тренажер</b> — усі блоки на одному екрані: вибір слова на слух, перевірка вимови, збирання з літер.</li>
 <li><b>👂 Тренування слуху</b> — одне слово по кроках: 1) послухати, 2) повторити вголос, 3) зібрати з літер. Наприкінці підсумок: вихідне слово, що ви промовили і що зібрали, з підсвічуванням відмінностей. Потім можна повторити це слово або перейти до наступного. Якщо ввімкнено налаштування «Обов’язково промовляти слово», до збирання з літер можна перейти лише після правильної вимови (або трьох спроб).</li>
 <li><b>📝 Тест</b> — від 10 до 30 випадкових слів поспіль. Кожне слово звучить один раз, без повтору; ви промовляєте його або пропускаєте. Правильно чи ні, видно лише наприкінці: результат, список слів і кнопка «Повторити помилки».</li>
+<li><b>🔢 Перелічення</b> — тренування називання рядів по порядку: дні тижня, місяці, пори року, частини доби, кольори веселки, числа 1–10, 1–20 і десятки до 100. Можна додати своє перелічення (наприклад, імена рідних). Оберіть ряд, натисніть «Говорити» й назвіть усе по порядку, потім «Закінчив(ла)» (або просто помовчіть). Застосунок покаже й голосом скаже, що правильно, що пропущено й що зайве; натискання на слово озвучує його. Ряд можна спершу послухати (слова підсвічуються), назвати вперед чи назад і обрати завдання «Продовжити»: дають перші слова, решту називаєте самі. Якщо розпізнавання помилилося, натисніть «Я сказав(ла) правильно». Числа, які браузер записав цифрами, розпізнаються як слова. У ⚙️ налаштуваннях обираються напрямок (лише вперед, вперед і назад, лише назад), показ ряду на екрані й голосова оцінка. Результати зберігаються лише на пристрої, записи голосу не зберігаються.</li>
 <li><b>🔤 Абетка</b> — підказка за першою літерою, коли слово «крутиться на язиці». Натисніть першу літеру: з’являться слова зі словника (разом із «Моїми словами»), що з неї починаються; наступна літера звужує список. Натискання на слово додає його до рядка (якщо ввімкнено автоозвучення, слово одразу промовляється), «Сказати так» озвучує весь рядок, ⌫ прибирає останнє слово. «Сховати літери» вивільняє місце для слів (в налаштуваннях можна ввімкнути автозгортання панелі після кожної натиснутої літери; повернути її — кнопка «Показати літери»). «Вільний набір» показує всю абетку: слово можна набирати так, як ви його собі уявляєте, навіть з помилками, а застосунок запропонує схожі слова. Категорія слів тут не враховується: пошук іде по всіх словах. Якщо в налаштуваннях увімкнено онлайн-пошук, під списком з’являється кнопка «Знайти слова в інтернеті»: слова шукаються у Вікісловнику (для англійської ще в Datamuse), для цього набрані літери надсилаються цим сервісам. Обране слово запам’ятовується на пристрої.</li>
 <li><b>🎤 Підказка за сказаним</b> — перенесено із застосунку «Говоримо разом» (вкладка «Говорить людина»). Натисніть «Говорити» й скажіть фразу, як вийде. Застосунок розбере її на слова й збере в рамку; слова, яких немає у словнику, позначено «?». Натисніть на слово з «?»: з’являться варіанти (добираються за звучанням, за сусідніми словами, за вашими попередніми виправленнями; за ввімкненого онлайн-пошуку слів ще й з інтернету), можна залишити слово як є або прибрати. Слова без «?» прибираються натисканням, а порядок змінюється утриманням і перетягуванням. Кнопка «Я, в, на, не…» додає службові слова, «Очистити» скидає екран. Підказки беруться з «Моїх фраз» і з вбудованих побутових фраз (наприклад, «Я хочу в туалет»): за ними враховується контекст, тому для спотвореного слова на кшталт «толя» після «в» пропонується «туалет». Слова добираються й за приголосними: упізнані «т» і «л» підходять до слова «туалет». Потім натисніть «Сказати» (фраза пролунає) або «🎯 Тренувати вимову»: застосунок озвучить фразу, ви повторите її вголос, читаючи з екрана, і застосунок голосом скаже, чи правильно («Молодець!» або «Майже, спробуйте ще раз»). Неправильні слова можна виправити, повторювати можна скільки завгодно, а готову фразу кнопкою «Додати до Моїх фраз» зберегти для наступних повторів. Спрощений вигляд, поведінка натискання на слово зі списку й онлайн-пошук слів вмикаються в ⚙️ налаштуваннях. Слова розпізнаються як «?» відносно словника застосунку; для точніших підказок можна покласти поруч з index.html частотні списки lex/ru.txt, lex/uk.txt, lex/en.txt (одне слово в рядку, як у «Говоримо разом»). Вивчені слова, виправлення й часті фрази зберігаються лише на цьому пристрої.</li>
 <li><b>🗣 Мої фрази</b> — тренування власних фраз. Нову фразу можна сказати в режимі «Підказка за сказаним» (кнопка «Сказати нову фразу»), а зібрану фразу зберегти сюди. Фразу можна й вписати вручну (або додати приклади, або завантажити список із файлу: одна фраза в рядку) та відкрити її. У ⚙️ налаштуваннях можна сховати текст фрази під час повторення (залишиться лише озвучення), вимкнути голосову оцінку й автоматичне озвучення. Натисніть «Сказати фразу» й промовте її цілком. Застосунок порівняє сказане з потрібною фразою по словах: правильні слова зелені, схожі жовті, неправильні, пропущені й зайві червоні. Спочатку показується, скільки слів вийшло правильно. Натисніть на жовте або червоне слово й оберіть правильне з кількох варіантів; коли всю фразу виправлено, застосунок промовить її, і можна сказати ще раз. Якщо розпізнавання помилилося, а ви сказали правильно, натисніть «Я сказав(ла) правильно». Розпізнавання мовлення в браузері не ідеальне, особливо при порушеному мовленні, тому оцінка умовна; краще займатися разом із логопедом. Фрази й лічильники спроб зберігаються лише на пристрої; записи голосу не зберігаються. «Зберегти у файл» і «Завантажити з файлу» переносять список фраз на інший пристрій.</li>
@@ -6061,6 +6503,7 @@ function fillFromHeard(){
 <li><b>🧩 Full trainer</b> — all blocks on one screen: choose the word by ear, pronunciation check, assembling from letters.</li>
 <li><b>👂 Listening practice</b> — one word step by step: 1) listen, 2) repeat aloud, 3) assemble from letters. At the end you get a summary: the original word, what you said and what you assembled, with differences highlighted. Then you can repeat this word or move to the next one. If “Require saying the word aloud” is on, you can go to letter assembly only after a correct pronunciation (or three attempts).</li>
 <li><b>📝 Test</b> — 10 to 30 random words in a row. Each word is played once, with no replay; you say it or skip it. Whether you were right is shown only at the end: the score, a list of words and a “Repeat mistakes” button.</li>
+<li><b>🔢 Sequences</b> — practice saying series in order: days of the week, months, seasons, parts of the day, colours of the rainbow, numbers 1–10, 1–20 and tens up to 100. You can add your own sequence (for example the names of relatives). Choose a series, tap “Speak” and say it all in order, then “Finished” (or just stay silent). The app shows and says by voice what was right, missing or extra; tapping a word speaks it. You can first listen to the series (words are highlighted), say it forwards or backwards, and choose the “Continue” task: the first words are given and you say the rest. If recognition was wrong, tap “I said it correctly”. Numbers the browser wrote as digits are recognised as words. ⚙️ Settings choose the direction (forwards only, forwards and backwards, backwards only), showing the series on the screen and the spoken verdict. Results are kept only on the device; voice recordings are not saved.</li>
 <li><b>🔤 ABC</b> — first-letter help for when a word is on the tip of your tongue. Tap the first letter: words from the dictionary (including “My words”) that start with it appear; the next letter narrows the list. Tapping a word adds it to the line (if auto-speak is on, the word is spoken at once), “Say it” speaks the whole line, ⌫ removes the last word. “Hide letters” makes room for more words (Settings can collapse the panel automatically after each letter; bring it back with “Show letters”). “Free typing” shows the whole alphabet: type the word the way you imagine it, mistakes included, and the app suggests similar words. The word category is not used here: the search covers all words. If online search is turned on in Settings, a “Find words online” button appears under the list: words are looked up in Wiktionary (and Datamuse for English), so the typed letters are sent to these services. A chosen word is remembered on the device.</li>
 <li><b>🎤 Suggestions from what was said</b> — ported from the “Let’s talk together” app (the “The person speaks” tab). Tap “Speak” and say a phrase however it comes out. The app splits it into words and gathers them in a frame; words that are not in the dictionary are marked “?”. Tap a word with “?”: options appear (chosen by sound, by neighbouring words and by your earlier corrections; with online word search on, also from the internet), and you can keep the word as it is or remove it. Words without “?” are removed by a tap, and the order is changed by holding and dragging. The “I, in, on, not…” button adds function words, “Clear” resets the screen. Suggestions come from “My phrases” and from built-in everyday phrases (for example “I want to go to the toilet”): they provide context, so a distorted word after “to” gets the likely word offered. Words are also matched by consonants: recognised sounds can fit a longer word. Then tap “Say” (the phrase is spoken) or “🎯 Practise pronunciation”: the app speaks the phrase, you repeat it aloud reading from the screen, and the app tells you by voice whether it was right (“Well done!” or “Almost, try again”). Wrong words can be fixed, you can repeat as often as you like, and the finished phrase can be saved with “Add to My phrases” for later practice. Simple view, how a tap on a listed word behaves and online word search are switched on in ⚙️ Settings. “?” is relative to the app’s dictionary; for more precise suggestions you can put frequency lists lex/ru.txt, lex/uk.txt, lex/en.txt next to index.html (one word per line, as in “Let’s talk together”). Learned words, corrections and frequent phrases are kept only on this device.</li>
 <li><b>🗣 My phrases</b> — practice with your own phrases. A new phrase can be said in the “Suggestions from what was said” mode (the “Say a new phrase” button), and the assembled phrase saved here. You can also type a phrase by hand (or add examples, or load a list from a file: one phrase per line) and open it. ⚙️ Settings can hide the phrase text while repeating (only the speech remains), and turn off the spoken verdict and automatic speaking. Tap “Say the phrase” and say it in full. The app compares what was said with the target phrase word by word: correct words are green, similar ones yellow, wrong, missing and extra ones red. It first shows how many words were right. Tap a yellow or red word and choose the right one from a few options; when the whole phrase is fixed, the app speaks it and you can say it again. If recognition got it wrong but you said it correctly, tap “I said it correctly”. Browser speech recognition is not perfect, especially with impaired speech, so the score is approximate; it is best done together with a therapist. Phrases and try counters are kept only on the device; voice recordings are not saved. “Save to file” and “Load from file” move the list of phrases to another device.</li>
