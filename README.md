@@ -1,4 +1,4 @@
-# 🗣️ Чуємо слова · Hear Words
+# 🗣️ Знову слова · Words Again
 
 🇺🇦 [Українська](#українська) · 🇬🇧 [English](#english) · 🇷🇺 [Русский](#русский-авторство-и-лицензия)
 
@@ -9,9 +9,9 @@
 
 ### Про проєкт
 
-**«Чуємо слова»** (англ. *Hear Words*, рос. «Слышим слова»; раніше — *Auditory Differentiation & Speech Trainer*) — безкоштовний застосунок для реабілітації мовлення та слуху.
+**«Знову слова»** (англ. *Words Again*, рос. «Снова слова»; раніше — «Чуємо слова» / *Hear Words*, ще раніше — *Auditory Differentiation & Speech Trainer*) — безкоштовний застосунок для реабілітації мовлення, слуху й письма.
 
-Цей застосунок допомагає розпізнавати слова на слух і правильно їх вимовляти. Він створений спеціально для реабілітації мовлення та слуху — для людей з **афазією**, апраксією мовлення та іншими порушеннями мовлення й слуху, а також для логопедів і рідних, які їм допомагають.
+Цей застосунок допомагає розпізнавати слова на слух, правильно їх вимовляти й писати. Він створений спеціально для реабілітації мовлення та слуху — для людей з **афазією**, апраксією мовлення та іншими порушеннями мовлення й слуху, а також для логопедів і рідних, які їм допомагають.
 
 Інтерфейс адаптований під потреби реабілітації: великі кнопки, високий контраст, прості елементи керування, регульована складність та таймер «гра / відпочинок», щоб заняття не перетворювалось на перевтому.
 
@@ -23,6 +23,7 @@
 - **🔢 Перелічення** — називання рядів по порядку, уперед і назад: дні тижня, місяці, пори року, частини доби, кольори веселки, числа 1–10, 1–20, десятки до 100 та власні ряди. Завдання «Весь ряд» і «Продовжити»; застосунок показує й голосом каже, що правильно, що пропущено й що зайве. Напрямок (уперед, назад або «туди й назад» одразу), рівень показу слів (завжди / після помилок / приховано — для поступового ускладнення) і голосова оцінка налаштовуються.
 - **👂 Тренування на слух** — одне слово крок за кроком: послухати, повторити вголос, скласти з літер; підсумок наприкінці.
 - **📝 Тест** — 10–30 випадкових слів поспіль; кожне слово звучить один раз, а користувач вимовляє його; наприкінці — результат.
+- **✍️ Письмо** — тренування правильного написання: слово за картинкою (перша літера підказана), диктант слова або диктант власної фрази. Слово набирається на клавіатурі «Абетки»; після перевірки правильні літери зелені, помилкові підсвічено, їх можна виправити; є підказки «ще літера» й «показати слово».
 - **🔤 Абетка** — підказка за першою літерою, коли слово «крутиться на язиці».
 - **🎤 Підказка за сказаним** — перенесено із застосунку «Говоримо разом» (вкладка «Говорить людина»): скажіть фразу, застосунок розбере її на слова, позначить сумнівні знаком «?», запропонує варіанти й запам’ятає ваші виправлення (автоматично слово замінюється лише після двох однакових виборів). Зібрану фразу можна потренувати вголос: застосунок озвучить її, ви повторите, а голос скаже, чи правильно; готову фразу можна зберегти в «Мої фрази». Необов’язково: файли `lex/uk.txt`, `lex/ru.txt`, `lex/en.txt` (частотні списки слів) роблять підказки точнішими.
 - **🗣 Мої фрази** — тренування власних фраз. Нову фразу можна просто сказати: застосунок розбере її на слова, позначить сумнівні знаком «?», запропонує варіанти, озвучить виправлену фразу, а ви повторите її вголос і почуєте голосову оцінку; потім фразу можна додати до списку. Власні фрази також можна вписувати, тренувати з порівнянням за словами та виправленням. Список фраз можна зберегти у файл і завантажити; записи голосу не зберігаються, оцінка умовна (розпізнавання мовлення браузера недосконале).
@@ -38,7 +39,7 @@
 - **25 тематичних категорій слів** — побут, їжа, частини тіла, емоції, родина, тварини, професії, місто й транспорт, кольори, числа, дієслова, прикметники тощо, а також режим «усі категорії».
 - **Три мови інтерфейсу**: англійська, українська та російська — з окремим словником і мовою розпізнавання мовлення для кожної.
 - **Регульована складність**: 2 / 3 / 4 варіанти відповіді на запитання (Легко / Середньо / Складно).
-- **Таймер «Гра / Відпочинок»** — з можливістю налаштувати тривалість заняття та перерви й екраном відпочинку, щоб підтримувати правильний темп занять і запобігати перевтомі.
+- **Таймер «Гра / Відпочинок»** — з можливістю налаштувати тривалість заняття та перерви й екраном відпочинку, щоб підтримувати правильний темп занять і запобігати перевтомі. Час рахується лише в режимах тренування; в «Абетці» й «Підказці за сказаним» перерва починається після озвучення фрази або виходу з режиму.
 - **М'який режим (увімкнений за замовчуванням)** — без червоних помилок: неправильний варіант просто гасне, а слово озвучується знову, доки людина не знайде відповідь; за правильну відповідь — коротка похвала й легка вібрація на телефоні.
 - **Візуальна опора (емодзі)** — картинка біля кожного варіанту відповіді та велика після відповіді, приблизно для 45% слів; можна вимкнути.
 - **Покрокові підказки** — 💡 перший склад → слово по складах → підсвічена відповідь.
@@ -58,7 +59,7 @@
 
 Жодних інструментів збірки, серверів чи залежностей не потрібно — це набір статичних файлів.
 
-**Мова.** Під час першого запуску мова інтерфейсу відповідає мові пристрою (українська, російська чи англійська; в інших випадках — англійська). Змінити її можна в «Налаштуваннях», вибір запам'ятовується. Маніфест застосунку українською: після встановлення під іконкою відображається назва «Чуємо слова».
+**Мова.** Під час першого запуску мова інтерфейсу відповідає мові пристрою (українська, російська чи англійська; в інших випадках — англійська). Змінити її можна в «Налаштуваннях», вибір запам'ятовується. Маніфест застосунку українською: після встановлення під іконкою відображається назва «Знову слова». Адреса й назва репозиторію (`SpeechRehab`) не змінювалися, тому встановлені копії оновлюються як раніше.
 
 ### 📁 Файли репозиторію
 
@@ -106,9 +107,9 @@
 
 ### About
 
-**Hear Words** (Ukrainian «Чуємо слова», Russian «Слышим слова»; formerly *Auditory Differentiation & Speech Trainer*) is a free app for speech and hearing rehabilitation.
+**Words Again** (Ukrainian «Знову слова», Russian «Снова слова»; formerly «Чуємо слова» / *Hear Words*, and before that *Auditory Differentiation & Speech Trainer*) is a free app for speech, hearing and writing rehabilitation.
 
-This app helps people recognize and correctly pronounce words by ear. It was designed with rehabilitation in mind: large buttons, high contrast, simple controls, adjustable difficulty, and a "play / rest" timer so a therapy session doesn't turn into overexertion.
+This app helps people recognize words by ear, pronounce them correctly and write them. It was designed with rehabilitation in mind: large buttons, high contrast, simple controls, adjustable difficulty, and a "play / rest" timer so a therapy session doesn't turn into overexertion.
 
 The app runs entirely in the browser — no installation, no backend, no account. Open `index.html` and start practicing, or host it as a static page (e.g. GitHub Pages) or install it as a PWA on a phone.
 
@@ -118,6 +119,7 @@ The app runs entirely in the browser — no installation, no backend, no account
 - **🔢 Sequences** — saying series in order, forwards and backwards: days of the week, months, seasons, parts of the day, colours of the rainbow, numbers 1–10, 1–20, tens up to 100, and your own series. Tasks “Whole series” and “Continue”; the app shows and says by voice what was right, missing or extra. Direction (forwards, backwards or “there and back” in one go), the level of word display (always / after mistakes / hidden — to make the task harder gradually) and the spoken verdict are configurable.
 - **👂 Listening practice** — one word step by step: listen, repeat aloud, assemble from letters; a summary at the end.
 - **📝 Test** — 10 to 30 random words in a row; each word is played once and the user says it; a result at the end.
+- **✍️ Writing** — practice spelling: a word from a picture (the first letter is given), dictation of a word, or dictation of your own phrase. The word is typed on the ABC keyboard; after checking, correct letters are green and wrong ones are highlighted and can be fixed; hints “one more letter” and “show the word” are available.
 - **🔤 ABC** — first-letter help for when a word is on the tip of your tongue.
 - **🎤 Suggestions from what was said** — ported from the “Let’s talk together” app (the “The person speaks” tab): say a phrase, the app splits it into words, marks doubtful ones with “?”, offers options and remembers your corrections (a word is replaced automatically only after the same choice twice). The assembled phrase can be practised aloud: the app speaks it, you repeat it, and a voice tells you whether it was right; the finished phrase can be saved to “My phrases”. Optional: `lex/uk.txt`, `lex/ru.txt`, `lex/en.txt` (word-frequency lists) make the suggestions more precise.
 - **🗣 My phrases** — practice with your own phrases. Just say a new phrase: the app splits it into words, marks doubtful ones with “?”, offers options, speaks the corrected phrase, you repeat it aloud and hear a spoken verdict; then the phrase can be added to the list. Own phrases can also be typed in and practised with a word-by-word comparison and fixing. The phrase list can be saved to and loaded from a file; voice recordings are not saved, and the score is approximate (browser speech recognition is imperfect).
@@ -133,7 +135,7 @@ The app runs entirely in the browser — no installation, no backend, no account
 - **25 thematic word categories** — household items, food, body parts, emotions, family, animals, professions, city & transport, colors, numbers, verbs, adjectives, and more — plus an "all categories" mode.
 - **Three interface languages**: English, Ukrainian, and Russian — with a matching dictionary and speech recognition locale for each.
 - **Adjustable difficulty**: 2 / 3 / 4 answer options per question (Easy / Medium / Hard).
-- **Play / Rest timer** — configurable session and break lengths, with a rest overlay, to support therapy pacing and prevent fatigue.
+- **Play / Rest timer** — configurable session and break lengths, with a rest overlay, to support therapy pacing and prevent fatigue. Time is counted only inside training modes; in ABC and “Suggestions from what was said” the break starts after a phrase is spoken or when leaving the mode.
 - **Gentle mode (on by default)** — no red errors: a wrong option simply fades out and the word is spoken again until the user finds the answer; correct answers get short praise and a light vibration on phones.
 - **Picture support (emoji)** — a picture next to each answer option and a large one after the answer, for about 45% of the words; can be switched off.
 - **Step-by-step hints** — 💡 first syllable → the word by syllables → the highlighted answer.
@@ -153,7 +155,7 @@ The app runs entirely in the browser — no installation, no backend, no account
 
 No build tools, servers, or dependencies are required — it is a set of static files.
 
-**Language.** On first launch the interface language follows the device language (Ukrainian, Russian or English; English otherwise). It can be changed in Settings and the choice is remembered. The app manifest is in Ukrainian, so after installation the name under the icon is «Чуємо слова».
+**Language.** On first launch the interface language follows the device language (Ukrainian, Russian or English; English otherwise). It can be changed in Settings and the choice is remembered. The app manifest is in Ukrainian, so after installation the name under the icon is «Знову слова». The address and the repository name (`SpeechRehab`) have not changed, so installed copies keep updating.
 
 ### 📁 Repository files
 

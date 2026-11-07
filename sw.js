@@ -1,6 +1,6 @@
 // Service worker: кэширует всё приложение, чтобы оно работало без интернета.
 // При любом изменении файлов приложения увеличивайте номер версии (v1 -> v2 ...).
-const CACHE = 'speech-rehab-v42';
+const CACHE = 'speech-rehab-v43';
 const ASSETS = [
   '/SpeechRehab/',
   '/SpeechRehab/index.html',

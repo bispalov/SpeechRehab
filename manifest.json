@@ -1,7 +1,7 @@
 {
-  "name": "Чуємо слова",
-  "short_name": "Чуємо слова",
-  "description": "Мовна гра для реабілітації: слухова диференціація слів",
+  "name": "Знову слова",
+  "short_name": "Знову слова",
+  "description": "Реабілітація мовлення, слуху й письма після інсульту",
   "lang": "uk",
   "start_url": "/SpeechRehab/index.html",
   "scope": "/SpeechRehab/",
