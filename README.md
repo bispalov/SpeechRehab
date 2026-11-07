@@ -22,8 +22,8 @@
 - **🧩 Повний тренажер** — усі блоки: вибір слова на слух, перевірка вимови, складання зі складів і літер, підказки.
 - **🔢 Перелічення** — називання рядів по порядку, уперед і назад: дні тижня, місяці, пори року, частини доби, кольори веселки, числа 1–10, 1–20, десятки до 100 та власні ряди. Завдання «Весь ряд» і «Продовжити»; застосунок показує й голосом каже, що правильно, що пропущено й що зайве. Напрямок (уперед, назад або «туди й назад» одразу), рівень показу слів (завжди / після помилок / приховано — для поступового ускладнення) і голосова оцінка налаштовуються.
 - **👂 Тренування на слух** — одне слово крок за кроком: послухати, повторити вголос, скласти з літер; підсумок наприкінці.
-- **📝 Тест** — 10–30 випадкових слів поспіль; кожне слово звучить один раз, а користувач вимовляє його; наприкінці — результат.
 - **✍️ Письмо** — тренування правильного написання: слово за картинкою, диктант слова або диктант власної фрази. На всіх рівнях перші літери підказуються (кількість 0–3 — у налаштуваннях). Слово набирається на клавіатурі «Абетки»; після перевірки правильні літери зелені, помилкові підсвічено; натиснута літера одразу виправляє першу позначену, наступна — наступну; є підказки «ще літера» й «показати слово». Панель з літерами можна згорнути, зокрема автоматично після кожної літери (налаштування). Кнопки з літерами можна зменшити («🔡 Дрібніше»), щоб на екрані вміщалося більше; картинка й кнопка 🔊 стоять поруч із полем введення, а дотик до поля розгортає літери.
+- **📝 Тест на слух** — 10–30 випадкових слів поспіль; кожне слово звучить один раз, а користувач вимовляє його; наприкінці — результат.
 - **🔤 Абетка** — підказка за першою літерою, коли слово «крутиться на язиці».
 - **🎤 Підказка за сказаним** — перенесено із застосунку «Говоримо разом» (вкладка «Говорить людина»): скажіть фразу, застосунок розбере її на слова, позначить сумнівні знаком «?», запропонує варіанти й запам’ятає ваші виправлення (автоматично слово замінюється лише після двох однакових виборів). Зібрану фразу можна потренувати вголос: застосунок озвучить її, ви повторите, а голос скаже, чи правильно; готову фразу можна зберегти в «Мої фрази». Необов’язково: файли `lex/uk.txt`, `lex/ru.txt`, `lex/en.txt` (частотні списки слів) роблять підказки точнішими.
 - **🗣 Мої фрази** — тренування власних фраз. Нову фразу можна просто сказати: застосунок розбере її на слова, позначить сумнівні знаком «?», запропонує варіанти, озвучить виправлену фразу, а ви повторите її вголос і почуєте голосову оцінку; потім фразу можна додати до списку. Власні фрази також можна вписувати, тренувати з порівнянням за словами та виправленням. Список фраз можна зберегти у файл і завантажити; записи голосу не зберігаються, оцінка умовна (розпізнавання мовлення браузера недосконале).
@@ -48,7 +48,7 @@
 - **Статистика прогресу** — лічильник правильних відповідей (і загальної кількості спроб у класичному режимі).
 - **Світла / темна тема**, адаптивний вигляд для телефонів і планшетів.
 - **Зручна навігація** — системна кнопка «Назад» на Android повертає на крок назад, а не закриває застосунок; налаштування згруповано за режимами; залишок часу таймера видно в шапці.
-- **Голосова оцінка** — одне налаштування для всіх режимів; після помилки звучить правильне слово. У «Тесті» можна дозволити один повтор слова.
+- **Голосова оцінка** — одне налаштування для всіх режимів; після помилки звучить правильне слово. У «Тесті на слух» можна дозволити один повтор слова.
 - **Робота офлайн** як встановлюваний PWA-застосунок (маніфест + іконки); усі налаштування (мова, голос, тема, таймер, категорія тощо) зберігаються локально на пристрої.
 
 ### 🚀 Як почати
@@ -118,8 +118,8 @@ The app runs entirely in the browser — no installation, no backend, no account
 - **🧩 Full trainer** — all blocks: choose the word by ear, pronunciation check, assembling from syllables and letters, hints.
 - **🔢 Sequences** — saying series in order, forwards and backwards: days of the week, months, seasons, parts of the day, colours of the rainbow, numbers 1–10, 1–20, tens up to 100, and your own series. Tasks “Whole series” and “Continue”; the app shows and says by voice what was right, missing or extra. Direction (forwards, backwards or “there and back” in one go), the level of word display (always / after mistakes / hidden — to make the task harder gradually) and the spoken verdict are configurable.
 - **👂 Listening practice** — one word step by step: listen, repeat aloud, assemble from letters; a summary at the end.
-- **📝 Test** — 10 to 30 random words in a row; each word is played once and the user says it; a result at the end.
 - **✍️ Writing** — practice spelling: a word from a picture, dictation of a word, or dictation of your own phrase. On every level the first letters are given as a hint (0–3, set in Settings). The word is typed on the ABC keyboard; after checking, correct letters are green and wrong ones are highlighted; the tapped letter fixes the first marked one, the next tap the next one; hints “one more letter” and “show the word” are available. The letter panel can be collapsed, also automatically after each letter (a setting). The letter buttons can be made smaller (“🔡 Smaller”) so more fits on the screen; the picture and a 🔊 button sit next to the input field, and tapping the field opens the letters.
+- **📝 Hearing test** — 10 to 30 random words in a row; each word is played once and the user says it; a result at the end.
 - **🔤 ABC** — first-letter help for when a word is on the tip of your tongue.
 - **🎤 Suggestions from what was said** — ported from the “Let’s talk together” app (the “The person speaks” tab): say a phrase, the app splits it into words, marks doubtful ones with “?”, offers options and remembers your corrections (a word is replaced automatically only after the same choice twice). The assembled phrase can be practised aloud: the app speaks it, you repeat it, and a voice tells you whether it was right; the finished phrase can be saved to “My phrases”. Optional: `lex/uk.txt`, `lex/ru.txt`, `lex/en.txt` (word-frequency lists) make the suggestions more precise.
 - **🗣 My phrases** — practice with your own phrases. Just say a new phrase: the app splits it into words, marks doubtful ones with “?”, offers options, speaks the corrected phrase, you repeat it aloud and hear a spoken verdict; then the phrase can be added to the list. Own phrases can also be typed in and practised with a word-by-word comparison and fixing. The phrase list can be saved to and loaded from a file; voice recordings are not saved, and the score is approximate (browser speech recognition is imperfect).
@@ -144,7 +144,7 @@ The app runs entirely in the browser — no installation, no backend, no account
 - **Progress stats** — running count of correct answers (and total attempts in classic mode).
 - **Light / dark theme**, responsive layout for phones and tablets.
 - **Easy navigation** — the Android “Back” button goes one step back instead of closing the app; settings are grouped by mode; the timer's time left is shown in the header.
-- **Spoken verdict** — one setting for all modes; after a mistake the right word is spoken. The Test can allow one replay of each word.
+- **Spoken verdict** — one setting for all modes; after a mistake the right word is spoken. The hearing test can allow one replay of each word.
 - **Works offline** as an installable PWA (manifest + icons); all settings (language, voice, theme, timer, category, etc.) are saved locally on the device.
 
 ### 🚀 Getting started
