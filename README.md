@@ -45,7 +45,7 @@
 - **Покрокові підказки** — 💡 перший склад → слово по складах → підсвічена відповідь.
 - **🐢 Озвучення по складах** — слово вимовляється повільно, склад за складом, а потім цілком.
 - **Автоозвучення** нового слова (за бажанням) з повільною швидкістю мовлення за замовчуванням.
-- **Статистика прогресу** — лічильник правильних відповідей (і загальної кількості спроб у класичному режимі).
+- **Статистика прогресу** — за режимами («Повний тренажер», «Перелічення», «Тренування слуху», «Письмо» та всі разом): спроби й правильні відповіді сьогодні й по днях, важкі слова, часті плутанини, результати за рядами; експорт у CSV.
 - **Світла / темна тема**, адаптивний вигляд для телефонів і планшетів.
 - **Зручна навігація** — системна кнопка «Назад» на Android повертає на крок назад, а не закриває застосунок; налаштування згруповано за режимами; залишок часу таймера видно в шапці.
 - **Голосова оцінка** — одне налаштування для всіх режимів; після помилки звучить правильне слово. У «Тесті на слух» можна дозволити один повтор слова.
@@ -141,7 +141,7 @@ The app runs entirely in the browser — no installation, no backend, no account
 - **Step-by-step hints** — 💡 first syllable → the word by syllables → the highlighted answer.
 - **🐢 Speak by syllables** — the word is spoken slowly, syllable by syllable, then as a whole.
 - **Auto-speak** the new word (optional) with a slow speech speed by default.
-- **Progress stats** — running count of correct answers (and total attempts in classic mode).
+- **Progress stats** — by mode (Full trainer, Sequences, Listening practice, Writing, and all together): tries and correct answers today and by day, difficult words, frequent confusions, results by series; CSV export.
 - **Light / dark theme**, responsive layout for phones and tablets.
 - **Easy navigation** — the Android “Back” button goes one step back instead of closing the app; settings are grouped by mode; the timer's time left is shown in the header.
 - **Spoken verdict** — one setting for all modes; after a mistake the right word is spoken. The hearing test can allow one replay of each word.

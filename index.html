@@ -274,6 +274,8 @@
         .diff-row { margin-top: 6px; font-weight: bold; letter-spacing: 1px; }
         .stats-table { width: 100%; border-collapse: collapse; margin: 4px 0 8px; }
         .stats-table td { padding: 3px 4px; border-bottom: 1px solid var(--input-border); }
+        .stats-tabs { margin: 0 0 8px; }
+        .stats-tabs > button { font-size: 0.85em; min-height: 40px; }
         .options-grid {
             display: flex;
             flex-direction: column;
@@ -2649,12 +2651,14 @@
             ownNoSupport: 'Запись звука не поддерживается в этом браузере.',
             ownDenied: 'Нет доступа к микрофону. Разрешите его в настройках браузера.',
             ownFail: 'Запись не удалась. Попробуйте ещё раз.',
-            statsBtn: '📊 Статистика', statsTitle: 'Статистика ошибок',
+            statsBtn: '📊 Статистика', statsTitle: 'Статистика занятий',
             statsHard: 'Трудные слова', statsConf: 'Частые путаницы',
             statsEmpty: 'Пока нет ошибок. Продолжайте заниматься!',
             statsAttempts: 'Всего попыток: ', statsOf: 'ошибок', statsFrom: 'из',
             statsExport: '⬇ Скачать CSV', statsReset: '🗑 Сбросить',
             statsResetConfirm: 'Удалить всю статистику?',
+            stAll: 'Все', stToday: 'Сегодня', stTries: 'попыток', stOk: 'верно', stDays: 'По дням (последние 7 дней с занятиями)', stDate: 'Дата', stTriesH: 'Попыток', stOkH: 'Верно',
+            stSeries: 'По рядам', stNoMode: 'В этом режиме пока нет данных. Статистика по режимам собирается начиная с версии 53.', stResetMode: '🗑 Сбросить этот режим', stResetModeQ: 'Удалить статистику режима «{m}»?',
             need: 'Нужно: ', said: 'Вы сказали: ',
             strict: 'Строгая проверка речи (в ответе не должно быть других слов)',
             requireLabel: 'Обязательно проговаривать слово (иначе нельзя перейти к следующему)',
@@ -2670,12 +2674,14 @@
             ownNoSupport: 'Запис звуку не підтримується в цьому браузері.',
             ownDenied: 'Немає доступу до мікрофона. Дозвольте його в налаштуваннях браузера.',
             ownFail: 'Запис не вдався. Спробуйте ще раз.',
-            statsBtn: '📊 Статистика', statsTitle: 'Статистика помилок',
+            statsBtn: '📊 Статистика', statsTitle: 'Статистика занять',
             statsHard: 'Важкі слова', statsConf: 'Часті плутанини',
             statsEmpty: 'Поки немає помилок. Продовжуйте займатися!',
             statsAttempts: 'Усього спроб: ', statsOf: 'помилок', statsFrom: 'з',
             statsExport: '⬇ Завантажити CSV', statsReset: '🗑 Скинути',
             statsResetConfirm: 'Видалити всю статистику?',
+            stAll: 'Усі', stToday: 'Сьогодні', stTries: 'спроб', stOk: 'правильно', stDays: 'По днях (останні 7 днів із заняттями)', stDate: 'Дата', stTriesH: 'Спроб', stOkH: 'Правильно',
+            stSeries: 'За рядами', stNoMode: 'У цьому режимі поки немає даних. Статистика за режимами збирається починаючи з версії 53.', stResetMode: '🗑 Скинути цей режим', stResetModeQ: 'Видалити статистику режиму «{m}»?',
             need: 'Потрібно: ', said: 'Ви сказали: ',
             strict: 'Сувора перевірка мовлення (у відповіді не має бути інших слів)',
             requireLabel: 'Обов’язково промовляти слово (інакше не можна перейти до наступного)',
@@ -2691,12 +2697,14 @@
             ownNoSupport: 'Audio recording is not supported in this browser.',
             ownDenied: 'No microphone access. Allow it in the browser settings.',
             ownFail: 'Recording failed. Try again.',
-            statsBtn: '📊 Statistics', statsTitle: 'Error statistics',
+            statsBtn: '📊 Statistics', statsTitle: 'Practice statistics',
             statsHard: 'Difficult words', statsConf: 'Frequent confusions',
             statsEmpty: 'No errors yet. Keep practicing!',
             statsAttempts: 'Total attempts: ', statsOf: 'errors', statsFrom: 'of',
             statsExport: '⬇ Download CSV', statsReset: '🗑 Reset',
             statsResetConfirm: 'Delete all statistics?',
+            stAll: 'All', stToday: 'Today', stTries: 'tries', stOk: 'correct', stDays: 'By day (last 7 days with practice)', stDate: 'Date', stTriesH: 'Tries', stOkH: 'Correct',
+            stSeries: 'By series', stNoMode: 'No data in this mode yet. Statistics by mode are collected from version 53 on.', stResetMode: '🗑 Reset this mode', stResetModeQ: 'Delete the statistics of “{m}”?',
             need: 'Target: ', said: 'You said: ',
             strict: 'Strict speech check (no other words allowed in the answer)',
             requireLabel: 'Require saying the word aloud (otherwise Next is locked)',
@@ -2768,26 +2776,64 @@
         try { localStorage.setItem(STATS_KEY, JSON.stringify(s)); } catch (e) {}
     }
 
+    // Статистика по режимам: в каком режиме сейчас человек (полный тренажёр, слух, тест, письмо; перечисления — отдельно)
+    const STAT_MODES = { full: 1, listen: 1, quiz: 1, wr: 1 };
+    function statDayKey() {
+        const d = new Date();
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    function statBucket(L, m) {
+        L.modes = L.modes || {};
+        return L.modes[m] || (L.modes[m] = { words: {}, conf: {}, days: {} });
+    }
+    // Попытка за день: n — попыток, k — верно (храним последние 60 дней)
+    function statDay(B, ok, fix) {
+        B.days = B.days || {};
+        const key = statDayKey(), d = B.days[key] || (B.days[key] = { n: 0, k: 0 });
+        if (fix) { if (d.k < d.n) d.k++; }
+        else { d.n++; if (ok) d.k++; }
+        const ks = Object.keys(B.days).sort();
+        if (ks.length > 60) ks.slice(0, ks.length - 60).forEach(x => delete B.days[x]);
+    }
+    // Слова и путаницы: fix — «Я сказал(а) верно»: последняя ошибка становится верным ответом (без новой попытки)
+    function statWord(T, tw, said, ok, fix) {
+        T.words = T.words || {}; T.conf = T.conf || {};
+        const w = T.words[tw] || (T.words[tw] = { ok: 0, bad: 0 });
+        if (fix) { if (w.bad > 0) w.bad--; w.ok++; return; }
+        if (ok) w.ok++; else w.bad++;
+        if (!ok && said) {
+            const sd = String(said).toLowerCase().trim().slice(0, 40);
+            if (sd && sd !== tw) {
+                const k = tw + '>' + sd;
+                T.conf[k] = (T.conf[k] || 0) + 1;
+                const keys = Object.keys(T.conf);
+                if (keys.length > 400) keys.sort((p, q) => T.conf[p] - T.conf[q]).slice(0, 100).forEach(k2 => delete T.conf[k2]);
+            }
+        }
+    }
     function recordResult(kind, target, said, ok) {
         try {
             const tw = (target || '').toLowerCase().trim();
             if (!tw) return;
+            const fix = kind === 'fix';
             const s = loadStats();
             if (!s[currentLang]) s[currentLang] = { words: {}, conf: {} };
             const L = s[currentLang];
-            const w = L.words[tw] || (L.words[tw] = { ok: 0, bad: 0 });
-            if (ok) w.ok++; else w.bad++;
-            if (!ok && said) {
-                const sd = String(said).toLowerCase().trim().slice(0, 40);
-                if (sd && sd !== tw) {
-                    const k = tw + '>' + sd;
-                    L.conf[k] = (L.conf[k] || 0) + 1;
-                    const keys = Object.keys(L.conf);
-                    if (keys.length > 400) {
-                        keys.sort((p, q) => L.conf[p] - L.conf[q]).slice(0, 100).forEach(k2 => delete L.conf[k2]);
-                    }
-                }
+            statWord(L, tw, said, ok, fix);
+            if (STAT_MODES[screenName]) {
+                const B = statBucket(L, screenName);
+                statWord(B, tw, said, ok, fix);
+                statDay(B, ok, fix);
             }
+            saveStats(s);
+        } catch (e) {}
+    }
+    // Попытка в «Перечислениях» для статистики по дням
+    function recordModeDay(mode, ok, fix) {
+        try {
+            const s = loadStats();
+            if (!s[currentLang]) s[currentLang] = { words: {}, conf: {} };
+            statDay(statBucket(s[currentLang], mode), ok, fix);
             saveStats(s);
         } catch (e) {}
     }
@@ -2816,38 +2862,95 @@
         } catch (e) { return null; }
     }
 
+    let statsTab = 'all';
+    const STAT_TABS = ['all', 'full', 'ser', 'listen', 'wr'];
+    function statTabName(t) {
+        if (t === 'all') return ex().stAll;
+        if (t === 'ser') return sT().title;
+        if (t === 'wr') return wT().title;
+        return t === 'full' ? mt().fullTitle : mt().listenTitle;
+    }
+    // Таблица по дням: сегодня и последние 7 дней с занятиями
+    function statDaysHtml(days) {
+        const x = ex(), ks = Object.keys(days || {}).sort().reverse();
+        const today = statDayKey(), td = (days || {})[today] || { n: 0, k: 0 };
+        const pct = d => d.n ? Math.round(d.k * 100 / d.n) + '%' : '—';
+        let h = '<p><b>' + escHtml(x.stToday) + ':</b> ' + td.n + ' ' + escHtml(x.stTries) + ', ' + td.k + ' ' + escHtml(x.stOk) + (td.n ? ' (' + pct(td) + ')' : '') + '</p>';
+        const last = ks.slice(0, 7);
+        if (last.length) {
+            h += '<p><b>' + escHtml(x.stDays) + '</b></p><table class="stats-table"><tr><td><b>' + escHtml(x.stDate) + '</b></td><td><b>' + escHtml(x.stTriesH) + '</b></td><td><b>' + escHtml(x.stOkH) + '</b></td><td><b>%</b></td></tr>';
+            last.forEach(k => {
+                const d = days[k], p = k.split('-');
+                h += '<tr><td>' + p[2] + '.' + p[1] + '</td><td>' + d.n + '</td><td>' + d.k + '</td><td>' + pct(d) + '</td></tr>';
+            });
+            h += '</table>';
+        }
+        return h;
+    }
+    // Трудные слова и частые путаницы
+    function statWordsHtml(T) {
+        const x = ex(), words = Object.entries((T && T.words) || {});
+        const hard = words.filter(([, v]) => v.bad > 0)
+            .sort((p, q) => (q[1].bad - 0.5 * q[1].ok) - (p[1].bad - 0.5 * p[1].ok)).slice(0, 8);
+        const conf = Object.entries((T && T.conf) || {}).sort((p, q) => q[1] - p[1]).slice(0, 8);
+        let h = '';
+        if (!hard.length && !conf.length) return '<p>' + escHtml(x.statsEmpty) + '</p>';
+        if (hard.length) {
+            h += '<p><b>' + escHtml(x.statsHard) + '</b></p><table class="stats-table">';
+            hard.forEach(([k, v]) => { h += '<tr><td>' + escHtml(k) + '</td><td>' + v.bad + ' ' + escHtml(x.statsOf) + ' ' + escHtml(x.statsFrom) + ' ' + (v.ok + v.bad) + '</td></tr>'; });
+            h += '</table>';
+        }
+        if (conf.length) {
+            h += '<p><b>' + escHtml(x.statsConf) + '</b></p><table class="stats-table">';
+            conf.forEach(([k, n]) => { const p = k.split('>'); h += '<tr><td>' + escHtml(p[0]) + ' → ' + escHtml(p[1] || '') + '</td><td>×' + n + '</td></tr>'; });
+            h += '</table>';
+        }
+        return h;
+    }
+    // Перечисления: по каждому ряду и направлению
+    function statSerHtml() {
+        const x = ex(), t = sT(), st = serStats();
+        if (ser.loaded !== currentLang) serMyLoad();
+        const all = serAll(), dirs = { fwd: t.fwd, rev: t.rev, round: t.round };
+        const rows = Object.entries(st).sort((p, q) => (q[1].l || 0) - (p[1].l || 0));
+        if (!rows.length) return '';
+        let h = '<p><b>' + escHtml(x.stSeries) + '</b></p><table class="stats-table">';
+        rows.forEach(([key, v]) => {
+            const i = key.lastIndexOf(':'), sid = key.slice(0, i), d = key.slice(i + 1);
+            const sr = all.find(z => z.id === sid);
+            const cont = d.endsWith('c'), dd = cont ? d.slice(0, -1) : d;
+            const name = (sr ? sr.e + ' ' + sr.name : sid) + ' · ' + (dirs[dd] || dd) + ' · ' + (cont ? t.cont : t.whole);
+            h += '<tr><td>' + escHtml(name) + '</td><td>' + v.k + ' ' + escHtml(x.stOk) + ' ' + escHtml(x.statsFrom) + ' ' + v.n + '</td></tr>';
+        });
+        return h + '</table>';
+    }
     function renderStatsPanel() {
         const x = ex();
         const L = (loadStats()[currentLang]) || { words: {}, conf: {} };
-        const words = Object.entries(L.words || {});
-        const attempts = words.reduce((n, [, v]) => n + v.ok + v.bad, 0);
-        const hard = words.filter(([, v]) => v.bad > 0)
-            .sort((p, q) => (q[1].bad - 0.5 * q[1].ok) - (p[1].bad - 0.5 * p[1].ok)).slice(0, 8);
-        const conf = Object.entries(L.conf || {}).sort((p, q) => q[1] - p[1]).slice(0, 8);
-
-        let h = '<p>' + escHtml(x.statsAttempts) + attempts + '</p>';
-        if (!hard.length && !conf.length) {
-            h += '<p>' + escHtml(x.statsEmpty) + '</p>';
+        const modes = L.modes || {};
+        let h = '<div class="ser-seg stats-tabs">';
+        STAT_TABS.forEach(tb => { h += '<button class="' + (statsTab === tb ? 'on' : '') + '" onclick="statsTab=\'' + tb + '\'; renderStatsPanel()">' + escHtml(statTabName(tb)) + '</button>'; });
+        h += '</div>';
+        if (statsTab === 'all') {
+            // все режимы вместе (в том числе «Тест на слух»): дни суммируются
+            const days = {};
+            Object.values(modes).forEach(B => Object.entries(B.days || {}).forEach(([k, d]) => {
+                const t = days[k] || (days[k] = { n: 0, k: 0 }); t.n += d.n; t.k += d.k;
+            }));
+            const attempts = Object.values(L.words || {}).reduce((n, v) => n + v.ok + v.bad, 0);
+            h += '<p>' + escHtml(x.statsAttempts) + attempts + '</p>' + statDaysHtml(days) + statWordsHtml(L);
         } else {
-            if (hard.length) {
-                h += '<p><b>' + escHtml(x.statsHard) + '</b></p><table class="stats-table">';
-                hard.forEach(([k, v]) => {
-                    h += '<tr><td>' + escHtml(k) + '</td><td>' + v.bad + ' ' + escHtml(x.statsOf) + ' ' + escHtml(x.statsFrom) + ' ' + (v.ok + v.bad) + '</td></tr>';
-                });
-                h += '</table>';
-            }
-            if (conf.length) {
-                h += '<p><b>' + escHtml(x.statsConf) + '</b></p><table class="stats-table">';
-                conf.forEach(([k, n]) => {
-                    const parts = k.split('>');
-                    h += '<tr><td>' + escHtml(parts[0]) + ' → ' + escHtml(parts[1] || '') + '</td><td>×' + n + '</td></tr>';
-                });
-                h += '</table>';
+            const B = modes[statsTab];
+            const serRows = statsTab === 'ser' ? statSerHtml() : '';
+            if (!B && !serRows) h += '<p>' + escHtml(x.stNoMode) + '</p>';
+            else {
+                if (B) h += statDaysHtml(B.days);
+                h += statsTab === 'ser' ? serRows : statWordsHtml(B);
             }
         }
         h += '<div class="assist-row">' +
              '<button class="assist-btn" onclick="exportStatsCsv()">' + escHtml(x.statsExport) + '</button>' +
-             '<button class="assist-btn" onclick="resetStats()">' + escHtml(x.statsReset) + '</button></div>';
+             '<button class="assist-btn" onclick="resetStats()">' + escHtml(statsTab === 'all' ? x.statsReset : x.stResetMode) + '</button></div>';
         document.getElementById('statsPanel').innerHTML = h;
     }
 
@@ -2875,18 +2978,21 @@
     function exportStatsCsv() {
         const s = loadStats();
         const q = v => '"' + String(v).replace(/"/g, '""') + '"';
-        const rows = [['lang', 'type', 'word', 'said', 'ok', 'errors', 'count'].join(',')];
+        const rows = [['lang', 'mode', 'type', 'word_or_date', 'said', 'ok', 'errors', 'count'].join(',')];
+        const put = (lang, mode, T) => {
+            Object.entries(T.words || {}).forEach(([w, v]) => rows.push([q(lang), q(mode), q('word'), q(w), q(''), v.ok, v.bad, ''].join(',')));
+            Object.entries(T.conf || {}).forEach(([k, n]) => { const p = k.split('>'); rows.push([q(lang), q(mode), q('confusion'), q(p[0]), q(p[1] || ''), '', '', n].join(',')); });
+            Object.entries(T.days || {}).sort().forEach(([d, v]) => rows.push([q(lang), q(mode), q('day'), q(d), q(''), v.k, v.n - v.k, v.n].join(',')));
+        };
         Object.keys(s).forEach(lang => {
             const L = s[lang] || {};
-            Object.entries(L.words || {}).forEach(([w, v]) => {
-                rows.push([q(lang), q('word'), q(w), q(''), v.ok, v.bad, ''].join(','));
-            });
-            Object.entries(L.conf || {}).forEach(([k, n]) => {
-                const p = k.split('>');
-                rows.push([q(lang), q('confusion'), q(p[0]), q(p[1] || ''), '', '', n].join(','));
-            });
+            put(lang, 'all', L);
+            Object.entries(L.modes || {}).forEach(([m, B]) => put(lang, m, B));
+            let st = {};
+            try { st = JSON.parse(localStorage.getItem('sr.ser.st.' + lang)) || {}; } catch (e) {}
+            Object.entries(st).forEach(([k, v]) => rows.push([q(lang), q('ser'), q('series'), q(k), q(''), v.k, v.n - v.k, v.n].join(',')));
         });
-        const blob = new Blob(['\ufeff' + rows.join('\n')], { type: 'text/csv;charset=utf-8' });
+        const blob = new Blob(['﻿' + rows.join('\n')], { type: 'text/csv;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -2897,9 +3003,19 @@
         setTimeout(() => URL.revokeObjectURL(url), 2000);
     }
 
+    // На вкладке «Все» сбрасывается вся статистика, на вкладке режима — только этот режим (текущий язык)
     function resetStats() {
-        if (!confirm(ex().statsResetConfirm)) return;
-        try { localStorage.removeItem(STATS_KEY); } catch (e) {}
+        const x = ex();
+        if (statsTab === 'all') {
+            if (!confirm(x.statsResetConfirm)) return;
+            try { localStorage.removeItem(STATS_KEY); ['ru', 'uk', 'en'].forEach(l => localStorage.removeItem('sr.ser.st.' + l)); } catch (e) {}
+        } else {
+            if (!confirm(x.stResetModeQ.replace('{m}', statTabName(statsTab)))) return;
+            const s = loadStats(), L = s[currentLang];
+            if (L && L.modes) delete L.modes[statsTab];
+            saveStats(s);
+            if (statsTab === 'ser') { try { localStorage.removeItem('sr.ser.st.' + currentLang); } catch (e) {} }
+        }
         renderStatsPanel();
     }
 
@@ -3948,7 +4064,7 @@
               verdict: 'Say aloud whether it was said correctly (all modes)', quiz: '📝 Hearing test: the word can be replayed once', wrGiven: '✍️ Writing (all levels): how many first letters of the word or phrase to give as a hint (fewer is harder)', wrG: ['0 — no hint', '1 letter', '2 letters', '3 letters'], wrHide: '✍️ Writing: collapse the letter panel after each letter you tap, so the task stays visible. Bring it back with the “Show letters” button.' }
     };
     // Номер версии приложения (совпадает с номером в sw.js) — виден внизу настроек
-    const APP_VERSION = 52;
+    const APP_VERSION = 53;
     function syncSettGroups() {
         let ver = document.getElementById('appVer');
         if (!ver) { ver = document.createElement('div'); ver.id = 'appVer'; ver.className = 'app-ver'; document.getElementById('settingsPanel').appendChild(ver); }
@@ -4108,6 +4224,7 @@
         train.built = null;
         train.builtOk = null;
         train.selfOk = false;
+        train.buildRec = false;
     }
 
     function listenNewWord() {
@@ -4162,6 +4279,7 @@
                  '<div class="step-note" id="trainBuildMsg"></div>' +
                  '<button class="primary-btn" id="trainNext3" onclick="renderListenStep(4)">' + escHtml(t.next) + '</button>';
         } else {
+            if (train.built !== null && !train.buildRec) { train.buildRec = true; recordResult('build', train.clean, train.built, train.builtOk); }
             h += renderTrainSummary();
         }
         el.innerHTML = h;
@@ -4229,7 +4347,7 @@
     function trainCountOk() {
         if (train.heard === null || train.heardOk) return;
         train.heardOk = true; train.passed = true; train.selfOk = true;
-        recordResult('speech', train.clean, train.clean, true);
+        recordResult('fix', train.clean, '', true);
         updateTrainSayUI();
     }
 
@@ -5771,10 +5889,12 @@
     function serMySave() { try { localStorage.setItem('sr.ser.my.' + ser.loaded, JSON.stringify(ser.my)); } catch (e) {} }
     function serAll() { return serBuiltin().concat(ser.my.map(x => ({ id: x.id, e: '⭐', name: x.name, items: x.items, custom: true }))); }
     function serStats() { try { return JSON.parse(localStorage.getItem('sr.ser.st.' + currentLang)) || {}; } catch (e) { return {}; } }
-    function serStat(sid, dir, ok) {
+    function serStat(sid, dir, ok, fix) {
         const st = serStats(), k = sid + ':' + dir;
         const x = st[k] || { n: 0, k: 0, l: 0 };
-        x.n++; if (ok) x.k++; x.l = Date.now(); st[k] = x;
+        if (fix) { if (x.k < x.n) x.k++; } else { x.n++; if (ok) x.k++; }
+        x.l = Date.now(); st[k] = x;
+        recordModeDay('ser', ok, fix);
         try { localStorage.setItem('sr.ser.st.' + currentLang, JSON.stringify(st)); } catch (e) {}
     }
     function serPref() {
@@ -6066,7 +6186,7 @@
         else if (!res.allOk) el.append(abcMk('div', 'step-note', t.tapHear));
         const acts = abcMk('div', 'abc-row');
         if (!res.allOk && !res.counted) acts.append(abcMk('button', 'assist-btn abc-say', t.count, () => {
-            res.counted = true; serStat(ser.sid, ser.dir + (ser.mode === 'cont' ? 'c' : ''), true); ser.msg = t.counted; serRender(true);
+            res.counted = true; serStat(ser.sid, ser.dir + (ser.mode === 'cont' ? 'c' : ''), true, true); ser.msg = t.counted; serRender(true);
         }));
         acts.append(abcMk('button', 'assist-btn abc-say', t.listen, () => serSpeakSeries(target)));
         el.append(acts);
@@ -7096,7 +7216,7 @@ function fillFromHeard(){
 </ul>
 
 <h3>📊 Статистика</h3>
-<p>Показывает трудные слова и частые путаницы (что услышали вместо нужного слова). Слова с ошибками предлагаются чаще. Данные хранятся только на этом устройстве; их можно скачать в виде CSV или сбросить.</p>
+<p>Вкладки: «Все», «🧩 Полный тренажёр», «🔢 Перечисления», «👂 Тренировка слуха», «✍️ Письмо». Для каждого режима видно, сколько было попыток и сколько верно сегодня и по дням за последние 7 дней занятий, а также трудные слова и частые путаницы (что было услышано, выбрано, сказано или написано вместо нужного слова). Для перечислений — результаты по каждому ряду и направлению. Вкладка «Все» собирает все режимы, включая «Тест на слух». «Я сказал(а) верно» исправляет последнюю ошибку и не добавляет лишнюю попытку. Слова с ошибками предлагаются чаще. Данные хранятся только на этом устройстве; их можно скачать в виде CSV или сбросить (на вкладке режима — только этот режим). Статистика по режимам ведётся с версии 53, более ранние ответы есть только на вкладке «Все».</p>
 
 <h3>⚙️ Настройки</h3>
 <ul>
@@ -7169,7 +7289,7 @@ function fillFromHeard(){
 </ul>
 
 <h3>📊 Статистика</h3>
-<p>Показує важкі слова і часті плутанини (що почули замість потрібного слова). Слова з помилками пропонуються частіше. Дані зберігаються лише на цьому пристрої; їх можна завантажити як CSV або скинути.</p>
+<p>Вкладки: «Усі», «🧩 Повний тренажер», «🔢 Перелічення», «👂 Тренування слуху», «✍️ Письмо». Для кожного режиму видно, скільки було спроб і скільки правильно сьогодні та по днях за останні 7 днів занять, а також важкі слова й часті плутанини (що було почуто, обрано, сказано чи написано замість потрібного слова). Для перелічень — результати за кожним рядом і напрямком. Вкладка «Усі» збирає всі режими, зокрема «Тест на слух». «Я сказав(ла) правильно» виправляє останню помилку й не додає зайвої спроби. Слова з помилками пропонуються частіше. Дані зберігаються лише на цьому пристрої; їх можна завантажити як CSV або скинути (на вкладці режиму — лише цей режим). Статистика за режимами ведеться з версії 53, раніші відповіді є лише на вкладці «Усі».</p>
 
 <h3>⚙️ Налаштування</h3>
 <ul>
@@ -7242,7 +7362,7 @@ function fillFromHeard(){
 </ul>
 
 <h3>📊 Statistics</h3>
-<p>Shows difficult words and frequent confusions (what was heard instead of the target word). Words with mistakes are offered more often. Data stays on this device only; you can download it as CSV or reset it.</p>
+<p>Tabs: “All”, “🧩 Full trainer”, “🔢 Sequences”, “👂 Listening practice”, “✍️ Writing”. For each mode you see how many tries there were and how many were correct today and by day for the last 7 days of practice, plus difficult words and frequent confusions (what was heard, chosen, said or written instead of the target word). For sequences, the results for each series and direction. The “All” tab combines all modes, including the hearing test. “I said it correctly” fixes the last mistake and does not add an extra try. Words with mistakes are offered more often. Data stays on this device only; you can download it as CSV or reset it (on a mode tab, only that mode). Statistics by mode are kept from version 53 on; earlier answers are only in the “All” tab.</p>
 
 <h3>⚙️ Settings</h3>
 <ul>
