@@ -1,6 +1,6 @@
 // Service worker: сохраняет приложение на устройстве, чтобы оно работало без интернета.
 // При любом изменении файлов приложения увеличивайте номер версии (v1 -> v2 ...).
-const CACHE = 'speech-rehab-v49';
+const CACHE = 'speech-rehab-v50';
 const ASSETS = [
   '/SpeechRehab/',
   '/SpeechRehab/index.html',
