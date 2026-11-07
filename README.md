@@ -31,7 +31,7 @@
 
 - **Вправи на слухову диференціацію** — застосунок озвучує слово, а користувач обирає правильний варіант з 2, 3 або 4 схожих за звучанням слів (мінімальні пари), тренуючи слух розрізняти реальні слова.
 - **Складання слова / завдання на письмо** — зібрати загадане слово зі складів, що корисно для тренування мовлення й читання.
-- **Режим «Абетка» (підказка за першою літерою)** — для моменту, коли слово «крутиться на язиці»: натисніть першу літеру, і застосунок покаже відповідні слова зі словника; натисніть слово, щоб почути його й додати до рядка, який можна озвучити. Другий режим клавіатури — вільний набір, навіть з помилками, із підказкою схожих слів. За бажанням у налаштуваннях можна ввімкнути онлайн-пошук слів (Вікісловник, для англійської ще Datamuse); обрані слова запам’ятовуються на пристрої. Панель з літерами можна налаштувати так, щоб вона згорталася після кожного натискання.
+- **Режим «Абетка» (підказка за першою літерою)** — для моменту, коли слово «крутиться на язиці»: натисніть першу літеру, і застосунок покаже відповідні слова зі словника; натисніть слово, щоб почути його й додати до рядка, який можна озвучити. Другий режим клавіатури — вільний набір, навіть з помилками, із підказкою схожих слів. За бажанням у налаштуваннях можна ввімкнути онлайн-пошук слів (Вікісловник, для англійської ще Datamuse); обрані слова запам’ятовуються на пристрої. Панель з літерами можна налаштувати так, щоб вона згорталася після кожного натискання. Короткі слова (я, ти, в, на, не…) додаються окремою кнопкою, слово у фразі прибирається натисканням, а зібрану фразу можна потренувати вголос і зберегти в «Мої фрази».
 - **Синтез мовлення (TTS)** — слова озвучуються вбудованими голосами пристрою, зі змінюваною швидкістю мовлення.
 - **Вибір голосу за статтю** — можна обрати чоловічий або жіночий голос для кожної мови, якщо пристрій пропонує декілька варіантів; голоси автоматично групуються та підписуються (♀ Жіночі / ♂ Чоловічі / Інші), а також додано виправлення для надійнішого завантаження голосів на Android, де вони раніше могли не з'являтися.
 - **Перевірка вимови мікрофоном** — користувач вимовляє слово вголос, а застосунок звіряє сказане із загаданим словом за допомогою розпізнавання мовлення браузера. Слово зараховується, якщо воно є серед варіантів розпізнавання; після помилки звучить правильне слово (у м’якому режимі — без слова «Неправильно»). Поки мікрофон слухає, застосунок нічого не озвучує, а помилки мікрофона чи мережі пояснюються простими словами.
@@ -46,6 +46,8 @@
 - **Автоозвучення** нового слова (за бажанням) з повільною швидкістю мовлення за замовчуванням.
 - **Статистика прогресу** — лічильник правильних відповідей (і загальної кількості спроб у класичному режимі).
 - **Світла / темна тема**, адаптивний вигляд для телефонів і планшетів.
+- **Зручна навігація** — системна кнопка «Назад» на Android повертає на крок назад, а не закриває застосунок; налаштування згруповано за режимами; залишок часу таймера видно в шапці.
+- **Голосова оцінка** — одне налаштування для всіх режимів; після помилки звучить правильне слово. У «Тесті» можна дозволити один повтор слова.
 - **Робота офлайн** як встановлюваний PWA-застосунок (маніфест + іконки); усі налаштування (мова, голос, тема, таймер, категорія тощо) зберігаються локально на пристрої.
 
 ### 🚀 Як почати
@@ -124,7 +126,7 @@ The app runs entirely in the browser — no installation, no backend, no account
 
 - **Auditory differentiation exercises** — the app speaks a word aloud, and the user picks the correct word out of 2, 3, or 4 similar-sounding options (minimal pairs), training the ear to tell real words apart.
 - **Word-building / spelling task** — assemble the target word from its syllables, useful for speech and reading practice.
-- **ABC mode (first-letter hint)** — for the “it’s on the tip of my tongue” moment: tap the first letter and the app lists matching words from the dictionary; tap a word to hear it and add it to a line that can be read aloud. A second keyboard mode allows free typing, mistakes included, and suggests similar words. Optional online word search (Wiktionary, Datamuse for English) can be switched on in Settings; chosen words are remembered on the device. The letter panel can be set to collapse automatically after each tap.
+- **ABC mode (first-letter hint)** — for the “it’s on the tip of my tongue” moment: tap the first letter and the app lists matching words from the dictionary; tap a word to hear it and add it to a line that can be read aloud. A second keyboard mode allows free typing, mistakes included, and suggests similar words. Optional online word search (Wiktionary, Datamuse for English) can be switched on in Settings; chosen words are remembered on the device. The letter panel can be set to collapse automatically after each tap. Short words (I, you, to, in, not…) are added with a separate button, a word in the phrase is removed with a tap, and the assembled phrase can be practised aloud and saved to “My phrases”.
 - **Text-to-speech (TTS)** — words are read aloud using the device's built-in voices, with adjustable speech speed.
 - **Voice selection by gender** — pick a specific male or female voice for each language when the device offers several; voices are grouped and labeled automatically (♀ Female / ♂ Male / Other), with extra reliability fixes for Android, where voices can otherwise fail to load.
 - **Speech recognition ("say it and check")** — the user pronounces the word into the microphone, and the app checks it against the target word using the browser's speech recognition. The word counts if it is among the recognition variants; after a mistake the right word is spoken (in gentle mode without the word “Incorrect”). While the microphone is listening, the app does not speak, and microphone or network problems are explained in plain words.
@@ -139,6 +141,8 @@ The app runs entirely in the browser — no installation, no backend, no account
 - **Auto-speak** the new word (optional) with a slow speech speed by default.
 - **Progress stats** — running count of correct answers (and total attempts in classic mode).
 - **Light / dark theme**, responsive layout for phones and tablets.
+- **Easy navigation** — the Android “Back” button goes one step back instead of closing the app; settings are grouped by mode; the timer's time left is shown in the header.
+- **Spoken verdict** — one setting for all modes; after a mistake the right word is spoken. The Test can allow one replay of each word.
 - **Works offline** as an installable PWA (manifest + icons); all settings (language, voice, theme, timer, category, etc.) are saved locally on the device.
 
 ### 🚀 Getting started
