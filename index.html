@@ -502,6 +502,23 @@
         .sg { border: 2px solid var(--input-border); border-radius: 10px; overflow: hidden; }
         .sg-h { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 54px; text-align: left; font-weight: bold; font-size: 1.05em; border: 0; border-radius: 0; background: var(--card-bg); color: var(--text-color); cursor: pointer; }
         .sg.open .sg-h { background: var(--option-btn-hover); }
+
+        /* Резервная копия данных */
+        .bk-note { margin: 0 0 8px; font-size: 0.95em; line-height: 1.35; }
+        .bk-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        .bk-row > button { flex: 1 1 0; width: auto; min-width: min-content; min-height: 44px; }
+        .bk-status { margin-top: 6px; font-size: 0.95em; min-height: 1.2em; }
+        /* Плашка «Открыто внутри Facebook / другого приложения» — над шапкой, не закреплена */
+        .iab-bar { align-self: stretch; margin: -15px -15px 0; padding: 8px 10px; background: #fde68a; color: #1f2937; font-size: 15px; line-height: 1.3; border-bottom: 2px solid #d97706; }
+        .iab-bar ~ .app-header { margin-top: 0; }
+        .iab-in { max-width: 600px; margin: 0 auto; }
+        .iab-top { display: flex; align-items: flex-start; gap: 8px; }
+        .iab-msg { flex: 1 1 auto; min-width: 0; font-weight: 700; padding-top: 4px; }
+        .iab-bar button { font-size: 15px; border-radius: 8px; cursor: pointer; }
+        .iab-x { flex: 0 0 auto; width: 44px; min-height: 44px; padding: 0; margin: 0; background: transparent; color: #1f2937; border: 2px solid #b45309; }
+        .iab-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+        .iab-row > button { flex: 1 1 0; width: auto; min-width: min-content; min-height: 44px; margin: 0; padding: 6px 10px; background: #1e3a8a; color: #fff; border: 0; font-weight: 700; }
+        .iab-hint { margin-top: 6px; font-weight: 700; }
         .app-ver { text-align: center; font-size: 0.9em; opacity: 0.75; padding: 4px 0 2px; }
         .sg-arr { flex: 0 0 auto; width: 1.2em; font-size: 0.9em; }
         .sg-b { display: none; flex-direction: column; gap: 12px; padding: 12px 10px; }
@@ -923,6 +940,7 @@
         @media (max-width: 380px) {
             body { padding: 8px; }
             .app-header { margin: -8px -8px 12px; }
+            .iab-bar { margin: -8px -8px 0; }
             .container { padding: 12px; }
             .card, .settings-panel { padding: 12px; }
             .abc-row .assist-btn { min-width: 52px; }
@@ -1143,6 +1161,20 @@
                 <option value="onerr" id="optSerNE"></option>
                 <option value="never" id="optSerNN"></option>
             </select>
+        </div>
+            </div>
+        </div>
+        <div class="sg" data-g="data">
+            <button type="button" class="sg-h" onclick="settToggle('data')" aria-expanded="false"><span class="sg-arr">▶</span><span class="sg-t" id="sgt_data"></span></button>
+            <div class="sg-b">
+        <div class="control-group">
+            <p class="bk-note" id="bkNote"></p>
+            <div class="bk-row">
+                <button type="button" class="assist-btn" id="bkSaveBtn" onclick="backupSave()"></button>
+                <button type="button" class="assist-btn" id="bkLoadBtn" onclick="document.getElementById('bkFile').click()"></button>
+            </div>
+            <input type="file" id="bkFile" accept=".json,application/json" style="display:none" onchange="if (this.files && this.files[0]) backupLoad(this.files[0]); this.value = '';">
+            <div class="bk-status" id="bkStatus" role="status" aria-live="polite"></div>
         </div>
             </div>
         </div>
@@ -4056,21 +4088,140 @@
         const c2 = document.getElementById('setSerVoice'); if (c2) c2.checked = p.voice;
     }
     const SETT_T = {
-        ru: { main: '⚙️ Основные', train: 'Слова: 🧩 тренажёр, 👂 слух, ✍️ письмо, 📝 тест на слух', abc: '🔤 Азбука и 🎤 подсказка по сказанному', phr: '🗣 Мои фразы', ser: '🔢 Перечисления',
+        ru: { main: '⚙️ Основные', train: 'Слова: 🧩 тренажёр, 👂 слух, ✍️ письмо, 📝 тест на слух', abc: '🔤 Азбука и 🎤 подсказка по сказанному', phr: '🗣 Мои фразы', ser: '🔢 Перечисления', data: '💾 Данные: копия и перенос',
               verdict: 'Голосом говорить, правильно ли сказано (во всех режимах)', quiz: '📝 Тест на слух: можно один раз повторить слово', wrGiven: '✍️ Письмо (все уровни): сколько первых букв слова или фразы подсказывать (меньше — сложнее)', wrG: ['0 — без подсказки', '1 буква', '2 буквы', '3 буквы'], wrHide: '✍️ Письмо: сворачивать панель с буквами после каждой нажатой буквы, чтобы было видно задание. Вернуть её — кнопкой «Показать буквы».' },
-        uk: { main: '⚙️ Основні', train: 'Слова: 🧩 тренажер, 👂 слух, ✍️ письмо, 📝 тест на слух', abc: '🔤 Абетка і 🎤 підказка за сказаним', phr: '🗣 Мої фрази', ser: '🔢 Перелічення',
+        uk: { main: '⚙️ Основні', train: 'Слова: 🧩 тренажер, 👂 слух, ✍️ письмо, 📝 тест на слух', abc: '🔤 Абетка і 🎤 підказка за сказаним', phr: '🗣 Мої фрази', ser: '🔢 Перелічення', data: '💾 Дані: копія й перенесення',
               verdict: 'Голосом казати, чи правильно сказано (в усіх режимах)', quiz: '📝 Тест на слух: можна один раз повторити слово', wrGiven: '✍️ Письмо (усі рівні): скільки перших літер слова чи фрази підказувати (менше — складніше)', wrG: ['0 — без підказки', '1 літера', '2 літери', '3 літери'], wrHide: '✍️ Письмо: згортати панель з літерами після кожної натиснутої літери, щоб було видно завдання. Повернути її — кнопкою «Показати літери».' },
-        en: { main: '⚙️ General', train: 'Words: 🧩 trainer, 👂 listening, ✍️ writing, 📝 hearing test', abc: '🔤 ABC and 🎤 suggestions from what was said', phr: '🗣 My phrases', ser: '🔢 Sequences',
+        en: { main: '⚙️ General', train: 'Words: 🧩 trainer, 👂 listening, ✍️ writing, 📝 hearing test', abc: '🔤 ABC and 🎤 suggestions from what was said', phr: '🗣 My phrases', ser: '🔢 Sequences', data: '💾 Data: backup and transfer',
               verdict: 'Say aloud whether it was said correctly (all modes)', quiz: '📝 Hearing test: the word can be replayed once', wrGiven: '✍️ Writing (all levels): how many first letters of the word or phrase to give as a hint (fewer is harder)', wrG: ['0 — no hint', '1 letter', '2 letters', '3 letters'], wrHide: '✍️ Writing: collapse the letter panel after each letter you tap, so the task stays visible. Bring it back with the “Show letters” button.' }
     };
+
+    // ===== Резервная копия всех данных приложения (настройки, свои слова и фразы, статистика) =====
+    // Сохраняются ключи localStorage с префиксами «sr.» и «app_»; загружаемые словари (lex) и секреты — нет.
+    // Ключи «Говоримо разом» (aac.*) не трогаются.
+    const BK_T = {
+        ru: { note: 'Все настройки, свои слова и фразы, статистика хранятся только на этом устройстве. Сохраните копию в файл, чтобы перенести их на другой телефон или вернуть после переустановки.',
+              save: '💾 Сохранить копию данных', load: '📂 Загрузить копию данных', saved: 'Копия сохранена: {f}. Файл обычно лежит в папке «Загрузки».',
+              bad: 'Этот файл не является копией данных «Снова слова».', ask: 'Заменить текущие данные на этом устройстве данными из копии от {d}? Текущие настройки, слова, фразы и статистика будут заменены.',
+              done: 'Данные загружены, приложение перезапускается…', err: 'Не удалось прочитать файл.' },
+        uk: { note: 'Усі налаштування, свої слова й фрази, статистика зберігаються лише на цьому пристрої. Збережіть копію у файл, щоб перенести їх на інший телефон або повернути після перевстановлення.',
+              save: '💾 Зберегти копію даних', load: '📂 Завантажити копію даних', saved: 'Копію збережено: {f}. Файл зазвичай лежить у папці «Завантаження».',
+              bad: 'Цей файл не є копією даних «Знову слова».', ask: 'Замінити поточні дані на цьому пристрої даними з копії від {d}? Поточні налаштування, слова, фрази й статистику буде замінено.',
+              done: 'Дані завантажено, застосунок перезапускається…', err: 'Не вдалося прочитати файл.' },
+        en: { note: 'All settings, your own words and phrases, and statistics are stored only on this device. Save a backup file to move them to another phone or restore them after reinstalling.',
+              save: '💾 Save data backup', load: '📂 Load data backup', saved: 'Backup saved: {f}. The file is usually in the “Downloads” folder.',
+              bad: 'This file is not a “Words Again” data backup.', ask: 'Replace the current data on this device with the backup from {d}? Current settings, words, phrases and statistics will be replaced.',
+              done: 'Data loaded, the app is restarting…', err: 'Could not read the file.' }
+    };
+    const BK_SKIP = /lex|secret|apikey|api_key|token/i;
+    function bkOwnKey(k) { return !!k && (k.indexOf('sr.') === 0 || k.indexOf('app_') === 0) && !BK_SKIP.test(k); }
+    function bkKeys() {
+        const ks = [];
+        try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (bkOwnKey(k)) ks.push(k); } } catch (e) {}
+        return ks.sort();
+    }
+    function bkStatus(msg) { const e = document.getElementById('bkStatus'); if (e) e.textContent = msg || ''; }
+    function backupSave() {
+        const t = BK_T[currentLang] || BK_T.uk, data = {};
+        bkKeys().forEach(k => { try { data[k] = localStorage.getItem(k); } catch (e) {} });
+        const d = new Date(), p = n => String(n).padStart(2, '0');
+        const name = 'znovu-slova-backup-' + d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '.json';
+        const blob = new Blob([JSON.stringify({ app: 'SpeechRehab', version: APP_VERSION, date: d.toISOString(), data }, null, 1)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        bkStatus(t.saved.replace('{f}', name));
+    }
+    function backupApply(obj) {
+        const t = BK_T[currentLang] || BK_T.uk;
+        if (!obj || obj.app !== 'SpeechRehab' || !obj.data || typeof obj.data !== 'object' || Array.isArray(obj.data)) { bkStatus(t.bad); return false; }
+        let d = '';
+        try { d = obj.date ? new Date(obj.date).toLocaleString(currentLang === 'en' ? 'en-GB' : (currentLang === 'uk' ? 'uk-UA' : 'ru-RU')) : '?'; } catch (e) { d = String(obj.date || '?'); }
+        if (!confirm(t.ask.replace('{d}', d))) return false;
+        try {
+            bkKeys().forEach(k => localStorage.removeItem(k));
+            Object.keys(obj.data).forEach(k => { const v = obj.data[k]; if (bkOwnKey(k) && typeof v === 'string') localStorage.setItem(k, v); });
+        } catch (e) { bkStatus(t.err); return false; }
+        bkStatus(t.done);
+        setTimeout(() => location.reload(), 600);
+        return true;
+    }
+    function backupLoad(file) {
+        const t = BK_T[currentLang] || BK_T.uk;
+        const r = new FileReader();
+        r.onload = () => { let obj = null; try { obj = JSON.parse(String(r.result || '')); } catch (e) { bkStatus(t.bad); return; } backupApply(obj); };
+        r.onerror = () => bkStatus(t.err);
+        r.readAsText(file);
+    }
+
+    // ===== Плашка «Открыто внутри Facebook / другого приложения» =====
+    // Встроенный браузер соцсети хранит данные отдельно: приложение там открывается «с нуля».
+    const IAB_RE = /FBAN|FBAV|FB_IAB|FBIOS|Instagram|Messenger|Line\/|MicroMessenger|Snapchat|; wv\)/i;
+    const IAB_T = {
+        ru: { msg: 'Открыто внутри Facebook или другого приложения: ваших настроек и фраз здесь не видно.', chrome: '🌐 Открыть в Chrome', copy: '📋 Копировать ссылку', copied: '✓ Ссылка скопирована', ios: 'Меню ⋯ → «Открыть в браузере»', close: 'Скрыть' },
+        uk: { msg: 'Відкрито всередині Facebook або іншого застосунку: ваших налаштувань і фраз тут не видно.', chrome: '🌐 Відкрити в Chrome', copy: '📋 Копіювати посилання', copied: '✓ Посилання скопійовано', ios: 'Меню ⋯ → «Відкрити в браузері»', close: 'Сховати' },
+        en: { msg: 'Opened inside Facebook or another app: your settings and phrases are not visible here.', chrome: '🌐 Open in Chrome', copy: '📋 Copy link', copied: '✓ Link copied', ios: 'Menu ⋯ → “Open in browser”', close: 'Hide' }
+    };
+    function iabNeeded() {
+        try {
+            if ((window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone) return false;
+            if (sessionStorage.getItem('sr.iab.off') === '1') return false;
+        } catch (e) {}
+        return IAB_RE.test(navigator.userAgent || '');
+    }
+    function iabCopy(btn) {
+        const t = IAB_T[currentLang] || IAB_T.uk, url = location.href;
+        const ok = () => { btn.textContent = t.copied; setTimeout(() => { btn.textContent = t.copy; }, 2500); };
+        const fallback = () => {
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = url; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, url.length);
+                const r = document.execCommand('copy'); ta.remove(); if (r) ok();
+            } catch (e) {}
+        };
+        try { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(url).then(ok, fallback); return; } } catch (e) {}
+        fallback();
+    }
+    function iabRender() {
+        let el = document.getElementById('iabBar');
+        if (!iabNeeded()) { if (el) el.remove(); return; }
+        if (!el) { el = document.createElement('div'); el.id = 'iabBar'; el.className = 'iab-bar'; el.setAttribute('role', 'note'); document.body.insertBefore(el, document.body.firstChild); }
+        const t = IAB_T[currentLang] || IAB_T.uk, ua = navigator.userAgent || '';
+        const android = /Android/i.test(ua), ios = /iPhone|iPad|iPod/i.test(ua);
+        el.innerHTML = '';
+        const inn = document.createElement('div'); inn.className = 'iab-in';
+        const top = document.createElement('div'); top.className = 'iab-top';
+        const msg = document.createElement('div'); msg.className = 'iab-msg'; msg.textContent = '⚠️ ' + t.msg;
+        const x = document.createElement('button'); x.type = 'button'; x.className = 'iab-x'; x.textContent = '✕'; x.title = t.close; x.setAttribute('aria-label', t.close);
+        x.onclick = () => { try { sessionStorage.setItem('sr.iab.off', '1'); } catch (e) {} el.remove(); };
+        top.append(msg, x);
+        const row = document.createElement('div'); row.className = 'iab-row';
+        if (android) {
+            const c = document.createElement('button'); c.type = 'button'; c.className = 'iab-chrome'; c.textContent = t.chrome;
+            c.onclick = () => { location.href = 'intent://' + location.host + location.pathname + location.search + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(location.href) + ';end'; };
+            row.append(c);
+        }
+        const cp = document.createElement('button'); cp.type = 'button'; cp.className = 'iab-copy'; cp.textContent = t.copy; cp.onclick = () => iabCopy(cp);
+        row.append(cp);
+        inn.append(top, row);
+        if (ios) { const h = document.createElement('div'); h.className = 'iab-hint'; h.textContent = t.ios; inn.append(h); }
+        el.append(inn);
+    }
     // Номер версии приложения (совпадает с номером в sw.js) — виден внизу настроек
-    const APP_VERSION = 54;
+    const APP_VERSION = 55;
     function syncSettGroups() {
         let ver = document.getElementById('appVer');
         if (!ver) { ver = document.createElement('div'); ver.id = 'appVer'; ver.className = 'app-ver'; document.getElementById('settingsPanel').appendChild(ver); }
         ver.textContent = ({ ru: 'Версия приложения: ', uk: 'Версія застосунку: ', en: 'App version: ' }[currentLang] || 'Version: ') + APP_VERSION;
         const t = SETT_T[currentLang] || SETT_T.ru;
-        ['main', 'train', 'abc', 'phr', 'ser'].forEach(g => { const e = document.getElementById('sgt_' + g); if (e) e.textContent = t[g]; });
+        ['main', 'train', 'abc', 'phr', 'ser', 'data'].forEach(g => { const e = document.getElementById('sgt_' + g); if (e) e.textContent = t[g]; });
+        const bt = BK_T[currentLang] || BK_T.uk;
+        document.getElementById('bkNote').textContent = bt.note;
+        document.getElementById('bkSaveBtn').textContent = bt.save;
+        document.getElementById('bkLoadBtn').textContent = bt.load;
+        iabRender();
         document.getElementById('labelVerdict').innerText = t.verdict;
         document.getElementById('labelQuizReplay').innerText = t.quiz;
         document.getElementById('setVerdict').checked = verdictOn();
@@ -7221,7 +7372,7 @@ function fillFromHeard(){
 
 <h3>⚙️ Настройки</h3>
 <ul>
-<li><b>Группы</b> — настройки разделены на группы: основные, слова (🧩 👂 ✍️ 📝), 🔤 Азбука и 🎤 подсказка, 🗣 Мои фразы, 🔢 Перечисления. Открыта одна группа; если открыть настройки из режима, сразу раскрывается его группа.</li>
+<li><b>Группы</b> — настройки разделены на группы: основные, слова (🧩 👂 ✍️ 📝), 🔤 Азбука и 🎤 подсказка, 🗣 Мои фразы, 🔢 Перечисления, 💾 данные. Открыта одна группа; если открыть настройки из режима, сразу раскрывается его группа.</li>
 <li><b>Голосом говорить, правильно ли сказано</b> — одна настройка для всех режимов. После ошибки приложение называет правильное слово.</li>
 <li><b>Язык и тема</b> — русский, украинский, английский; светлая и тёмная тема.</li>
 <li><b>Количество вариантов</b> — 2, 3 или 4.</li>
@@ -7235,6 +7386,8 @@ function fillFromHeard(){
 <li><b>Таймер «Игра / Отдых»</b> — после времени игры включается пауза для отдыха; длительность задаётся в минутах. Время игры идёт только внутри режимов тренировки; на стартовом экране и пока открыты настройки, справка или статистика, таймер стоит (в шапке значок ⏸). В «Азбуке» и «Подсказке по сказанному» перерыв не прерывает человека: он начнётся после того, как фраза озвучена, или при выходе из режима (в шапке ☕). Оставшееся время видно в шапке во всех режимах; нажатие на него ставит паузу.</li>
 <li><b>🔤 Азбука, 🎤 Подсказка по сказанному и 🗣 Мои фразы</b> — онлайн-поиск слов, сворачивание букв, упрощённый вид подсказки; поведение слова из списка (нажатие говорит, удержание добавляет) общее для «Азбуки» и подсказки; показ текста фразы при повторении в «Моих фразах».</li>
 <li><b>📚 Мои слова</b> — окно для добавления своих слов в словарь (описание ниже).</li>
+<li><b>💾 Данные: копия и перенос</b> — все настройки, свои слова и фразы, статистика хранятся только на этом устройстве. «💾 Сохранить копию данных» создаёт файл (обычно в папке «Загрузки»), «📂 Загрузить копию данных» возвращает всё из такого файла — на другом телефоне или после переустановки. Перед загрузкой приложение спрашивает подтверждение: текущие данные будут заменены.</li>
+<li><b>Открыто внутри Facebook или другого приложения</b> — у встроенного браузера соцсети своё хранилище: там приложение открывается «с нуля», а изменения не попадают в установленное приложение. Сверху появляется жёлтая плашка: «🌐 Открыть в Chrome» (Android) или «📋 Копировать ссылку», чтобы открыть ссылку в обычном браузере. Плашку можно скрыть ✕.</li>
 </ul>
 
 <h3>📚 Свой словарь</h3>
@@ -7294,7 +7447,7 @@ function fillFromHeard(){
 
 <h3>⚙️ Налаштування</h3>
 <ul>
-<li><b>Групи</b> — налаштування поділено на групи: основні, слова (🧩 👂 ✍️ 📝), 🔤 Абетка й 🎤 підказка, 🗣 Мої фрази, 🔢 Перелічення. Відкрита одна група; якщо відкрити налаштування з режиму, одразу розкривається його група.</li>
+<li><b>Групи</b> — налаштування поділено на групи: основні, слова (🧩 👂 ✍️ 📝), 🔤 Абетка й 🎤 підказка, 🗣 Мої фрази, 🔢 Перелічення, 💾 дані. Відкрита одна група; якщо відкрити налаштування з режиму, одразу розкривається його група.</li>
 <li><b>Голосом казати, чи правильно сказано</b> — одне налаштування для всіх режимів. Після помилки застосунок називає правильне слово.</li>
 <li><b>Мова і тема</b> — російська, українська, англійська; світла й темна тема.</li>
 <li><b>Кількість варіантів</b> — 2, 3 або 4.</li>
@@ -7308,6 +7461,8 @@ function fillFromHeard(){
 <li><b>Таймер «Гра / Відпочинок»</b> — після часу гри вмикається пауза для відпочинку; тривалість задається в хвилинах. Час гри йде лише всередині режимів тренування; на стартовому екрані й поки відкрито налаштування, довідку чи статистику, таймер стоїть (у шапці значок ⏸). В «Абетці» й «Підказці за сказаним» перерва не перериває людину: вона почнеться після того, як фразу озвучено, або при виході з режиму (у шапці ☕). Залишок часу видно в шапці в усіх режимах; натискання на нього ставить паузу.</li>
 <li><b>🔤 Абетка, 🎤 Підказка за сказаним і 🗣 Мої фрази</b> — онлайн-пошук слів, згортання літер, спрощений вигляд підказки; поведінка слова зі списку (натискання говорить, утримання додає) спільна для «Абетки» й підказки; показ тексту фрази під час повторення в «Моїх фразах».</li>
 <li><b>📚 Мої слова</b> — вікно для додавання своїх слів до словника (опис нижче).</li>
+<li><b>💾 Дані: копія й перенесення</b> — усі налаштування, свої слова й фрази, статистика зберігаються лише на цьому пристрої. «💾 Зберегти копію даних» створює файл (зазвичай у папці «Завантаження»), «📂 Завантажити копію даних» повертає все з такого файлу — на іншому телефоні або після перевстановлення. Перед завантаженням застосунок питає підтвердження: поточні дані буде замінено.</li>
+<li><b>Відкрито всередині Facebook або іншого застосунку</b> — вбудований браузер соцмережі має власне сховище: там застосунок відкривається «з нуля», а зміни не потрапляють до встановленого застосунку. Згори з’являється жовта плашка: «🌐 Відкрити в Chrome» (Android) або «📋 Копіювати посилання», щоб відкрити посилання у звичайному браузері. Плашку можна сховати ✕.</li>
 </ul>
 
 <h3>📚 Власний словник</h3>
@@ -7367,7 +7522,7 @@ function fillFromHeard(){
 
 <h3>⚙️ Settings</h3>
 <ul>
-<li><b>Groups</b> — settings are split into groups: general, words (🧩 👂 ✍️ 📝), 🔤 ABC and 🎤 suggestions, 🗣 My phrases, 🔢 Sequences. One group is open; when Settings are opened from a mode, that mode's group opens.</li>
+<li><b>Groups</b> — settings are split into groups: general, words (🧩 👂 ✍️ 📝), 🔤 ABC and 🎤 suggestions, 🗣 My phrases, 🔢 Sequences, 💾 data. One group is open; when Settings are opened from a mode, that mode's group opens.</li>
 <li><b>Say aloud whether it was said correctly</b> — one setting for all modes. After a mistake the app says the right word.</li>
 <li><b>Language and theme</b> — Russian, Ukrainian, English; light and dark theme.</li>
 <li><b>Number of options</b> — 2, 3 or 4.</li>
@@ -7381,6 +7536,8 @@ function fillFromHeard(){
 <li><b>Play / Rest timer</b> — after the play time a rest break starts; durations are set in minutes. Play time runs only inside training modes; on the start screen and while Settings, Help or Statistics are open the timer stands still (⏸ in the header). In ABC and “Suggestions from what was said” the break does not interrupt the person: it starts after a phrase has been spoken or when leaving the mode (☕ in the header). The time left is shown in the header in every mode; tapping it pauses the timer.</li>
 <li><b>🔤 ABC, 🎤 Suggestions from what was said and 🗣 My phrases</b> — online word search, collapsing letters, the simple view of suggestions; how a listed word behaves (tap speaks, hold adds) is shared by ABC and suggestions; showing the phrase text while repeating in “My phrases”.</li>
 <li><b>📚 My words</b> — a window for adding your own words to the dictionary (described below).</li>
+<li><b>💾 Data: backup and transfer</b> — all settings, your own words and phrases, and statistics are stored only on this device. “💾 Save data backup” creates a file (usually in the “Downloads” folder), “📂 Load data backup” restores everything from such a file — on another phone or after reinstalling. Before loading, the app asks for confirmation: the current data will be replaced.</li>
+<li><b>Opened inside Facebook or another app</b> — a social network's built-in browser has its own storage: the app opens there “from scratch”, and changes do not reach the installed app. A yellow bar appears at the top: “🌐 Open in Chrome” (Android) or “📋 Copy link” to open the link in a regular browser. The bar can be hidden with ✕.</li>
 </ul>
 
 <h3>📚 Your own dictionary</h3>

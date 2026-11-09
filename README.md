@@ -50,6 +50,8 @@
 - **Зручна навігація** — системна кнопка «Назад» на Android повертає на крок назад, а не закриває застосунок; налаштування згруповано за режимами; залишок часу таймера видно в шапці.
 - **Голосова оцінка** — одне налаштування для всіх режимів; після помилки звучить правильне слово. У «Тесті на слух» можна дозволити один повтор слова.
 - **Робота офлайн** як встановлюваний PWA-застосунок (маніфест + іконки); усі налаштування (мова, голос, тема, таймер, категорія тощо) зберігаються локально на пристрої.
+- **Резервна копія даних** — у налаштуваннях (група «💾 Дані») можна зберегти всі налаштування, свої слова й фрази та статистику в один файл і завантажити їх на іншому телефоні або після перевстановлення.
+- **Підказка для вбудованого браузера** — якщо посилання відкрито всередині Facebook, Instagram, Messenger тощо, згори з’являється жовта плашка: там застосунок не бачить ваших даних, тож його варто відкрити в Chrome (кнопка «Відкрити в Chrome» на Android або «Копіювати посилання»).
 
 ### 🚀 Як почати
 
@@ -146,6 +148,8 @@ The app runs entirely in the browser — no installation, no backend, no account
 - **Easy navigation** — the Android “Back” button goes one step back instead of closing the app; settings are grouped by mode; the timer's time left is shown in the header.
 - **Spoken verdict** — one setting for all modes; after a mistake the right word is spoken. The hearing test can allow one replay of each word.
 - **Works offline** as an installable PWA (manifest + icons); all settings (language, voice, theme, timer, category, etc.) are saved locally on the device.
+- **Data backup** — in Settings (the “💾 Data” group) all settings, your own words and phrases, and statistics can be saved to one file and loaded on another phone or after reinstalling.
+- **In-app browser hint** — if the link is opened inside Facebook, Instagram, Messenger, etc., a yellow bar appears at the top: the app cannot see your data there, so it is better to open it in Chrome (“Open in Chrome” on Android, or “Copy link”).
 
 ### 🚀 Getting started
 
