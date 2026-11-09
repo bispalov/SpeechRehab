@@ -4218,7 +4218,7 @@
         el.append(inn);
     }
     // Номер версии приложения (совпадает с номером в sw.js) — виден внизу настроек
-    const APP_VERSION = 56;
+    const APP_VERSION = 57;
     function syncSettGroups() {
         let ver = document.getElementById('appVer');
         if (!ver) { ver = document.createElement('div'); ver.id = 'appVer'; ver.className = 'app-ver'; document.getElementById('settingsPanel').appendChild(ver); }
@@ -6085,14 +6085,39 @@
         return String(text).toLowerCase().replace(/\d+/g, m => ' ' + serNum(parseInt(m, 10)) + ' ')
             .replace(/[“”«»"„.,;:!?()]/g, ' ').split(/[\s\-–—]+/).map(phrNorm).filter(Boolean);
     }
-    // Сравнение сказанного с рядом: статус каждого слова ряда и лишние слова
-    function serEval(items, text, turn) {
-        const T = [], owner = [], last = [];
-        items.forEach((it, i) => { const tk = serTokens(it); tk.forEach(w => { T.push(w); owner.push(i); }); last[i] = T.length - 1; });
+    // Служебные слова, которые распознавание само дописывает к названиям («в воскресенье», «и потом»):
+    // не считаются лишними, если их нет в самом ряду
+    const SER_FILL = {
+        ru: 'в во и а ну э эм ээ потом дальше затем на у',
+        uk: 'в у і й та а ну е ем потім далі на',
+        en: 'and on the a uh um er erm then next'
+    };
+    // Другая форма того же слова (среда → «в среду», неділя → «в неділю») считается верной
+    function serSameWord(t, h) {
+        if (t === h) return true;
+        if (t.length < 4 || h.length < 3 || Math.abs(t.length - h.length) > 1) return false;
+        let k = 0; while (k < t.length && k < h.length && t[k] === h[k]) k++;
+        return k >= t.length - 1 && k >= h.length - 1;
+    }
+    // Сравнение сказанного с рядом: статус каждого слова ряда и лишние слова.
+    // live — проверка по ходу ответа: сравнение только с началом ряда такой длины, сколько уже сказано (+1 слово на пропуск),
+    // иначе в «туда и обратно» слово могло бы прилипнуть к своему повтору во второй половине ряда.
+    function serEval(items, text, turn, live) {
         let H = serTokens(text);
+        const all = new Set(); items.forEach(it => serTokens(it).forEach(w => all.add(w)));
+        const fill = new Set((SER_FILL[currentLang] || '').split(' ').map(phrNorm));
+        H = H.filter(w => all.has(w) || !fill.has(w));
         // «туда и обратно»: поворотное слово можно произнести и дважды подряд
         if (turn) { const tk = serTokens(turn); if (tk.length === 1) H = H.filter((w, i) => !(w === tk[0] && H[i - 1] === tk[0])); }
+        if (live) {
+            let cnt = 0, L = 0;
+            while (L < items.length && cnt < H.length) { cnt += serTokens(items[L]).length; L++; }
+            items = items.slice(0, Math.min(items.length, L + 1));
+        }
+        const T = [], owner = [], last = [];
+        items.forEach((it, i) => { const tk = serTokens(it); tk.forEach(w => { T.push(w); owner.push(i); }); last[i] = T.length - 1; });
         const al = phrAlign(T, H);
+        al.rows.forEach(r => { if (r.ti >= 0 && r.hi >= 0 && r.st !== 'ok' && serSameWord(T[r.ti], H[r.hi])) r.st = 'ok'; });
         const rank = { ok: 0, near: 1, bad: 2, miss: 3 };
         const agg = items.map(() => ({ s: 'ok', h: [] }));
         const seq = [];
@@ -6169,7 +6194,7 @@
         const items = serTarget(), marks = [];
         let cur = 0;
         if (String(text || '').trim()) {
-            const r = serEval(items, text, serTurnWord());
+            const r = serEval(items, text, serTurnWord(), true);
             let last = -1;
             r.seq.forEach(x => { if (x.i >= 0 && x.st !== 'miss') last = Math.max(last, x.i); });
             r.seq.forEach(x => { if (x.i >= 0 && x.i <= last) marks[x.i] = { st: x.st, h: x.h }; });
