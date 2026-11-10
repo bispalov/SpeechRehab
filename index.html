@@ -485,6 +485,9 @@
             cursor: pointer;
         }
         .letter-tile.used { opacity: 0.2; pointer-events: none; }
+        .letter-tile.bad { border-color: #c62828 !important; background: #ffebee !important; color: #b71c1c !important; }
+        .train-pic { font-size: 1.8em; vertical-align: middle; }
+        #listenScreen .train-mic { margin-top: 2px; }
         .letter-slot {
             box-sizing: border-box;
             min-width: 46px;
@@ -519,6 +522,10 @@
         .iab-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
         .iab-row > button { flex: 1 1 0; width: auto; min-width: min-content; min-height: 44px; margin: 0; padding: 6px 10px; background: #1e3a8a; color: #fff; border: 0; font-weight: 700; }
         .iab-hint { margin-top: 6px; font-weight: 700; }
+
+        /* «Тренировка слуха»: буквы — плитки в несколько рядов, а не во всю ширину */
+        .letter-slots > button.letter-tile, .letter-tiles > button.letter-tile { width: auto; flex: 0 0 auto; margin: 0; min-width: 52px; height: 56px; font-size: 26px; }
+        .letter-slots > .letter-slot { min-width: 52px; height: 56px; border-radius: 8px; }
         .app-ver { text-align: center; font-size: 0.9em; opacity: 0.75; padding: 4px 0 2px; }
         .sg-arr { flex: 0 0 auto; width: 1.2em; font-size: 0.9em; }
         .sg-b { display: none; flex-direction: column; gap: 12px; padding: 12px 10px; }
@@ -3837,18 +3844,18 @@
             quizTitle: '📝 Тест на слух', quizDesc: 'От 10 до 30 случайных слов подряд. Каждое слово звучит один раз, вы проговариваете его. В конце результат.',
             home: 'К выбору режима',
             homeShort: 'Режимы',
-            stepOf: 'Шаг {i} из 3', s1: 'Послушайте слово', s2: 'Повторите слово вслух', s3: 'Соберите слово из букв', summary: 'Итог',
+            stepOf: 'Шаг {i} из 2', s1: 'Послушайте и повторите слово', s2: 'Соберите слово из букв', sayRep: '🎤 Повторить', summary: 'Итог',
             listen: '🔊 Послушать', slow: '🐢 По слогам', next: 'Далее ➔',
             say: '🎤 Проговорить', again: '🎤 Ещё раз', listening: '⏺ Слушаю…',
             heardLbl: 'Вы сказали:', noSpeech: 'Не расслышал. Попробуйте ещё раз.',
             noRecSupport: 'Распознавание речи здесь недоступно. Можно перейти дальше.',
             noMic: 'Нет доступа к микрофону. Разрешите его в настройках браузера.', needNet: 'Для распознавания речи нужен интернет.', recFail: 'Не удалось распознать. Попробуйте ещё раз.',
             errPrefix: 'Ошибка распознавания: ',
-            requireNote: 'Сначала проговорите слово верно или сделайте 3 попытки.',
+            requireNote: 'Сначала повторите слово верно или сделайте 3 попытки.',
             buildBack: '⌫ Стереть', buildClear: 'Очистить', builtOk: '✔ Верно!',
-            builtBad: '✘ Не совпадает. Можно исправить или перейти дальше.',
+            builtBad: '✘ Не совпадает. Нажмите на красные буквы, чтобы заменить их, или перейдите дальше.',
             srcWord: 'Исходное слово', saidWord: 'Вы проговорили', builtWord: 'Вы собрали', notSaid: 'не проговаривали',
-            repeatWord: '🔁 Повторить это слово', nextWord: '➡ Следующее слово', toModes: '🏠 К выбору режима',
+            repeatWord: '🔁 Ещё раз это слово', nextWord: '➡ Следующее слово', builtFixed: '✔ Потом исправлено', toModes: '🏠 К выбору режима',
             quizSetup: 'Тест на слух: услышать и повторить', quizCountLabel: 'Сколько слов (10–30):',
             quizPool: 'Слов в выбранной категории: {n}', quizSmall: 'Слов меньше выбранного числа: тест будет из {n} слов.',
             quizStart: '▶ Начать тест', quizProgress: 'Слово {i} из {n}',
@@ -3868,18 +3875,18 @@
             quizTitle: '📝 Тест на слух', quizDesc: 'Від 10 до 30 випадкових слів поспіль. Кожне слово звучить один раз, ви промовляєте його. Наприкінці результат.',
             home: 'До вибору режиму',
             homeShort: 'Режими',
-            stepOf: 'Крок {i} з 3', s1: 'Послухайте слово', s2: 'Повторіть слово вголос', s3: 'Зберіть слово з літер', summary: 'Підсумок',
+            stepOf: 'Крок {i} з 2', s1: 'Послухайте й повторіть слово', s2: 'Зберіть слово з літер', sayRep: '🎤 Повторити', summary: 'Підсумок',
             listen: '🔊 Послухати', slow: '🐢 По складах', next: 'Далі ➔',
             say: '🎤 Промовити', again: '🎤 Ще раз', listening: '⏺ Слухаю…',
             heardLbl: 'Ви сказали:', noSpeech: 'Не розчув. Спробуйте ще раз.',
             noRecSupport: 'Розпізнавання мовлення тут недоступне. Можна перейти далі.',
             noMic: 'Немає доступу до мікрофона. Дозвольте його в налаштуваннях браузера.', needNet: 'Для розпізнавання мовлення потрібен інтернет.', recFail: 'Не вдалося розпізнати. Спробуйте ще раз.',
             errPrefix: 'Помилка розпізнавання: ',
-            requireNote: 'Спочатку промовте слово правильно або зробіть 3 спроби.',
+            requireNote: 'Спочатку повторіть слово правильно або зробіть 3 спроби.',
             buildBack: '⌫ Стерти', buildClear: 'Очистити', builtOk: '✔ Правильно!',
-            builtBad: '✘ Не збігається. Можна виправити або перейти далі.',
+            builtBad: '✘ Не збігається. Натисніть на червоні літери, щоб замінити їх, або перейдіть далі.',
             srcWord: 'Вихідне слово', saidWord: 'Ви промовили', builtWord: 'Ви зібрали', notSaid: 'не промовляли',
-            repeatWord: '🔁 Повторити це слово', nextWord: '➡ Наступне слово', toModes: '🏠 До вибору режиму',
+            repeatWord: '🔁 Ще раз це слово', nextWord: '➡ Наступне слово', builtFixed: '✔ Потім виправлено', toModes: '🏠 До вибору режиму',
             quizSetup: 'Тест на слух: почути й повторити', quizCountLabel: 'Скільки слів (10–30):',
             quizPool: 'Слів в обраній категорії: {n}', quizSmall: 'Слів менше за обране число: тест буде з {n} слів.',
             quizStart: '▶ Почати тест', quizProgress: 'Слово {i} з {n}',
@@ -3899,7 +3906,7 @@
             quizTitle: '📝 Hearing test', quizDesc: '10 to 30 random words in a row. Each word is played once and you say it. A result at the end.',
             home: 'Back to modes',
             homeShort: 'Modes',
-            stepOf: 'Step {i} of 3', s1: 'Listen to the word', s2: 'Repeat the word aloud', s3: 'Assemble the word from letters', summary: 'Summary',
+            stepOf: 'Step {i} of 2', s1: 'Listen and repeat the word', s2: 'Assemble the word from letters', sayRep: '🎤 Repeat', summary: 'Summary',
             listen: '🔊 Listen', slow: '🐢 By syllables', next: 'Next ➔',
             say: '🎤 Say it', again: '🎤 Again', listening: '⏺ Listening…',
             heardLbl: 'You said:', noSpeech: 'Could not hear you. Try again.',
@@ -3908,9 +3915,9 @@
             errPrefix: 'Recognition error: ',
             requireNote: 'First say the word correctly or make 3 attempts.',
             buildBack: '⌫ Erase', buildClear: 'Clear', builtOk: '✔ Correct!',
-            builtBad: '✘ Does not match. You can fix it or continue.',
+            builtBad: '✘ Does not match. Tap the red letters to replace them, or continue.',
             srcWord: 'Original word', saidWord: 'You said', builtWord: 'You assembled', notSaid: 'not spoken',
-            repeatWord: '🔁 Repeat this word', nextWord: '➡ Next word', toModes: '🏠 Back to modes',
+            repeatWord: '🔁 This word again', nextWord: '➡ Next word', builtFixed: '✔ Fixed afterwards', toModes: '🏠 Back to modes',
             quizSetup: 'Hearing test: hear and repeat', quizCountLabel: 'How many words (10–30):',
             quizPool: 'Words in the selected category: {n}', quizSmall: 'There are fewer words than selected: the test will have {n} words.',
             quizStart: '▶ Start the test', quizProgress: 'Word {i} of {n}',
@@ -4221,7 +4228,7 @@
         el.append(inn);
     }
     // Номер версии приложения (совпадает с номером в sw.js) — виден внизу настроек
-    const APP_VERSION = 62;
+    const APP_VERSION = 63;
     function syncSettGroups() {
         let ver = document.getElementById('appVer');
         if (!ver) { ver = document.createElement('div'); ver.id = 'appVer'; ver.className = 'app-ver'; document.getElementById('settingsPanel').appendChild(ver); }
@@ -4392,6 +4399,9 @@
         train.builtOk = null;
         train.selfOk = false;
         train.buildRec = false;
+        train.order = [];
+        train.firstBuilt = null;
+        train.firstBuiltOk = null;
     }
 
     function listenNewWord() {
@@ -4415,27 +4425,24 @@
         return isChecked('requireSpeech') && speechRecognitionAvailable() && !train.passed && train.attempts < MAX_SPEECH_ATTEMPTS;
     }
 
+    // Шаги: 1 — послушать и повторить, 2 — собрать из букв, 3 — итог
     function renderListenStep(step) {
         stopModeSpeech();
         train.step = step;
         const t = mt();
         const el = document.getElementById('listenScreen');
         let h = '';
-        if (step <= 3) h += '<div class="step-progress">' + escHtml(t.stepOf.replace('{i}', step)) + '</div>';
+        if (step <= 2) h += '<div class="step-progress">' + escHtml(t.stepOf.replace('{i}', step)) + '</div>';
         if (step === 1) {
             h += '<div class="step-title">' + escHtml(t.s1) + '</div>' +
                  '<div class="step-box"><button class="assist-btn" onclick="trainSpeak()">' + escHtml(t.listen) + '</button>' +
                  '<button class="assist-btn" onclick="trainSyllables()">' + escHtml(t.slow) + '</button></div>' +
-                 '<button class="primary-btn" onclick="renderListenStep(2)">' + escHtml(t.next) + '</button>';
-        } else if (step === 2) {
-            h += '<div class="step-title">' + escHtml(t.s2) + '</div>' +
-                 '<div class="step-box"><button class="assist-btn" onclick="trainSpeak()">' + escHtml(t.listen) + '</button>' +
-                 '<button class="assist-btn" id="trainMicBtn" onclick="trainMic()">' + escHtml(train.attempts ? t.again : t.say) + '</button></div>' +
+                 '<button class="primary-btn train-mic" id="trainMicBtn" onclick="trainMic()">' + escHtml(train.attempts ? t.again : t.sayRep) + '</button>' +
                  '<div class="step-box" id="trainSayResult" style="display:none"></div>' +
                  '<div class="step-note" id="trainNote"></div>' +
-                 '<button class="primary-btn" id="trainNext2" onclick="renderListenStep(3)">' + escHtml(t.next) + '</button>';
-        } else if (step === 3) {
-            h += '<div class="step-title">' + escHtml(t.s3) + '</div>' +
+                 '<button class="primary-btn" id="trainNextSay" onclick="renderListenStep(2)">' + escHtml(t.next) + '</button>';
+        } else if (step === 2) {
+            h += '<div class="step-title">' + escHtml(t.s2) + '</div>' +
                  '<div class="step-box"><button class="assist-btn" onclick="trainSpeak()">' + escHtml(t.listen) + '</button>' +
                  '<button class="assist-btn" onclick="trainSyllables()">' + escHtml(t.slow) + '</button></div>' +
                  (isChecked('spellSyllableHint') ? '<div class="step-note"><b>' + escHtml(train.word.replace(/-/g, ' • ')) + '</b></div>' : '') +
@@ -4444,16 +4451,15 @@
                  '<div class="step-box"><button class="assist-btn" onclick="trainUndo()">' + escHtml(t.buildBack) + '</button>' +
                  '<button class="assist-btn" onclick="trainClear()">' + escHtml(t.buildClear) + '</button></div>' +
                  '<div class="step-note" id="trainBuildMsg"></div>' +
-                 '<button class="primary-btn" id="trainNext3" onclick="renderListenStep(4)">' + escHtml(t.next) + '</button>';
+                 '<button class="primary-btn" id="trainNextBuild" onclick="renderListenStep(3)">' + escHtml(t.next) + '</button>';
         } else {
-            if (train.built !== null && !train.buildRec) { train.buildRec = true; recordResult('build', train.clean, train.built, train.builtOk); }
+            if (train.firstBuilt != null && !train.buildRec) { train.buildRec = true; recordResult('build', train.clean, train.firstBuilt, train.firstBuiltOk); }
             h += renderTrainSummary();
         }
         el.innerHTML = h;
         window.scrollTo(0, 0);
-        if (step === 1) setTimeout(() => { if (screenName === 'listen' && train.step === 1) trainSpeak(); }, 250);
-        if (step === 2) updateTrainSayUI();
-        if (step === 3) renderBuildArea();
+        if (step === 1) { updateTrainSayUI(); if (!train.attempts) setTimeout(() => { if (screenName === 'listen' && train.step === 1 && !micBusy()) trainSpeak(); }, 250); }
+        if (step === 2) renderBuildArea();
     }
 
     function trainMic() {
@@ -4484,7 +4490,7 @@
                 speakSpeechFeedback(ok, m.heard, train.clean);
                 flushSpeechFeedback();
             }
-            if (train.step === 2) updateTrainSayUI();
+            if (train.step === 1) updateTrainSayUI();
         });
     }
 
@@ -4506,7 +4512,7 @@
         box.innerHTML = h;
         box.style.display = h ? '' : 'none';
         const locked = trainNextLocked();
-        document.getElementById('trainNext2').disabled = locked;
+        document.getElementById('trainNextSay').disabled = locked;
         document.getElementById('trainNote').innerText = locked ? t.requireNote : '';
     }
 
@@ -4518,13 +4524,20 @@
         updateTrainSayUI();
     }
 
+    // train.placed[i] — номер плитки на i-м месте слова (пустое место — undefined).
+    // Буква ставится в первое пустое место; нажатие на поставленную букву возвращает её в набор, место остаётся пустым.
+    // Собранное неверно — неверные буквы красные, их можно заменить на месте.
+    function trainFilled() { let n = 0; for (let i = 0; i < train.letters.length; i++) if (train.placed[i] !== undefined) n++; return n; }
     function renderBuildArea() {
         const t = mt();
         const total = train.letters.length;
+        const complete = trainFilled() === total;
         let slots = '';
         for (let i = 0; i < total; i++) {
             if (train.placed[i] !== undefined) {
-                slots += '<button class="letter-tile" onclick="trainRemove(' + i + ')">' + escHtml(train.tiles[train.placed[i]].ch) + '</button>';
+                const ch = train.tiles[train.placed[i]].ch;
+                const bad = complete && ch !== train.letters[i];
+                slots += '<button class="letter-tile' + (bad ? ' bad' : '') + '" onclick="trainRemove(' + i + ')">' + escHtml(ch) + '</button>';
             } else {
                 slots += '<span class="letter-slot"></span>';
             }
@@ -4532,24 +4545,30 @@
         document.getElementById('trainSlots').innerHTML = slots;
         document.getElementById('trainTiles').innerHTML = train.tiles.map((tl, idx) =>
             '<button class="letter-tile' + (tl.used ? ' used' : '') + '" onclick="trainPlace(' + idx + ')">' + escHtml(tl.ch) + '</button>').join('');
-        const complete = train.placed.length === total;
         let msg = '';
         if (complete) {
-            train.built = train.placed.map(i => train.tiles[i].ch).join('');
-            train.builtOk = train.built === train.letters.join('');
+            const built = train.placed.map(i => train.tiles[i].ch).join('');
+            // первая полностью собранная попытка идёт в итог и статистику; исправления после неё — тренировка
+            if (train.firstBuilt == null) { train.firstBuilt = built; train.firstBuiltOk = built === train.letters.join(''); }
+            train.built = built;
+            train.builtOk = built === train.letters.join('');
             msg = train.builtOk ? '<span class="res-ok">' + escHtml(t.builtOk) + '</span>' : '<span class="res-bad">' + escHtml(t.builtBad) + '</span>';
         } else {
             train.built = null;
             train.builtOk = null;
         }
         document.getElementById('trainBuildMsg').innerHTML = msg;
-        document.getElementById('trainNext3').disabled = !complete;
+        document.getElementById('trainNextBuild').disabled = !complete;
     }
 
     function trainPlace(idx) {
-        if (train.tiles[idx].used || train.placed.length >= train.letters.length) return;
+        if (train.tiles[idx].used) return;
+        let pos = -1;
+        for (let i = 0; i < train.letters.length; i++) if (train.placed[i] === undefined) { pos = i; break; }
+        if (pos < 0) return;
         train.tiles[idx].used = true;
-        train.placed.push(idx);
+        train.placed[pos] = idx;
+        train.order = (train.order || []).filter(p => p !== pos).concat(pos);
         renderBuildArea();
     }
 
@@ -4557,17 +4576,20 @@
         const idx = train.placed[pos];
         if (idx === undefined) return;
         train.tiles[idx].used = false;
-        train.placed.splice(pos, 1);
+        train.placed[pos] = undefined;
+        train.order = (train.order || []).filter(p => p !== pos);
         renderBuildArea();
     }
 
+    // «⌫ Стереть» убирает последнюю поставленную букву
     function trainUndo() {
-        if (train.placed.length) trainRemove(train.placed.length - 1);
+        const o = train.order || [];
+        if (o.length) trainRemove(o[o.length - 1]);
     }
 
     function trainClear() {
         train.tiles.forEach(tl => { tl.used = false; });
-        train.placed = [];
+        train.placed = []; train.order = [];
         renderBuildArea();
     }
 
@@ -4575,7 +4597,8 @@
         const t = mt();
         const target = train.letters.join('');
         let h = '<div class="step-title">' + escHtml(t.summary) + '</div>';
-        h += '<div class="result-row"><div class="res-label">' + escHtml(t.srcWord) + '</div><b>' + escHtml(train.word.replace(/-/g, ' • ')) + '</b></div>';
+        const pic = wrPic(train.word);
+        h += '<div class="result-row"><div class="res-label">' + escHtml(t.srcWord) + '</div>' + (pic ? '<span class="train-pic" aria-hidden="true">' + pic + '</span> ' : '') + '<b>' + escHtml(train.word.replace(/-/g, ' • ')) + '</b></div>';
         h += '<div class="result-row"><div class="res-label">' + escHtml(t.saidWord) + '</div>';
         if (train.heard === null) {
             h += '<span>' + escHtml(t.notSaid) + '</span>';
@@ -4585,16 +4608,18 @@
         }
         h += '</div>';
         h += '<div class="result-row"><div class="res-label">' + escHtml(t.builtWord) + '</div>';
-        if (train.built === null) {
+        if (train.firstBuilt == null) {
             h += '<span>—</span>';
         } else {
-            h += '<b>' + escHtml(train.built) + '</b> ' + (train.builtOk ? '<span class="res-ok">✔</span>' : '<span class="res-bad">✘</span>');
-            if (!train.builtOk) h += buildDiffHtml(target, train.built);
+            h += '<b>' + escHtml(train.firstBuilt) + '</b> ' + (train.firstBuiltOk ? '<span class="res-ok">✔</span>' : '<span class="res-bad">✘</span>');
+            if (!train.firstBuiltOk) {
+                h += buildDiffHtml(target, train.firstBuilt);
+                if (train.builtOk) h += '<div class="res-ok">' + escHtml(t.builtFixed) + '</div>';
+            }
         }
         h += '</div>';
-        h += '<button class="primary-btn" onclick="trainRepeatWord()">' + escHtml(t.repeatWord) + '</button>' +
-             '<button class="primary-btn" onclick="listenNewWord()">' + escHtml(t.nextWord) + '</button>' +
-             '<button class="assist-btn" onclick="goHome()">' + escHtml(t.toModes) + '</button>';
+        h += '<button class="primary-btn" onclick="listenNewWord()">' + escHtml(t.nextWord) + '</button>' +
+             '<button class="assist-btn" onclick="trainRepeatWord()">' + escHtml(t.repeatWord) + '</button>';
         return h;
     }
 
@@ -7575,7 +7600,7 @@ function fillFromHeard(){
 <ul>
 <li><b>🧩 Полный тренажёр</b> — все блоки на одном экране: выбор слова на слух, проверка произношения, сбор из букв.</li>
 <li><b>🔢 Перечисления</b> — тренировка называния рядов по порядку: дни недели, месяцы, времена года, части суток, цвета радуги, числа 1–10, 1–20 и десятки до 100. Можно добавить своё перечисление (например, имена родных). Направление, задание и показ названий собраны в сворачиваемый блок «⚙️» над заданием: в свёрнутом виде в нём видно, что выбрано (▶ — свёрнут, ▼ — раскрыт). Выберите ряд, нажмите «Говорить» и назовите всё по порядку, затем «Закончил(а)» (или просто помолчите). Приложение покажет и голосом скажет, что верно, что пропущено и что лишнее; нажатие на слово озвучивает его. Ряд можно сначала послушать (слова подсвечиваются; повторное нажатие «⏹ Остановить» прерывает озвучку), назвать вперёд или назад и выбрать задание «Продолжить»: даются первые слова, остальное называете сами. Если распознавание ошиблось, нажмите «Я сказал(а) верно». Числа, которые браузер записал цифрами, распознаются как слова. В ⚙️ настройках выбираются направление (только вперёд, вперёд и назад, только назад), показ ряда на экране, способ проверки и голосовая оценка. Проверка «По одному слову»: текущее слово подсвечено, слова пронумерованы; нажмите «🎤 Назвать следующее слово» и скажите одно слово. Если названия скрыты, ряд открывается по ходу: названные слова видны, следующее — «▢ ?», остальное не показано. Верное отмечается ✅, и рамка переходит дальше (если отмеченное слово не поместилось на экране, приложение коротко говорит «Да»); ошибка — ❌ с пояснением, что услышано (если названо другое слово ряда — его номер или «это слово идёт позже / уже было») и голосом «Нет. Нужно: …» (при скрытых названиях — «Нет. Ещё раз»), тогда можно «Ещё раз», «Я сказал(а) верно» или «Пропустить». В итоге — сколько слов названо с первой попытки. Названия «После ошибок» открываются после первой ошибки и остаются видны до нового задания. Результаты хранятся только на устройстве, записи голоса не сохраняются. Направление: вперёд, назад или «⇄ туда и обратно» (сначала вперёд, сразу назад). Названия на экране можно сделать видимыми, показывать только после ошибок или скрыть совсем — так задание постепенно усложняется.</li>
-<li><b>👂 Тренировка слуха</b> — одно слово по шагам: 1) послушать, 2) повторить вслух, 3) собрать из букв. В конце итог: исходное слово, что вы проговорили и что собрали, с подсветкой различий. Затем можно повторить это слово или перейти к следующему. Если включена настройка «Обязательно проговаривать слово», к сборке из букв можно перейти только после верного произношения (или трёх попыток). Если распознавание ошиблось, а слово сказано верно, нажмите «Я сказал(а) верно».</li>
+<li><b>👂 Тренировка слуха</b> — одно слово в два шага: 1) послушать и повторить вслух (слово звучит само, можно послушать ещё раз или по слогам), 2) собрать из букв. Если слово собрано неверно, неверные буквы становятся красными: нажмите на такую букву, чтобы вернуть её, и поставьте на её место другую. В конце итог: исходное слово (с картинкой, если она есть), что вы сказали и что собрали с первого раза, с подсветкой различий. Затем — следующее слово или ещё раз это же. Если включена настройка «Обязательно проговаривать слово», к сборке из букв можно перейти только после верного произношения (или трёх попыток). Если распознавание ошиблось, а слово сказано верно, нажмите «Я сказал(а) верно».</li>
 <li><b>✍️ Письмо</b> — тренировка правильного написания. Три уровня (выбор вверху экрана): «🖼 Картинка» — показывается картинка и звучит слово; «👂 Диктант» — только звук; «💬 Фраза» — диктант своей фразы из «Моих фраз» (если их нет, берутся примеры). Слово набирается на клавиатуре «Азбуки». «✔ Проверить»: верные буквы зелёные, ошибочные подсвечены, видно, сколько букв верно; их можно исправить и проверить снова. «💡 Ещё буква» оставляет верное начало и добавляет следующую букву, «👁 Показать» показывает слово, пока вы не начнёте писать. Картинка и кнопка 🔊 есть и рядом с полем ввода, над буквами, — они видны, даже когда задание наверху прокручено. Касание поля ввода разворачивает свёрнутые буквы. После проверки нажатая буква сразу исправляет первую отмеченную (она в мигающей рамке), следующая — следующую; пропущенная буква показана пустой рамкой ▢ и встаёт на своё место; ⌫ убирает отмеченную лишнюю букву. Когда все отмеченные буквы исправлены, нажмите «Проверить». Слово можно послушать ещё раз и по слогам. Регистр, буква «ё» и знаки препинания не учитываются. Ошибки попадают в статистику, трудные слова предлагаются чаще. Панель с буквами сворачивается кнопкой «⌨️ ▾ Скрыть буквы» и возвращается кнопкой «⌨️ ▴ Показать буквы»; в настройках (группа «Слова») можно включить автоматическое сворачивание после каждой нажатой буквы. Кнопка «🔡 Мельче» уменьшает кнопки с буквами, чтобы на экране помещалось больше; «🔠 Крупнее» возвращает обычный размер (выбор общий для «Азбуки» и «Письма»). На всех уровнях первые буквы слова или фразы подсказываются: сколько (0–3, 0 — без подсказки) задаётся в настройках, группа «Слова»; подсказанные буквы подчёркнуты.</li>
 <li><b>📝 Тест на слух</b> — от 10 до 30 случайных слов подряд. Каждое слово звучит один раз, без повтора; вы проговариваете его или пропускаете. Верно или неверно, видно только в конце: результат, список слов и кнопка «Повторить ошибки». В настройках можно разрешить один повтор каждого слова.</li>
 <li><b>🔤 Азбука</b> — подсказка по первой букве, когда слово «вертится на языке». Нажмите первую букву: появятся слова из словаря (включая «Мои слова»), которые с неё начинаются; следующая буква сужает список. Нажатие на слово добавляет его в строку (если включено автоозвучивание, слово сразу произносится), «Сказать так» озвучивает всю строку, ⌫ убирает последнее слово. «Скрыть буквы» освобождает место для слов (в настройках можно включить автосворачивание панели после каждой нажатой буквы; вернуть её — кнопка «Показать буквы»). «🔡 Мельче» уменьшает кнопки с буквами, «🔠 Крупнее» возвращает обычный размер. «Свободный набор» показывает весь алфавит: слово можно набирать так, как вы его себе представляете, даже с ошибками, а приложение предложит похожие слова. Категория слов здесь не учитывается: поиск идёт по всем словам. Если в настройках включён онлайн-поиск, под списком появляется кнопка «Найти слова в интернете»: слова ищутся в Викисловаре (для английского ещё в Datamuse), для этого набранные буквы отправляются в эти сервисы. Выбранное слово запоминается на устройстве. Собранная фраза показана словами-кнопками: нажатие убирает слово, «Очистить» убирает всё. Сворачиваемый блок «▶ Я, ты, в, на, не… — короткие слова» над строкой набора показывает местоимения, предлоги и частицы (стрелка ▼ — блок раскрыт), их можно добавить во фразу одним нажатием, после чего блок сам сворачивается; такие слова находятся и по буквам. «🎯 Тренировать» переносит фразу в тренировку, как в «Подсказке по сказанному»: приложение озвучит её, вы повторите, и фразу можно сохранить в «Мои фразы». Если в настройках включено «нажатие говорит слово, удержание добавляет», слово из списка сначала можно послушать.</li>
@@ -7650,7 +7675,7 @@ function fillFromHeard(){
 <ul>
 <li><b>🧩 Повний тренажер</b> — усі блоки на одному екрані: вибір слова на слух, перевірка вимови, збирання з літер.</li>
 <li><b>🔢 Перелічення</b> — тренування називання рядів по порядку: дні тижня, місяці, пори року, частини доби, кольори веселки, числа 1–10, 1–20 і десятки до 100. Можна додати своє перелічення (наприклад, імена рідних). Напрямок, завдання й показ назв зібрано в згортуваний блок «⚙️» над завданням: у згорнутому вигляді в ньому видно, що вибрано (▶ — згорнуто, ▼ — розгорнуто). Оберіть ряд, натисніть «Говорити» й назвіть усе по порядку, потім «Закінчив(ла)» (або просто помовчіть). Застосунок покаже й голосом скаже, що правильно, що пропущено й що зайве; натискання на слово озвучує його. Ряд можна спершу послухати (слова підсвічуються; повторне натискання «⏹ Зупинити» перериває озвучення), назвати вперед чи назад і обрати завдання «Продовжити»: дають перші слова, решту називаєте самі. Якщо розпізнавання помилилося, натисніть «Я сказав(ла) правильно». Числа, які браузер записав цифрами, розпізнаються як слова. У ⚙️ налаштуваннях обираються напрямок (лише вперед, вперед і назад, лише назад), показ ряду на екрані, спосіб перевірки й голосова оцінка. Перевірка «По одному слову»: поточне слово підсвічено, слова пронумеровано; натисніть «🎤 Назвати наступне слово» і скажіть одне слово. Якщо назви приховано, ряд відкривається по ходу: названі слова видно, наступне — «▢ ?», решту не показано. Правильне позначається ✅, і рамка переходить далі (якщо позначене слово не вмістилося на екрані, застосунок коротко каже «Так»); помилка — ❌ з поясненням, що почуто (якщо назвали інше слово ряду — його номер або «це слово йде пізніше / вже було») і голосом «Ні. Треба: …» (якщо назви приховано — «Ні. Ще раз»), тоді можна «Ще раз», «Я сказав(ла) правильно» або «Пропустити». У підсумку — скільки слів названо з першої спроби. Назви «Після помилок» відкриваються після першої помилки й лишаються видимими до нового завдання. Результати зберігаються лише на пристрої, записи голосу не зберігаються. Напрямок: уперед, назад або «⇄ туди й назад» (спершу уперед, одразу назад). Назви на екрані можна зробити видимими, показувати лише після помилок або приховати зовсім — так завдання поступово ускладнюється.</li>
-<li><b>👂 Тренування слуху</b> — одне слово по кроках: 1) послухати, 2) повторити вголос, 3) зібрати з літер. Наприкінці підсумок: вихідне слово, що ви промовили і що зібрали, з підсвічуванням відмінностей. Потім можна повторити це слово або перейти до наступного. Якщо ввімкнено налаштування «Обов’язково промовляти слово», до збирання з літер можна перейти лише після правильної вимови (або трьох спроб). Якщо розпізнавання помилилося, а слово сказано правильно, натисніть «Я сказав(ла) правильно».</li>
+<li><b>👂 Тренування слуху</b> — одне слово у два кроки: 1) послухати й повторити вголос (слово звучить саме, можна послухати ще раз або по складах), 2) зібрати з літер. Якщо слово зібрано неправильно, неправильні літери стають червоними: натисніть на таку літеру, щоб повернути її, і поставте на її місце іншу. Наприкінці підсумок: вихідне слово (з картинкою, якщо вона є), що ви сказали і що зібрали з першого разу, з підсвічуванням відмінностей. Потім — наступне слово або ще раз це саме. Якщо ввімкнено налаштування «Обов’язково промовляти слово», до збирання з літер можна перейти лише після правильної вимови (або трьох спроб). Якщо розпізнавання помилилося, а слово сказано правильно, натисніть «Я сказав(ла) правильно».</li>
 <li><b>✍️ Письмо</b> — тренування правильного написання. Три рівні (вибір угорі екрана): «🖼 Картинка» — показується картинка й звучить слово; «👂 Диктант» — лише звук; «💬 Фраза» — диктант власної фрази з «Моїх фраз» (якщо їх немає, беруться приклади). Слово набирається на клавіатурі «Абетки». «✔ Перевірити»: правильні літери зелені, помилкові підсвічено, видно, скільки літер правильно; їх можна виправити й перевірити знову. «💡 Ще літера» залишає правильний початок і додає наступну літеру, «👁 Показати» показує слово, доки ви не почнете писати. Картинка й кнопка 🔊 є й поруч із полем введення, над літерами, — їх видно, навіть коли завдання вгорі прокручено. Дотик до поля введення розгортає згорнуті літери. Після перевірки натиснута літера одразу виправляє першу позначену (вона в блимаючій рамці), наступна — наступну; пропущена літера показана порожньою рамкою ▢ і стає на своє місце; ⌫ прибирає позначену зайву літеру. Коли всі позначені літери виправлено, натисніть «Перевірити». Слово можна послухати ще раз і по складах. Регістр і розділові знаки не враховуються. Помилки потрапляють до статистики, важкі слова пропонуються частіше. Панель з літерами згортається кнопкою «⌨️ ▾ Сховати літери» й повертається кнопкою «⌨️ ▴ Показати літери»; у налаштуваннях (група «Слова») можна ввімкнути автоматичне згортання після кожної натиснутої літери. Кнопка «🔡 Дрібніше» зменшує кнопки з літерами, щоб на екрані вміщалося більше; «🔠 Більше» повертає звичайний розмір (вибір спільний для «Абетки» й «Письма»). На всіх рівнях перші літери слова чи фрази підказуються: скільки (0–3, 0 — без підказки) задається в налаштуваннях, група «Слова»; підказані літери підкреслено.</li>
 <li><b>📝 Тест на слух</b> — від 10 до 30 випадкових слів поспіль. Кожне слово звучить один раз, без повтору; ви промовляєте його або пропускаєте. Правильно чи ні, видно лише наприкінці: результат, список слів і кнопка «Повторити помилки». У налаштуваннях можна дозволити один повтор кожного слова.</li>
 <li><b>🔤 Абетка</b> — підказка за першою літерою, коли слово «крутиться на язиці». Натисніть першу літеру: з’являться слова зі словника (разом із «Моїми словами»), що з неї починаються; наступна літера звужує список. Натискання на слово додає його до рядка (якщо ввімкнено автоозвучення, слово одразу промовляється), «Сказати так» озвучує весь рядок, ⌫ прибирає останнє слово. «Сховати літери» вивільняє місце для слів (в налаштуваннях можна ввімкнути автозгортання панелі після кожної натиснутої літери; повернути її — кнопка «Показати літери»). «🔡 Дрібніше» зменшує кнопки з літерами, «🔠 Більше» повертає звичайний розмір. «Вільний набір» показує всю абетку: слово можна набирати так, як ви його собі уявляєте, навіть з помилками, а застосунок запропонує схожі слова. Категорія слів тут не враховується: пошук іде по всіх словах. Якщо в налаштуваннях увімкнено онлайн-пошук, під списком з’являється кнопка «Знайти слова в інтернеті»: слова шукаються у Вікісловнику (для англійської ще в Datamuse), для цього набрані літери надсилаються цим сервісам. Обране слово запам’ятовується на пристрої. Зібрана фраза показана словами-кнопками: натискання прибирає слово, «Очистити» прибирає все. Згортуваний блок «▶ Я, ти, в, на, не… — короткі слова» над рядком набору показує займенники, прийменники й частки (стрілка ▼ — блок розгорнуто), їх можна додати до фрази одним натисканням, після чого блок сам згортається; такі слова знаходяться й за літерами. «🎯 Тренувати» переносить фразу в тренування, як у «Підказці за сказаним»: застосунок озвучить її, ви повторите, і фразу можна зберегти в «Мої фрази». Якщо в налаштуваннях увімкнено «натискання говорить слово, утримання додає», слово зі списку спершу можна послухати.</li>
@@ -7725,7 +7750,7 @@ function fillFromHeard(){
 <ul>
 <li><b>🧩 Full trainer</b> — all blocks on one screen: choose the word by ear, pronunciation check, assembling from letters.</li>
 <li><b>🔢 Sequences</b> — practice saying series in order: days of the week, months, seasons, parts of the day, colours of the rainbow, numbers 1–10, 1–20 and tens up to 100. You can add your own sequence (for example the names of relatives). Direction, task and word display are in the collapsible “⚙️” block above the task; when collapsed it shows what is selected (▶ collapsed, ▼ open). Choose a series, tap “Speak” and say it all in order, then “Finished” (or just stay silent). The app shows and says by voice what was right, missing or extra; tapping a word speaks it. You can first listen to the series (words are highlighted; tapping “⏹ Stop” ends it), say it forwards or backwards, and choose the “Continue” task: the first words are given and you say the rest. If recognition was wrong, tap “I said it correctly”. Numbers the browser wrote as digits are recognised as words. ⚙️ Settings choose the direction (forwards only, forwards and backwards, backwards only), showing the series on the screen, the checking method and the spoken verdict. With “One word at a time” checking, the current word is highlighted and the words are numbered; tap “🎤 Say the next word” and say one word. If the words are hidden, the series opens as you go: words already said are shown, the next one is “▢ ?”, the rest is not shown. A right word gets ✅ and the frame moves on (if that word is off the screen, the app briefly says “Yes”); a mistake gets ❌ with what was heard (if another word of the series was said — its number or “this word comes later / came earlier”) and by voice “No. It is: …” (“No. Try again” if the words are hidden), then choose “Again”, “I said it correctly” or “Skip”. The summary shows how many words were right first time. Words set to “After errors” open after the first mistake and stay visible until a new task. Results are kept only on the device; voice recordings are not saved. Direction: forwards, backwards or “⇄ there and back” (forwards, then straight back). The words on screen can be always shown, shown only after mistakes, or hidden — so the task can be made harder step by step.</li>
-<li><b>👂 Listening practice</b> — one word step by step: 1) listen, 2) repeat aloud, 3) assemble from letters. At the end you get a summary: the original word, what you said and what you assembled, with differences highlighted. Then you can repeat this word or move to the next one. If “Require saying the word aloud” is on, you can go to letter assembly only after a correct pronunciation (or three attempts). If recognition was wrong but the word was said correctly, tap “I said it correctly”.</li>
+<li><b>👂 Listening practice</b> — one word in two steps: 1) listen and repeat aloud (the word plays by itself; you can listen again or by syllables), 2) assemble it from letters. If the word is assembled wrongly, the wrong letters turn red: tap such a letter to return it and put another one in its place. At the end you get a summary: the original word (with a picture if there is one), what you said and what you assembled the first time, with differences highlighted. Then the next word or this word again. If “Require saying the word aloud” is on, you can go to letter assembly only after a correct pronunciation (or three attempts). If recognition was wrong but the word was said correctly, tap “I said it correctly”.</li>
 <li><b>✍️ Writing</b> — practice spelling words correctly. Three levels (chosen at the top of the screen): “🖼 Picture” — a picture is shown and the word is spoken; “👂 Dictation” — sound only; “💬 Phrase” — dictation of your own phrase from “My phrases” (examples are used if there are none). The word is typed on the ABC keyboard. “✔ Check”: correct letters are green, wrong ones are highlighted, and the number of correct letters is shown; they can be fixed and checked again. “💡 One more letter” keeps the correct beginning and adds the next letter, “👁 Show” shows the word until you start writing. The picture and a 🔊 button are also next to the input field, above the letters, so they stay visible when the task at the top is scrolled away. Tapping the input field opens collapsed letters. After checking, the letter you tap fixes the first marked one (in a blinking frame), the next tap fixes the next one; a missing letter is shown as an empty frame ▢ and goes into its place; ⌫ removes a marked extra letter. When all marked letters are fixed, tap “Check”. The word can be heard again and by syllables. Case and punctuation do not matter. Mistakes go into the statistics and difficult words come up more often. The letter panel is collapsed with “⌨️ ▾ Hide letters” and brought back with “⌨️ ▴ Show letters”; in Settings (the “Words” group) it can be set to collapse automatically after each letter. The “🔡 Smaller” button makes the letter buttons smaller so more fits on the screen; “🔠 Larger” brings back the normal size (shared by ABC and Writing). On every level the first letters of the word or phrase are given as a hint: how many (0–3, 0 means no hint) is set in Settings, the “Words” group; hint letters are underlined.</li>
 <li><b>📝 Hearing test</b> — 10 to 30 random words in a row. Each word is played once, with no replay; you say it or skip it. Whether you were right is shown only at the end: the score, a list of words and a “Repeat mistakes” button. Settings can allow one replay of each word.</li>
 <li><b>🔤 ABC</b> — first-letter help for when a word is on the tip of your tongue. Tap the first letter: words from the dictionary (including “My words”) that start with it appear; the next letter narrows the list. Tapping a word adds it to the line (if auto-speak is on, the word is spoken at once), “Say it” speaks the whole line, ⌫ removes the last word. “Hide letters” makes room for more words (Settings can collapse the panel automatically after each letter; bring it back with “Show letters”). “🔡 Smaller” makes the letter buttons smaller, “🔠 Larger” brings back the normal size. “Free typing” shows the whole alphabet: type the word the way you imagine it, mistakes included, and the app suggests similar words. The word category is not used here: the search covers all words. If online search is turned on in Settings, a “Find words online” button appears under the list: words are looked up in Wiktionary (and Datamuse for English), so the typed letters are sent to these services. A chosen word is remembered on the device. The assembled phrase is shown as word buttons: a tap removes a word, “Clear” removes everything. The collapsible “▶ I, you, to, in, not… — short words” block above the typing line shows pronouns, prepositions and particles (the ▼ arrow means it is open) that are added to the phrase with one tap, after which the block collapses by itself; they can also be found by letters. “🎯 Practise” takes the phrase to practice, as in “Suggestions from what was said”: the app speaks it, you repeat it, and the phrase can be saved to “My phrases”. If “tap speaks the word, hold adds it” is on in Settings, a word from the list can be heard first.</li>
