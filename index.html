@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Знову слова · Words Again</title>
-    <link rel="manifest" href="/SpeechRehab/manifest.json">
+    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#141923">
     <link rel="icon" href="icon-192.png">
     <link rel="apple-touch-icon" href="icon-192.png">
@@ -546,6 +546,11 @@
         #fullTrainer .timer-status-row { display: none !important; }
         #fullTrainer .full-optbtn { margin: 0; }
         #quizCountSeg { margin: 6px 0 10px; }
+
+        .about-box p { margin: 0 0 8px; line-height: 1.4; }
+        .about-name { font-size: 1.1em; }
+        .about-facts { margin: 0 0 8px 1.1em; padding: 0; line-height: 1.4; }
+        .about-box a { color: var(--option-btn-border); font-weight: 700; word-break: break-all; }
         .app-ver { text-align: center; font-size: 0.9em; opacity: 0.75; padding: 4px 0 2px; }
         .sg-arr { flex: 0 0 auto; width: 1.2em; font-size: 0.9em; }
         .sg-b { display: none; flex-direction: column; gap: 12px; padding: 12px 10px; }
@@ -1226,6 +1231,12 @@
             <input type="file" id="bkFile" accept=".json,application/json" style="display:none" onchange="if (this.files && this.files[0]) backupLoad(this.files[0]); this.value = '';">
             <div class="bk-status" id="bkStatus" role="status" aria-live="polite"></div>
         </div>
+            </div>
+        </div>
+        <div class="sg" data-g="about">
+            <button type="button" class="sg-h" onclick="settToggle('about')" aria-expanded="false"><span class="sg-arr">▶</span><span class="sg-t" id="sgt_about"></span></button>
+            <div class="sg-b">
+        <div class="control-group about-box" id="aboutBox"></div>
             </div>
         </div>
     </div>
@@ -4204,11 +4215,11 @@
         const c2 = document.getElementById('setSerVoice'); if (c2) c2.checked = p.voice;
     }
     const SETT_T = {
-        ru: { main: '⚙️ Основные', train: 'Слова: 🧩 тренажёр, 👂 слух, ✍️ письмо, 📝 тест на слух', abc: '🔤 Азбука и 🎤 подсказка по сказанному', phr: '🗣 Мои фразы', ser: '🔢 Перечисления', data: '💾 Данные: копия и перенос',
+        ru: { main: '⚙️ Основные', train: 'Слова: 🧩 тренажёр, 👂 слух, ✍️ письмо, 📝 тест на слух', abc: '🔤 Азбука и 🎤 подсказка по сказанному', phr: '🗣 Мои фразы', ser: '🔢 Перечисления', data: '💾 Данные: копия и перенос', about: 'ℹ️ О приложении',
               verdict: 'Голосом говорить, правильно ли сказано (во всех режимах)', quiz: '📝 Тест на слух: можно один раз повторить слово', wrGiven: '✍️ Письмо (все уровни): сколько первых букв слова или фразы подсказывать (меньше — сложнее)', wrG: ['0 — без подсказки', '1 буква', '2 буквы', '3 буквы'], wrHide: '✍️ Письмо: сворачивать панель с буквами после каждой нажатой буквы, чтобы было видно задание. Вернуть её — кнопкой «Показать буквы».' },
-        uk: { main: '⚙️ Основні', train: 'Слова: 🧩 тренажер, 👂 слух, ✍️ письмо, 📝 тест на слух', abc: '🔤 Абетка і 🎤 підказка за сказаним', phr: '🗣 Мої фрази', ser: '🔢 Перелічення', data: '💾 Дані: копія й перенесення',
+        uk: { main: '⚙️ Основні', train: 'Слова: 🧩 тренажер, 👂 слух, ✍️ письмо, 📝 тест на слух', abc: '🔤 Абетка і 🎤 підказка за сказаним', phr: '🗣 Мої фрази', ser: '🔢 Перелічення', data: '💾 Дані: копія й перенесення', about: 'ℹ️ Про застосунок',
               verdict: 'Голосом казати, чи правильно сказано (в усіх режимах)', quiz: '📝 Тест на слух: можна один раз повторити слово', wrGiven: '✍️ Письмо (усі рівні): скільки перших літер слова чи фрази підказувати (менше — складніше)', wrG: ['0 — без підказки', '1 літера', '2 літери', '3 літери'], wrHide: '✍️ Письмо: згортати панель з літерами після кожної натиснутої літери, щоб було видно завдання. Повернути її — кнопкою «Показати літери».' },
-        en: { main: '⚙️ General', train: 'Words: 🧩 trainer, 👂 listening, ✍️ writing, 📝 hearing test', abc: '🔤 ABC and 🎤 suggestions from what was said', phr: '🗣 My phrases', ser: '🔢 Sequences', data: '💾 Data: backup and transfer',
+        en: { main: '⚙️ General', train: 'Words: 🧩 trainer, 👂 listening, ✍️ writing, 📝 hearing test', abc: '🔤 ABC and 🎤 suggestions from what was said', phr: '🗣 My phrases', ser: '🔢 Sequences', data: '💾 Data: backup and transfer', about: 'ℹ️ About the app',
               verdict: 'Say aloud whether it was said correctly (all modes)', quiz: '📝 Hearing test: the word can be replayed once', wrGiven: '✍️ Writing (all levels): how many first letters of the word or phrase to give as a hint (fewer is harder)', wrG: ['0 — no hint', '1 letter', '2 letters', '3 letters'], wrHide: '✍️ Writing: collapse the letter panel after each letter you tap, so the task stays visible. Bring it back with the “Show letters” button.' }
     };
 
@@ -4325,17 +4336,53 @@
         if (ios) { const h = document.createElement('div'); h.className = 'iab-hint'; h.textContent = t.ios; inn.append(h); }
         el.append(inn);
     }
+
+    // ===== О приложении (настройки → «ℹ️ О приложении») =====
+    // Логин автора на GitHub. Если пусто — берётся из адреса вида <логин>.github.io (так на GitHub Pages ссылка верна сама).
+    const APP_AUTHOR_GH = 'bispalov';
+    const APP_REPO = 'SpeechRehab';
+    const ABOUT_T = {
+        ru: { name: 'Снова слова', desc: 'Бесплатное приложение для восстановления речи, слуха и письма после инсульта: для людей с афазией, апраксией и аграфией и их близких.',
+              facts: ['Бесплатно, без рекламы и регистрации.', 'Работает без интернета (распознаванию речи обычно нужна сеть).', 'Все данные хранятся только на этом устройстве, голос не записывается.', 'Не заменяет логопеда или реабилитолога.'],
+              ver: 'Версия', author: 'Автор', code: 'Исходный код и инструкции', lic: 'Лицензия MIT. Код написан ИИ-ассистентом Claude (Anthropic) по заданию и под руководством автора.', mirror: 'Эта копия размещена не на сайте автора.' },
+        uk: { name: 'Знову слова', desc: 'Безкоштовний застосунок для відновлення мовлення, слуху й письма після інсульту: для людей з афазією, апраксією та аграфією і їхніх близьких.',
+              facts: ['Безкоштовно, без реклами й реєстрації.', 'Працює без інтернету (розпізнаванню мовлення зазвичай потрібна мережа).', 'Усі дані зберігаються лише на цьому пристрої, голос не записується.', 'Не замінює логопеда чи реабілітолога.'],
+              ver: 'Версія', author: 'Автор', code: 'Вихідний код та інструкції', lic: 'Ліцензія MIT. Код написав ШІ-асистент Claude (Anthropic) за завданням і під керівництвом автора.', mirror: 'Ця копія розміщена не на сайті автора.' },
+        en: { name: 'Words Again', desc: 'A free app for recovering speech, hearing and writing after a stroke: for people with aphasia, apraxia and agraphia and their families.',
+              facts: ['Free, no ads, no sign-up.', 'Works offline (speech recognition usually needs the internet).', 'All data stays on this device only; the voice is not recorded.', 'Does not replace a speech therapist.'],
+              ver: 'Version', author: 'Author', code: 'Source code and instructions', lic: 'MIT license. The code was written by the AI assistant Claude (Anthropic) on the assignment and under the direction of the author.', mirror: 'This copy is not hosted on the author’s site.' }
+    };
+    function appGhUser() {
+        if (APP_AUTHOR_GH) return APP_AUTHOR_GH;
+        const h = location.hostname || '';
+        return /\.github\.io$/i.test(h) ? h.split('.')[0] : '';
+    }
+    function aboutRender() {
+        const box = document.getElementById('aboutBox'); if (!box) return;
+        const t = ABOUT_T[currentLang] || ABOUT_T.uk, gh = appGhUser();
+        const link = (href, text) => '<a href="' + escHtml(href) + '" target="_blank" rel="noopener">' + escHtml(text) + '</a>';
+        let h = '<p class="about-name"><b>' + escHtml(t.name) + '</b> · ' + escHtml(t.ver) + ' ' + APP_VERSION + '</p>' +
+                '<p>' + escHtml(t.desc) + '</p><ul class="about-facts">' + t.facts.map(f => '<li>' + escHtml(f) + '</li>').join('') + '</ul>';
+        if (gh) {
+            h += '<p>' + escHtml(t.author) + ': ' + link('https://github.com/' + gh, '@' + gh) + '</p>' +
+                 '<p>' + escHtml(t.code) + ': ' + link('https://github.com/' + gh + '/' + APP_REPO, 'github.com/' + gh + '/' + APP_REPO) + '</p>';
+            if (APP_AUTHOR_GH && !/\.github\.io$/i.test(location.hostname || '')) h += '<p class="bk-note">' + escHtml(t.mirror) + '</p>';
+        }
+        h += '<p class="bk-note">' + escHtml(t.lic) + '</p>';
+        box.innerHTML = h;
+    }
     // Номер версии приложения (совпадает с номером в sw.js) — виден внизу настроек
-    const APP_VERSION = 68;
+    const APP_VERSION = 71;
     function syncSettGroups() {
         let ver = document.getElementById('appVer');
         if (!ver) { ver = document.createElement('div'); ver.id = 'appVer'; ver.className = 'app-ver'; document.getElementById('settingsPanel').appendChild(ver); }
         ver.textContent = ({ ru: 'Версия приложения: ', uk: 'Версія застосунку: ', en: 'App version: ' }[currentLang] || 'Version: ') + APP_VERSION;
         const t = SETT_T[currentLang] || SETT_T.ru;
-        ['main', 'train', 'abc', 'phr', 'ser', 'data'].forEach(g => { const e = document.getElementById('sgt_' + g); if (e) e.textContent = t[g]; });
+        ['main', 'train', 'abc', 'phr', 'ser', 'data', 'about'].forEach(g => { const e = document.getElementById('sgt_' + g); if (e) e.textContent = t[g]; });
         const lt = LB_T[currentLang] || LB_T.uk;
         [['labelBuildLetters', lt.label], ['optBuildWord', lt.word], ['optBuildExtra', lt.extra], ['optBuildAbc', lt.abc]].forEach(([id, v]) => { const e = document.getElementById(id); if (e) e.textContent = v; });
         const ls = document.getElementById('buildLettersSelect'); if (ls) ls.value = lbSet();
+        aboutRender();
         const bt = BK_T[currentLang] || BK_T.uk;
         document.getElementById('bkNote').textContent = bt.note;
         document.getElementById('bkSaveBtn').textContent = bt.save;
@@ -7815,10 +7862,11 @@ function fillFromHeard(){
 <li><b>Строгая проверка речи</b> — в ответе не должно быть других слов. Слово должно совпасть точно; похожее, но неточное слово не засчитывается.</li>
 <li><b>Обязательно проговаривать слово</b> — пока слово не произнесено верно, «Следующее слово» не срабатывает, а страница возвращается к блоку проговаривания. После трёх неудачных попыток переход открывается, чтобы не застрять.</li>
 <li><b>Таймер «Игра / Отдых»</b> — после времени игры включается пауза для отдыха; длительность задаётся в минутах. Время игры идёт только внутри режимов тренировки; на стартовом экране таймер не показывается, а пока открыты настройки, справка или статистика, он стоит (в шапке значок ⏸). В «Азбуке» и «Подсказке по сказанному» перерыв не прерывает человека: он начнётся после того, как фраза озвучена, или при выходе из режима (в шапке ☕). Оставшееся время видно в шапке во всех режимах, включая «Полный тренажёр»; нажатие на него ставит паузу.</li>
+<li><b>ℹ️ О приложении</b> — в настройках: версия, коротко о приложении, ссылки на автора и исходный код на GitHub. Там же (в README) — как разместить приложение на своём сайте.</li>
 <li><b>Стартовый экран</b> — режим, в котором вы занимались в прошлый раз, выделен и помечен «▶ Продолжить». Под заголовком — итог дня: сколько упражнений сделано сегодня и сколько верно. В основных настройках можно спрятать ненужные сейчас режимы («Режимы на стартовом экране»); их данные и статистика сохраняются. В «Полном тренажёре» выбор категории свёрнут в строку «▶ ⚙️ Категория: …».</li>
 <li><b>🔤 Азбука, 🎤 Подсказка по сказанному и 🗣 Мои фразы</b> — онлайн-поиск слов, сворачивание букв, упрощённый вид подсказки; поведение слова из списка (нажатие говорит, удержание добавляет) общее для «Азбуки» и подсказки; показ текста фразы при повторении в «Моих фразах».</li>
 <li><b>📚 Мои слова</b> — окно для добавления своих слов в словарь (описание ниже).</li>
-<li><b>💾 Данные: копия и перенос</b> — все настройки, свои слова и фразы, статистика хранятся только на этом устройстве. «💾 Сохранить копию данных» создаёт файл (обычно в папке «Загрузки»), «📂 Загрузить копию данных» возвращает всё из такого файла — на другом телефоне или после переустановки. Перед загрузкой приложение спрашивает подтверждение: текущие данные будут заменены.</li>
+<li><b>💾 Данные: копия и перенос</b> — все настройки, свои слова и фразы, статистика хранятся только на этом устройстве. «💾 Сохранить копию данных» создаёт файл (обычно в папке «Загрузки»), «📂 Загрузить копию данных» возвращает всё из такого файла — на другом телефоне или после переустановки. Перед загрузкой приложение спрашивает подтверждение: текущие данные будут заменены. <b>Переустановка:</b> если после удаления Chrome не предлагает установить приложение снова, помогает очистка данных сайта в Chrome (Настройки → Настройки сайтов → Все сайты → адрес приложения → «Очистить и сбросить»). Но «Снова слова» и «Говоримо разом» живут на одном адресе, и очистка удаляет данные <b>обоих</b> — сначала сохраните копию данных в каждом, а после установки загрузите копии обратно.</li>
 <li><b>Открыто внутри Facebook или другого приложения</b> — у встроенного браузера соцсети своё хранилище: там приложение открывается «с нуля», а изменения не попадают в установленное приложение. Сверху появляется жёлтая плашка: «🌐 Открыть в Chrome» (Android) или «📋 Копировать ссылку», чтобы открыть ссылку в обычном браузере. Плашку можно скрыть ✕.</li>
 </ul>
 
@@ -7891,10 +7939,11 @@ function fillFromHeard(){
 <li><b>Сувора перевірка мовлення</b> — у відповіді не має бути інших слів. Слово має збігтися точно; схоже, але неточне слово не зараховується.</li>
 <li><b>Обов’язково промовляти слово</b> — доки слово не вимовлено правильно, «Наступне слово» не спрацьовує, а сторінка повертається до блоку промовляння. Після трьох невдалих спроб перехід відкривається, щоб не застрягти.</li>
 <li><b>Таймер «Гра / Відпочинок»</b> — після часу гри вмикається пауза для відпочинку; тривалість задається в хвилинах. Час гри йде лише всередині режимів тренування; на стартовому екрані таймер не показується, а поки відкрито налаштування, довідку чи статистику, він стоїть (у шапці значок ⏸). В «Абетці» й «Підказці за сказаним» перерва не перериває людину: вона почнеться після того, як фразу озвучено, або при виході з режиму (у шапці ☕). Залишок часу видно в шапці в усіх режимах, зокрема в «Повному тренажері»; натискання на нього ставить паузу.</li>
+<li><b>ℹ️ Про застосунок</b> — у налаштуваннях: версія, коротко про застосунок, посилання на автора й вихідний код на GitHub. Там же (у README) — як розмістити застосунок на своєму сайті.</li>
 <li><b>Стартовий екран</b> — режим, у якому ви займалися минулого разу, виділено й позначено «▶ Продовжити». Під заголовком — підсумок дня: скільки вправ зроблено сьогодні й скільки правильно. В основних налаштуваннях можна сховати непотрібні зараз режими («Режими на стартовому екрані»); їхні дані й статистика зберігаються. У «Повному тренажері» вибір категорії згорнуто в рядок «▶ ⚙️ Категорія: …».</li>
 <li><b>🔤 Абетка, 🎤 Підказка за сказаним і 🗣 Мої фрази</b> — онлайн-пошук слів, згортання літер, спрощений вигляд підказки; поведінка слова зі списку (натискання говорить, утримання додає) спільна для «Абетки» й підказки; показ тексту фрази під час повторення в «Моїх фразах».</li>
 <li><b>📚 Мої слова</b> — вікно для додавання своїх слів до словника (опис нижче).</li>
-<li><b>💾 Дані: копія й перенесення</b> — усі налаштування, свої слова й фрази, статистика зберігаються лише на цьому пристрої. «💾 Зберегти копію даних» створює файл (зазвичай у папці «Завантаження»), «📂 Завантажити копію даних» повертає все з такого файлу — на іншому телефоні або після перевстановлення. Перед завантаженням застосунок питає підтвердження: поточні дані буде замінено.</li>
+<li><b>💾 Дані: копія й перенесення</b> — усі налаштування, свої слова й фрази, статистика зберігаються лише на цьому пристрої. «💾 Зберегти копію даних» створює файл (зазвичай у папці «Завантаження»), «📂 Завантажити копію даних» повертає все з такого файлу — на іншому телефоні або після перевстановлення. Перед завантаженням застосунок питає підтвердження: поточні дані буде замінено. <b>Перевстановлення:</b> якщо після видалення Chrome не пропонує встановити застосунок знову, допомагає очищення даних сайту в Chrome (Налаштування → Налаштування сайтів → Усі сайти → адреса застосунку → «Очистити й скинути»). Але «Знову слова» та «Говоримо разом» розміщені на одній адресі, і очищення видаляє дані <b>обох</b> — спершу збережіть копію даних у кожному, а після встановлення завантажте копії назад.</li>
 <li><b>Відкрито всередині Facebook або іншого застосунку</b> — вбудований браузер соцмережі має власне сховище: там застосунок відкривається «з нуля», а зміни не потрапляють до встановленого застосунку. Згори з’являється жовта плашка: «🌐 Відкрити в Chrome» (Android) або «📋 Копіювати посилання», щоб відкрити посилання у звичайному браузері. Плашку можна сховати ✕.</li>
 </ul>
 
@@ -7967,10 +8016,11 @@ function fillFromHeard(){
 <li><b>Strict speech check</b> — no other words allowed in the answer. The word must match exactly; a similar but inexact word is not accepted.</li>
 <li><b>Require saying the word aloud</b> — “Next word” does not work until the word is pronounced correctly, and the page scrolls back to the speaking block. After three failed attempts it unlocks so you never get stuck.</li>
 <li><b>Play / Rest timer</b> — after the play time a rest break starts; durations are set in minutes. Play time runs only inside training modes; on the start screen the timer is hidden, and while Settings, Help or Statistics are open the timer stands still (⏸ in the header). In ABC and “Suggestions from what was said” the break does not interrupt the person: it starts after a phrase has been spoken or when leaving the mode (☕ in the header). The time left is shown in the header in every mode; tapping it pauses the timer.</li>
+<li><b>ℹ️ About the app</b> — in Settings: version, a short description, links to the author and the source code on GitHub. The README there explains how to host the app on your own site.</li>
 <li><b>Start screen</b> — the mode you used last time is highlighted and marked “▶ Continue”. Under the title is today's summary: how many exercises were done today and how many were right. In the main settings you can hide modes you don't need now (“Modes on the start screen”); their data and statistics are kept. In the Full trainer the category choice is collapsed into the line “▶ ⚙️ Category: …”.</li>
 <li><b>🔤 ABC, 🎤 Suggestions from what was said and 🗣 My phrases</b> — online word search, collapsing letters, the simple view of suggestions; how a listed word behaves (tap speaks, hold adds) is shared by ABC and suggestions; showing the phrase text while repeating in “My phrases”.</li>
 <li><b>📚 My words</b> — a window for adding your own words to the dictionary (described below).</li>
-<li><b>💾 Data: backup and transfer</b> — all settings, your own words and phrases, and statistics are stored only on this device. “💾 Save data backup” creates a file (usually in the “Downloads” folder), “📂 Load data backup” restores everything from such a file — on another phone or after reinstalling. Before loading, the app asks for confirmation: the current data will be replaced.</li>
+<li><b>💾 Data: backup and transfer</b> — all settings, your own words and phrases, and statistics are stored only on this device. “💾 Save data backup” creates a file (usually in the “Downloads” folder), “📂 Load data backup” restores everything from such a file — on another phone or after reinstalling. Before loading, the app asks for confirmation: the current data will be replaced. <b>Reinstalling:</b> if Chrome does not offer to install the app again after it was removed, clearing the site data in Chrome helps (Settings → Site settings → All sites → the app address → “Clear & reset”). But «Знову слова» and «Говоримо разом» share one address, and clearing deletes the data of <b>both</b> — first save a data backup in each, and load the backups after installing again.</li>
 <li><b>Opened inside Facebook or another app</b> — a social network's built-in browser has its own storage: the app opens there “from scratch”, and changes do not reach the installed app. A yellow bar appears at the top: “🌐 Open in Chrome” (Android) or “📋 Copy link” to open the link in a regular browser. The bar can be hidden with ✕.</li>
 </ul>
 

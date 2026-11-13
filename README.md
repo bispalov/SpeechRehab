@@ -62,7 +62,22 @@
 
 Жодних інструментів збірки, серверів чи залежностей не потрібно — це набір статичних файлів.
 
+**Перевстановлення.** «Знову слова» та «Говоримо разом» встановлюються поруч як окремі застосунки. Якщо застосунок видалили й хочете встановити знову, Chrome може вважати його вже встановленим і не пропонувати встановлення. Тоді допомагає очищення даних сайту в Chrome (Налаштування → Налаштування сайтів → Усі сайти → адреса застосунку → «Очистити й скинути»). ⚠️ Обидва застосунки розміщені на одній адресі, тому очищення видаляє налаштування, свої слова, фрази й статистику **обох**. Перед цим збережіть копію даних у кожному з них («💾 Дані» → «Зберегти копію даних»), а після встановлення завантажте копії назад.
+
 **Мова.** Під час першого запуску мова інтерфейсу відповідає мові пристрою (українська, російська чи англійська; в інших випадках — англійська). Змінити її можна в «Налаштуваннях», вибір запам'ятовується. Маніфест застосунку українською: після встановлення під іконкою відображається назва «Знову слова». Адреса й назва репозиторію (`SpeechRehab`) не змінювалися, тому встановлені копії оновлюються як раніше.
+
+### 🌐 Розміщення на власному сайті
+
+Застосунок можна розмістити на будь-якому сайті — окремо або разом із «Говоримо разом». Щоб він встановлювався з вашого домену:
+
+1. **Потрібен HTTPS.** Без нього не працюють встановлення, робота без інтернету й мікрофон. Для перевірки на своєму комп'ютері підходить `http://localhost`.
+2. **Скопіюйте всі файли в одну папку:** `index.html`, `sw.js`, `manifest.json`, `accents.js`, `dict-en.js`, `dict-uk.js`, `dict-ru.js`, `icon-192.png`, `icon-512.png`, `LICENSE` (за бажанням ще `lex/` і `extra-dict.json`). `sw.js` має лежати в тій самій папці, що й `index.html`.
+3. **У `manifest.json` змініть лише `"id"`** на шлях цієї папки на вашому сайті, наприклад `"/rehab/"` (або `"/"`, якщо застосунок у корені сайту). Решта шляхів відносні й підлаштовуються самі. Коли люди вже встановили застосунок, `id` більше не змінюйте — інакше встановлені копії перестануть оновлюватися.
+4. **Обидва застосунки на одному сайті** — кожен у своїй папці зі своїм `id`. Тоді вони встановлюються поруч, але мають спільне сховище браузера: очищення даних сайту видаляє дані обох. Щоб розділити їх повністю, розмістіть застосунки на різних піддоменах.
+5. За бажанням змініть `name` і `short_name` у `manifest.json`, щоб відрізняти свою копію від оригіналу.
+6. **Оновлення:** після зміни файлів збільшуйте номер `CACHE` у `sw.js` і `APP_VERSION` в `index.html` на однакове число — тоді встановлені копії отримають оновлення під час наступного відкриття з інтернетом.
+7. **Перенесення даних:** копію даних («💾 Дані» → «Зберегти копію даних»), збережену в одній копії застосунку, можна завантажити в іншу — на іншому сайті чи телефоні.
+8. **Ліцензія MIT:** залиште файл `LICENSE` і зазначення авторства, зокрема посилання на автора в «ℹ️ Про застосунок».
 
 ### 📁 Файли репозиторію
 
@@ -161,7 +176,22 @@ The app runs entirely in the browser — no installation, no backend, no account
 
 No build tools, servers, or dependencies are required — it is a set of static files.
 
+**Reinstalling.** «Знову слова» and «Говоримо разом» install side by side as separate apps. If an app was removed and you want to install it again, Chrome may still consider it installed and not offer installation. Clearing the site data in Chrome helps (Settings → Site settings → All sites → the app address → “Clear & reset”). ⚠️ Both apps are hosted at the same address, so clearing deletes the settings, own words, phrases and statistics of **both**. Before that, save a data backup in each of them (“💾 Data” → “Save data backup”), and load the backups after installing again.
+
 **Language.** On first launch the interface language follows the device language (Ukrainian, Russian or English; English otherwise). It can be changed in Settings and the choice is remembered. The app manifest is in Ukrainian, so after installation the name under the icon is «Знову слова». The address and the repository name (`SpeechRehab`) have not changed, so installed copies keep updating.
+
+### 🌐 Hosting on your own site
+
+The app can be hosted on any site — alone or together with «Говоримо разом». For it to install from your domain:
+
+1. **HTTPS is required.** Without it installation, offline use and the microphone do not work. For testing on your own computer `http://localhost` is fine.
+2. **Copy all files into one folder:** `index.html`, `sw.js`, `manifest.json`, `accents.js`, `dict-en.js`, `dict-uk.js`, `dict-ru.js`, `icon-192.png`, `icon-512.png`, `LICENSE` (optionally also `lex/` and `extra-dict.json`). `sw.js` must be in the same folder as `index.html`.
+3. **In `manifest.json` change only `"id"`** to the path of that folder on your site, e.g. `"/rehab/"` (or `"/"` if the app is at the site root). All other paths are relative and adapt by themselves. Once people have installed the app, do not change `id` again — otherwise installed copies stop updating.
+4. **Both apps on one site** — each in its own folder with its own `id`. They then install side by side but share the browser storage: clearing the site data deletes the data of both. To separate them completely, host them on different subdomains.
+5. Optionally change `name` and `short_name` in `manifest.json` to tell your copy apart from the original.
+6. **Updates:** after changing files, increase `CACHE` in `sw.js` and `APP_VERSION` in `index.html` to the same number — installed copies get the update the next time they are opened online.
+7. **Moving data:** a data backup (“💾 Data” → “Save data backup”) saved in one copy of the app can be loaded into another — on another site or phone.
+8. **MIT license:** keep the `LICENSE` file and the authorship notice, including the link to the author in “ℹ️ About the app”.
 
 ### 📁 Repository files
 

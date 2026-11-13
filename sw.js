@@ -1,17 +1,13 @@
 // Service worker: сохраняет приложение на устройстве, чтобы оно работало без интернета.
 // При любом изменении файлов приложения увеличивайте номер версии (v1 -> v2 ...).
-const CACHE = 'speech-rehab-v68';
-const ASSETS = [
-  '/SpeechRehab/',
-  '/SpeechRehab/index.html',
-  '/SpeechRehab/manifest.json',
-  '/SpeechRehab/accents.js',
-  '/SpeechRehab/dict-en.js',
-  '/SpeechRehab/dict-uk.js',
-  '/SpeechRehab/dict-ru.js',
-  '/SpeechRehab/icon-192.png',
-  '/SpeechRehab/icon-512.png'
-];
+const CACHE = 'speech-rehab-v71';
+// Папка приложения определяется по адресу самого sw.js (на GitHub Pages это /SpeechRehab/),
+// поэтому приложение можно разместить в любой папке любого сайта без правки этого файла.
+const BASE = new URL('./', self.location).pathname;
+const PAGE = BASE + 'index.html';
+const ASSETS = ['', 'index.html', 'manifest.json', 'accents.js', 'dict-en.js', 'dict-uk.js', 'dict-ru.js', 'icon-192.png', 'icon-512.png'].map(f => BASE + f);
+const isPage = p => p === BASE || p === PAGE;
+const isLex = p => p.startsWith(BASE + 'lex/') && /^[a-z]+\.txt$/.test(p.slice(BASE.length + 4));
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS.map(u => new Request(u, { cache: 'reload' })))));
@@ -40,14 +36,14 @@ self.addEventListener('fetch', e => {
   // Запросы к другим сайтам (онлайн-поиск слов) идут напрямую, без кэша и подмены страницей приложения
   if (url.origin !== self.location.origin) return;
   // Сама страница: при наличии интернета — свежая с сайта (так обновления видны сразу), без интернета — сохранённая копия
-  if (e.request.mode === 'navigate' || /\/SpeechRehab\/(index\.html)?$/.test(url.pathname)) {
+  if (e.request.mode === 'navigate' || isPage(url.pathname)) {
     e.respondWith(
-      fetchFresh('/SpeechRehab/index.html', 4000)
+      fetchFresh(PAGE, 4000)
         .then(res => {
-          if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put('/SpeechRehab/index.html', copy)); return res; }
-          return caches.match('/SpeechRehab/index.html').then(r => r || res);
+          if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(PAGE, copy)); return res; }
+          return caches.match(PAGE).then(r => r || res);
         })
-        .catch(() => caches.match('/SpeechRehab/index.html'))
+        .catch(() => caches.match(PAGE))
     );
     return;
   }
@@ -55,11 +51,11 @@ self.addEventListener('fetch', e => {
     caches.match(e.request, { ignoreSearch: true })
       .then(r => r || fetch(e.request).then(res => {
         // необязательные частотные списки lex/*.txt сохраняем в кэш, чтобы они работали без интернета
-        if (res.ok && /\/SpeechRehab\/lex\/[a-z]+\.txt$/.test(url.pathname)) {
+        if (res.ok && isLex(url.pathname)) {
           const copy = res.clone();
           caches.open(CACHE).then(c => c.put(e.request, copy));
         }
         return res;
-      }).catch(() => caches.match('/SpeechRehab/index.html')))
+      }).catch(() => caches.match(PAGE)))
   );
 });
