@@ -1,9 +1,17 @@
 // Service worker: сохраняет приложение на устройстве, чтобы оно работало без интернета.
 // При любом изменении файлов приложения увеличивайте номер версии (v1 -> v2 ...).
-const CACHE = 'speech-rehab-v71';
+const VER = 'speech-rehab-v72';
 // Папка приложения определяется по адресу самого sw.js (на GitHub Pages это /SpeechRehab/),
 // поэтому приложение можно разместить в любой папке любого сайта без правки этого файла.
 const BASE = new URL('./', self.location).pathname;
+// Имя кэша включает папку: у сайта одно хранилище кэшей на все приложения (например, «Говоримо разом» рядом),
+// и каждая копия удаляет только свои старые кэши.
+const CACHE = VER + ':' + BASE;
+function isOwnOldCache(k) {
+  if (k === CACHE || !k.startsWith('speech-rehab-v')) return false;          // чужие кэши (govorim-…) не трогаем
+  const i = k.indexOf(':');
+  return i >= 0 ? k.slice(i + 1) === BASE : BASE === '/SpeechRehab/';          // прежние имена без папки (до v72) — только у копии в /SpeechRehab/
+}
 const PAGE = BASE + 'index.html';
 const ASSETS = ['', 'index.html', 'manifest.json', 'accents.js', 'dict-en.js', 'dict-uk.js', 'dict-ru.js', 'icon-192.png', 'icon-512.png'].map(f => BASE + f);
 const isPage = p => p === BASE || p === PAGE;
@@ -17,7 +25,7 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(keys => Promise.all(keys.filter(isOwnOldCache).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });

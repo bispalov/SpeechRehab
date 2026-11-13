@@ -75,7 +75,7 @@
 3. **У `manifest.json` змініть лише `"id"`** на шлях цієї папки на вашому сайті, наприклад `"/rehab/"` (або `"/"`, якщо застосунок у корені сайту). Решта шляхів відносні й підлаштовуються самі. Коли люди вже встановили застосунок, `id` більше не змінюйте — інакше встановлені копії перестануть оновлюватися.
 4. **Обидва застосунки на одному сайті** — кожен у своїй папці зі своїм `id`. Тоді вони встановлюються поруч, але мають спільне сховище браузера: очищення даних сайту видаляє дані обох. Щоб розділити їх повністю, розмістіть застосунки на різних піддоменах.
 5. За бажанням змініть `name` і `short_name` у `manifest.json`, щоб відрізняти свою копію від оригіналу.
-6. **Оновлення:** після зміни файлів збільшуйте номер `CACHE` у `sw.js` і `APP_VERSION` в `index.html` на однакове число — тоді встановлені копії отримають оновлення під час наступного відкриття з інтернетом.
+6. **Оновлення:** після зміни файлів збільшуйте номер `VER` у `sw.js` і `APP_VERSION` в `index.html` на однакове число — тоді встановлені копії отримають оновлення під час наступного відкриття з інтернетом.
 7. **Перенесення даних:** копію даних («💾 Дані» → «Зберегти копію даних»), збережену в одній копії застосунку, можна завантажити в іншу — на іншому сайті чи телефоні.
 8. **Ліцензія MIT:** залиште файл `LICENSE` і зазначення авторства, зокрема посилання на автора в «ℹ️ Про застосунок».
 
@@ -90,7 +90,7 @@
 
 Необов'язково: `extra-dict.json` — додатковий словник, який підвантажується за наявності інтернету. Файли `README.md` і `LICENSE` застосунку не потрібні, але потрібні для опису й ліцензії проєкту.
 
-Шляхи в `manifest.json` і `sw.js` вказані як `/SpeechRehab/…`, тому репозиторій (або папка на хостингу) має називатися `SpeechRehab`. Після будь-яких змін у файлах збільшуйте номер версії кешу в `sw.js` (`CACHE`), інакше встановлені застосунки не оновляться.
+Шляхи в `sw.js` і `manifest.json` відносні: застосунок працює в папці з будь-якою назвою; змінювати потрібно лише `"id"` у `manifest.json` (див. «Розміщення на власному сайті»). Після будь-яких змін у файлах збільшуйте номер версії `VER` у `sw.js`, інакше встановлені застосунки не оновляться. Кожна копія видаляє лише власні старі кеші (`speech-rehab-…`), тож кеші інших застосунків на тому самому сайті, наприклад «Говоримо разом», не зачіпаються.
 
 ### 🎯 Для кого цей застосунок
 
@@ -189,7 +189,7 @@ The app can be hosted on any site — alone or together with «Говоримо 
 3. **In `manifest.json` change only `"id"`** to the path of that folder on your site, e.g. `"/rehab/"` (or `"/"` if the app is at the site root). All other paths are relative and adapt by themselves. Once people have installed the app, do not change `id` again — otherwise installed copies stop updating.
 4. **Both apps on one site** — each in its own folder with its own `id`. They then install side by side but share the browser storage: clearing the site data deletes the data of both. To separate them completely, host them on different subdomains.
 5. Optionally change `name` and `short_name` in `manifest.json` to tell your copy apart from the original.
-6. **Updates:** after changing files, increase `CACHE` in `sw.js` and `APP_VERSION` in `index.html` to the same number — installed copies get the update the next time they are opened online.
+6. **Updates:** after changing files, increase `VER` in `sw.js` and `APP_VERSION` in `index.html` to the same number — installed copies get the update the next time they are opened online.
 7. **Moving data:** a data backup (“💾 Data” → “Save data backup”) saved in one copy of the app can be loaded into another — on another site or phone.
 8. **MIT license:** keep the `LICENSE` file and the authorship notice, including the link to the author in “ℹ️ About the app”.
 
@@ -204,7 +204,7 @@ The app needs:
 
 Optional: `extra-dict.json` — an additional dictionary loaded when the internet is available. `README.md` and `LICENSE` are not used by the app but belong to the project.
 
-Paths in `manifest.json` and `sw.js` are set to `/SpeechRehab/…`, so the repository (or hosting folder) must be named `SpeechRehab`. After changing any file, increase the cache version (`CACHE`) in `sw.js`, otherwise installed copies will not update.
+Paths in `sw.js` and `manifest.json` are relative: the app works in a folder with any name; only `"id"` in `manifest.json` needs changing (see “Hosting on your own site”). After changing any file, increase the version `VER` in `sw.js`, otherwise installed copies will not update. Each copy deletes only its own old caches (`speech-rehab-…`), so caches of other apps on the same site, such as «Говоримо разом», are left alone.
 
 ### 🎯 Who is it for
 
