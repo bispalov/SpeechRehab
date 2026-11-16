@@ -561,6 +561,18 @@
                    background: #fff8e1; color: #1f2937; border: 2px solid #ffc107; box-shadow: 0 4px 14px rgba(0,0,0,0.18); font-size: 17px; font-weight: 700; text-align: center; pointer-events: none; }
         .ih-note.hidden { display: none; }
         @media (prefers-reduced-motion: reduce) { .ih-pulse { animation: none; outline: 4px solid #ffc107; outline-offset: 2px; } }
+
+        /* Справка: оглавление из сворачиваемых пунктов */
+        .help-body details.hp-item { border: 1px solid var(--option-btn-border); border-radius: 10px; margin: 6px 0; background: var(--card-bg, transparent); }
+        .help-body details.hp-item > summary { list-style: none; cursor: pointer; min-height: 52px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-weight: 700; }
+        .help-body details.hp-item > summary::-webkit-details-marker { display: none; }
+        .help-body details.hp-item > summary::before { content: '▶'; flex: 0 0 auto; font-size: 0.85em; }
+        .help-body details.hp-item[open] > summary::before { content: '▼'; }
+        .help-body .hp-text { padding: 0 12px 10px; }
+        .help-body .hp-text > :first-child { margin-top: 0; }
+        .help-body .hp-note { opacity: 0.85; }
+        .help-body .hp-toggle { width: 100%; margin: 4px 0 8px; min-height: 48px; }
+        .help-body .hp-all { width: 100%; margin-top: 12px; }
         .app-ver { text-align: center; font-size: 0.9em; opacity: 0.75; padding: 4px 0 2px; }
         .sg-arr { flex: 0 0 auto; width: 1.2em; font-size: 0.9em; }
         .sg-b { display: none; flex-direction: column; gap: 12px; padding: 12px 10px; }
@@ -3279,7 +3291,7 @@
         const hb = document.getElementById('helpBtn');
         hb.setAttribute('aria-label', hh.btn);
         hb.title = hh.btn;
-        if (!document.getElementById('helpOverlay').classList.contains('hidden')) renderHelp();
+        if (!document.getElementById('helpOverlay').classList.contains('hidden')) renderHelp();   // смена языка: тот же вид справки
         refreshModeTexts();
         document.getElementById('settingsTitle').innerText = i18n[currentLang].settingsBtnText;
         document.getElementById('statsTitle').innerText = x.statsTitle;
@@ -4682,7 +4694,7 @@
         box.innerHTML = h;
     }
     // Номер версии приложения (совпадает с номером в sw.js) — виден внизу настроек
-    const APP_VERSION = 77;
+    const APP_VERSION = 78;
     function syncSettGroups() {
         let ver = document.getElementById('appVer');
         if (!ver) { ver = document.createElement('div'); ver.id = 'appVer'; ver.className = 'app-ver'; document.getElementById('settingsPanel').appendChild(ver); }
@@ -8125,7 +8137,7 @@ function fillFromHeard(){
 
     const helpI18n = {
         ru: {
-            btn: 'Справка', title: 'Справка', close: 'Закрыть',
+            btn: 'Справка', title: 'Справка', close: 'Закрыть', tocNote: 'Нажмите на заголовок, чтобы прочитать пункт. В режимах кнопка ❓ показывает справку только об этом режиме.', expandAll: '▼ Раскрыть все пункты', collapseAll: '▲ Свернуть все пункты', modeTitle: '❓ Справка: {m}', all: '📖 Вся справка',
             body: `
 <p>Тренажёр помогает различать на слух похожие слова, тренировать собственное произношение и письмо. Занятия состоят из коротких заданий: слово озвучивается, а вы выбираете его, собираете из букв и произносите вслух.</p>
 
@@ -8139,7 +8151,7 @@ function fillFromHeard(){
 <li><b>🔤 Азбука</b> — подсказка по первой букве, когда слово «вертится на языке». Нажмите первую букву: появятся слова из словаря (включая «Мои слова»), которые с неё начинаются; следующая буква сужает список. Нажатие на слово добавляет его в строку (если включено автоозвучивание, слово сразу произносится), «Сказать так» озвучивает всю строку, ⌫ убирает последнее слово. «Скрыть буквы» освобождает место для слов (в настройках можно включить автосворачивание панели после каждой нажатой буквы; вернуть её — кнопка «Показать буквы»). «🔡 Мельче» уменьшает кнопки с буквами, «🔠 Крупнее» возвращает обычный размер. «Свободный набор» показывает весь алфавит: слово можно набирать так, как вы его себе представляете, даже с ошибками, а приложение предложит похожие слова. Категория слов здесь не учитывается: поиск идёт по всем словам. Если в настройках включён онлайн-поиск, под списком появляется кнопка «Найти слова в интернете»: слова ищутся в Викисловаре (для английского ещё в Datamuse), для этого набранные буквы отправляются в эти сервисы. Выбранное слово запоминается на устройстве. Собранная фраза показана словами-кнопками: нажатие убирает слово, «Очистить» убирает всё. Сворачиваемый блок «▶ Я, ты, в, на, не… — короткие слова» над строкой набора показывает местоимения, предлоги и частицы (стрелка ▼ — блок раскрыт), их можно добавить во фразу одним нажатием, после чего блок сам сворачивается; такие слова находятся и по буквам. «🎯 Тренировать» переносит фразу в тренировку, как в «Подсказке по сказанному»: приложение озвучит её, вы повторите, и фразу можно сохранить в «Мои фразы». Если в настройках включено «нажатие говорит слово, удержание добавляет», слово из списка сначала можно послушать.</li>
 <li><b>🎤 Подсказка по сказанному</b> — перенесён из приложения «Говорим вместе» (вкладка «Говорит человек»). Нажмите «Говорить» и скажите фразу как получится. Приложение разберёт её на слова и соберёт в рамку; слова, которых нет в словаре, помечены «?». Нажмите на слово с «?»: появятся варианты (подбираются по звучанию, по соседним словам, по вашим прежним исправлениям; при включённом онлайн-поиске слов ещё и из интернета), можно оставить слово как есть или убрать его. Слова без «?» убираются нажатием, а порядок меняется удержанием и перетаскиванием. Кнопка «Я, в, на, не…» раскрывает служебные слова; после выбора слова блок сам сворачивается. «Очистить» сбрасывает экран. Подсказки берутся из «Мои фразы» и из встроенных бытовых фраз (например, «Я хочу в туалет»): по ним учитывается контекст, поэтому для искажённого слова вроде «толя» после «в» предлагается «туалет». Слова подбираются и по согласным: узнанные «т» и «л» подходят к слову «туалет». Затем нажмите «Сказать» (фраза прозвучит) или «🎯 Тренировать произношение»: приложение озвучит фразу, вы повторите её вслух, читая с экрана, и приложение голосом скажет, верно ли («Молодец!» или «Почти, попробуйте ещё раз»). Неверные слова можно исправить, повторять можно сколько угодно, а готовую фразу кнопкой «Добавить в Мои фразы» сохранить для следующих повторов. Упрощённый вид, поведение нажатия на слово из списка и онлайн-поиск слов включаются в ⚙️ настройках. Слова распознаются как «?» относительно словаря приложения; для более точных подсказок можно положить рядом с index.html частотные списки lex/ru.txt, lex/uk.txt, lex/en.txt (по одному слову в строке, как в «Говорим вместе»). Слово заменяется автоматически, только если одно и то же исправление выбрано дважды подряд. Выученные слова, исправления и частые фразы хранятся только на этом устройстве.</li>
 <li><b>🗣 Мои фразы</b> — тренировка собственных фраз. Новую фразу можно сказать в режиме «Подсказка по сказанному» (кнопка «Сказать новую фразу»), а собранную фразу сохранить сюда. Фразу можно также вписать вручную (или добавить примеры, или загрузить список из файла: одна фраза в строке) и открыть её. В ⚙️ настройках можно скрыть текст фразы при повторении (останется только озвучивание), отключить голосовую оценку и автоматическое озвучивание. Нажмите «Сказать фразу» и произнесите её целиком. Приложение сравнит сказанное с нужной фразой по словам: верные слова зелёные, похожие жёлтые, неверные, пропущенные и лишние красные. Сначала показывается, сколько слов получилось верно. Нажмите на жёлтое или красное слово и выберите правильное из нескольких вариантов; когда вся фраза исправлена, приложение произнесёт её, и можно сказать ещё раз. Если распознавание ошиблось, а вы сказали верно, нажмите «Я сказал(а) верно». Распознавание речи в браузере не идеально, особенно при нарушенной речи, поэтому оценка условная; лучше заниматься вместе с логопедом. Фразы и счётчики попыток хранятся только на устройстве; записи голоса не сохраняются. «Сохранить в файл» и «Загрузить из файла» переносят список фраз на другое устройство.</li>
-<li>Категория слов выбирается на стартовом экране. Кнопка 🏠 в заголовке возвращает к выбору режима. Системная кнопка «Назад» на Android сначала закрывает открытое окно, затем делает шаг назад внутри режима и возвращает к выбору режима; приложение закрывается только со стартового экрана.</li>
+<li><b>Кнопки вверху и «Назад»</b> — кнопка 🏠 в заголовке возвращает к выбору режима, 📊 — статистика, ⚙️ — настройки, ❓ — справка: на стартовом экране она открывается оглавлением (нажмите на пункт, чтобы прочитать), а в режиме показывает только то, что относится к этому режиму; кнопка «📖 Вся справка» внизу открывает оглавление. Категория слов выбирается на стартовом экране. Системная кнопка «Назад» на Android сначала закрывает открытое окно, затем делает шаг назад внутри режима и возвращает к выбору режима; приложение закрывается только со стартового экрана.</li>
 </ul>
 
 <h3>Как заниматься</h3>
@@ -8150,7 +8162,7 @@ function fillFromHeard(){
 <li><b>Выбор слова</b> — выберите услышанное слово среди вариантов. В <i>мягком режиме</i> неверный вариант гаснет, и можно выбрать снова. В обычном режиме попытка одна, правильный ответ подсвечивается.</li>
 <li><b>Сбор слова из букв</b> — составьте слово из букв; можно показывать слоги.</li>
 <li><b>Следующее слово ➔</b> — переход к новому заданию.</li>
-<li>Счётчики над заданием показывают число верных ответов и всего заданий.</li>
+<li><b>Счётчики</b> — над заданием показывают число верных ответов и всего заданий.</li>
 </ul>
 
 <h3>Проверка произношения</h3>
@@ -8203,7 +8215,7 @@ function fillFromHeard(){
 <p>Если слова не озвучиваются, проверьте громкость и выберите другой голос в настройках.</p>`
         },
         uk: {
-            btn: 'Довідка', title: 'Довідка', close: 'Закрити',
+            btn: 'Довідка', title: 'Довідка', close: 'Закрити', tocNote: 'Натисніть на заголовок, щоб прочитати пункт. У режимах кнопка ❓ показує довідку лише про цей режим.', expandAll: '▼ Розгорнути всі пункти', collapseAll: '▲ Згорнути всі пункти', modeTitle: '❓ Довідка: {m}', all: '📖 Уся довідка',
             body: `
 <p>Тренажер допомагає розрізняти на слух схожі слова, тренувати власну вимову й письмо. Заняття складаються з коротких завдань: слово озвучується, а ви вибираєте його, збираєте з літер і вимовляєте вголос.</p>
 
@@ -8217,7 +8229,7 @@ function fillFromHeard(){
 <li><b>🔤 Абетка</b> — підказка за першою літерою, коли слово «крутиться на язиці». Натисніть першу літеру: з’являться слова зі словника (разом із «Моїми словами»), що з неї починаються; наступна літера звужує список. Натискання на слово додає його до рядка (якщо ввімкнено автоозвучення, слово одразу промовляється), «Сказати так» озвучує весь рядок, ⌫ прибирає останнє слово. «Сховати літери» вивільняє місце для слів (в налаштуваннях можна ввімкнути автозгортання панелі після кожної натиснутої літери; повернути її — кнопка «Показати літери»). «🔡 Дрібніше» зменшує кнопки з літерами, «🔠 Більше» повертає звичайний розмір. «Вільний набір» показує всю абетку: слово можна набирати так, як ви його собі уявляєте, навіть з помилками, а застосунок запропонує схожі слова. Категорія слів тут не враховується: пошук іде по всіх словах. Якщо в налаштуваннях увімкнено онлайн-пошук, під списком з’являється кнопка «Знайти слова в інтернеті»: слова шукаються у Вікісловнику (для англійської ще в Datamuse), для цього набрані літери надсилаються цим сервісам. Обране слово запам’ятовується на пристрої. Зібрана фраза показана словами-кнопками: натискання прибирає слово, «Очистити» прибирає все. Згортуваний блок «▶ Я, ти, в, на, не… — короткі слова» над рядком набору показує займенники, прийменники й частки (стрілка ▼ — блок розгорнуто), їх можна додати до фрази одним натисканням, після чого блок сам згортається; такі слова знаходяться й за літерами. «🎯 Тренувати» переносить фразу в тренування, як у «Підказці за сказаним»: застосунок озвучить її, ви повторите, і фразу можна зберегти в «Мої фрази». Якщо в налаштуваннях увімкнено «натискання говорить слово, утримання додає», слово зі списку спершу можна послухати.</li>
 <li><b>🎤 Підказка за сказаним</b> — перенесено із застосунку «Говоримо разом» (вкладка «Говорить людина»). Натисніть «Говорити» й скажіть фразу, як вийде. Застосунок розбере її на слова й збере в рамку; слова, яких немає у словнику, позначено «?». Натисніть на слово з «?»: з’являться варіанти (добираються за звучанням, за сусідніми словами, за вашими попередніми виправленнями; за ввімкненого онлайн-пошуку слів ще й з інтернету), можна залишити слово як є або прибрати. Слова без «?» прибираються натисканням, а порядок змінюється утриманням і перетягуванням. Кнопка «Я, в, на, не…» розкриває службові слова; після вибору слова блок сам згортається. «Очистити» скидає екран. Підказки беруться з «Моїх фраз» і з вбудованих побутових фраз (наприклад, «Я хочу в туалет»): за ними враховується контекст, тому для спотвореного слова на кшталт «толя» після «в» пропонується «туалет». Слова добираються й за приголосними: упізнані «т» і «л» підходять до слова «туалет». Потім натисніть «Сказати» (фраза пролунає) або «🎯 Тренувати вимову»: застосунок озвучить фразу, ви повторите її вголос, читаючи з екрана, і застосунок голосом скаже, чи правильно («Молодець!» або «Майже, спробуйте ще раз»). Неправильні слова можна виправити, повторювати можна скільки завгодно, а готову фразу кнопкою «Додати до Моїх фраз» зберегти для наступних повторів. Спрощений вигляд, поведінка натискання на слово зі списку й онлайн-пошук слів вмикаються в ⚙️ налаштуваннях. Слова розпізнаються як «?» відносно словника застосунку; для точніших підказок можна покласти поруч з index.html частотні списки lex/ru.txt, lex/uk.txt, lex/en.txt (одне слово в рядку, як у «Говоримо разом»). Слово замінюється автоматично, лише якщо те саме виправлення обрано двічі поспіль. Вивчені слова, виправлення й часті фрази зберігаються лише на цьому пристрої.</li>
 <li><b>🗣 Мої фрази</b> — тренування власних фраз. Нову фразу можна сказати в режимі «Підказка за сказаним» (кнопка «Сказати нову фразу»), а зібрану фразу зберегти сюди. Фразу можна й вписати вручну (або додати приклади, або завантажити список із файлу: одна фраза в рядку) та відкрити її. У ⚙️ налаштуваннях можна сховати текст фрази під час повторення (залишиться лише озвучення), вимкнути голосову оцінку й автоматичне озвучення. Натисніть «Сказати фразу» й промовте її цілком. Застосунок порівняє сказане з потрібною фразою по словах: правильні слова зелені, схожі жовті, неправильні, пропущені й зайві червоні. Спочатку показується, скільки слів вийшло правильно. Натисніть на жовте або червоне слово й оберіть правильне з кількох варіантів; коли всю фразу виправлено, застосунок промовить її, і можна сказати ще раз. Якщо розпізнавання помилилося, а ви сказали правильно, натисніть «Я сказав(ла) правильно». Розпізнавання мовлення в браузері не ідеальне, особливо при порушеному мовленні, тому оцінка умовна; краще займатися разом із логопедом. Фрази й лічильники спроб зберігаються лише на пристрої; записи голосу не зберігаються. «Зберегти у файл» і «Завантажити з файлу» переносять список фраз на інший пристрій.</li>
-<li>Категорія слів обирається на стартовому екрані. Кнопка 🏠 у заголовку повертає до вибору режиму. Системна кнопка «Назад» на Android спершу закриває відкрите вікно, потім робить крок назад усередині режиму й повертає до вибору режиму; застосунок закривається лише зі стартового екрана.</li>
+<li><b>Кнопки вгорі та «Назад»</b> — кнопка 🏠 у заголовку повертає до вибору режиму, 📊 — статистика, ⚙️ — налаштування, ❓ — довідка: на стартовому екрані вона відкривається змістом (натисніть на пункт, щоб прочитати), а в режимі показує лише те, що стосується цього режиму; кнопка «📖 Уся довідка» внизу відкриває зміст. Категорія слів обирається на стартовому екрані. Системна кнопка «Назад» на Android спершу закриває відкрите вікно, потім робить крок назад усередині режиму й повертає до вибору режиму; застосунок закривається лише зі стартового екрана.</li>
 </ul>
 
 <h3>Як займатися</h3>
@@ -8228,7 +8240,7 @@ function fillFromHeard(){
 <li><b>Вибір слова</b> — виберіть почуте слово серед варіантів. У <i>м’якому режимі</i> неправильний варіант гасне, і можна вибрати знову. У звичайному режимі спроба одна, правильна відповідь підсвічується.</li>
 <li><b>Збирання слова з літер</b> — складіть слово з літер; можна показувати склади.</li>
 <li><b>Наступне слово ➔</b> — перехід до нового завдання.</li>
-<li>Лічильники над завданням показують кількість правильних відповідей і всього завдань.</li>
+<li><b>Лічильники</b> — над завданням показують кількість правильних відповідей і всього завдань.</li>
 </ul>
 
 <h3>Перевірка вимови</h3>
@@ -8281,7 +8293,7 @@ function fillFromHeard(){
 <p>Якщо слова не озвучуються, перевірте гучність і виберіть інший голос у налаштуваннях.</p>`
         },
         en: {
-            btn: 'Help', title: 'Help', close: 'Close',
+            btn: 'Help', title: 'Help', close: 'Close', tocNote: 'Tap a heading to read the item. Inside a mode the ❓ button shows help only about that mode.', expandAll: '▼ Expand all items', collapseAll: '▲ Collapse all items', modeTitle: '❓ Help: {m}', all: '📖 All help',
             body: `
 <p>This trainer helps you tell similar-sounding words apart by ear and practise your own pronunciation and writing. Each task is short: the word is spoken, then you choose it, assemble it from letters and say it aloud.</p>
 
@@ -8295,7 +8307,7 @@ function fillFromHeard(){
 <li><b>🔤 ABC</b> — first-letter help for when a word is on the tip of your tongue. Tap the first letter: words from the dictionary (including “My words”) that start with it appear; the next letter narrows the list. Tapping a word adds it to the line (if auto-speak is on, the word is spoken at once), “Say it” speaks the whole line, ⌫ removes the last word. “Hide letters” makes room for more words (Settings can collapse the panel automatically after each letter; bring it back with “Show letters”). “🔡 Smaller” makes the letter buttons smaller, “🔠 Larger” brings back the normal size. “Free typing” shows the whole alphabet: type the word the way you imagine it, mistakes included, and the app suggests similar words. The word category is not used here: the search covers all words. If online search is turned on in Settings, a “Find words online” button appears under the list: words are looked up in Wiktionary (and Datamuse for English), so the typed letters are sent to these services. A chosen word is remembered on the device. The assembled phrase is shown as word buttons: a tap removes a word, “Clear” removes everything. The collapsible “▶ I, you, to, in, not… — short words” block above the typing line shows pronouns, prepositions and particles (the ▼ arrow means it is open) that are added to the phrase with one tap, after which the block collapses by itself; they can also be found by letters. “🎯 Practise” takes the phrase to practice, as in “Suggestions from what was said”: the app speaks it, you repeat it, and the phrase can be saved to “My phrases”. If “tap speaks the word, hold adds it” is on in Settings, a word from the list can be heard first.</li>
 <li><b>🎤 Suggestions from what was said</b> — ported from the “Let’s talk together” app (the “The person speaks” tab). Tap “Speak” and say a phrase however it comes out. The app splits it into words and gathers them in a frame; words that are not in the dictionary are marked “?”. Tap a word with “?”: options appear (chosen by sound, by neighbouring words and by your earlier corrections; with online word search on, also from the internet), and you can keep the word as it is or remove it. Words without “?” are removed by a tap, and the order is changed by holding and dragging. The “I, in, on, not…” button opens function words; after a word is chosen the block collapses by itself. “Clear” resets the screen. Suggestions come from “My phrases” and from built-in everyday phrases (for example “I want to go to the toilet”): they provide context, so a distorted word after “to” gets the likely word offered. Words are also matched by consonants: recognised sounds can fit a longer word. Then tap “Say” (the phrase is spoken) or “🎯 Practise pronunciation”: the app speaks the phrase, you repeat it aloud reading from the screen, and the app tells you by voice whether it was right (“Well done!” or “Almost, try again”). Wrong words can be fixed, you can repeat as often as you like, and the finished phrase can be saved with “Add to My phrases” for later practice. Simple view, how a tap on a listed word behaves and online word search are switched on in ⚙️ Settings. “?” is relative to the app’s dictionary; for more precise suggestions you can put frequency lists lex/ru.txt, lex/uk.txt, lex/en.txt next to index.html (one word per line, as in “Let’s talk together”). A word is replaced automatically only after the same correction has been chosen twice in a row. Learned words, corrections and frequent phrases are kept only on this device.</li>
 <li><b>🗣 My phrases</b> — practice with your own phrases. A new phrase can be said in the “Suggestions from what was said” mode (the “Say a new phrase” button), and the assembled phrase saved here. You can also type a phrase by hand (or add examples, or load a list from a file: one phrase per line) and open it. ⚙️ Settings can hide the phrase text while repeating (only the speech remains), and turn off the spoken verdict and automatic speaking. Tap “Say the phrase” and say it in full. The app compares what was said with the target phrase word by word: correct words are green, similar ones yellow, wrong, missing and extra ones red. It first shows how many words were right. Tap a yellow or red word and choose the right one from a few options; when the whole phrase is fixed, the app speaks it and you can say it again. If recognition got it wrong but you said it correctly, tap “I said it correctly”. Browser speech recognition is not perfect, especially with impaired speech, so the score is approximate; it is best done together with a therapist. Phrases and try counters are kept only on the device; voice recordings are not saved. “Save to file” and “Load from file” move the list of phrases to another device.</li>
-<li>Choose the word category on the start screen. The 🏠 button in the header returns to the mode selection. The Android “Back” button first closes an open window, then goes one step back inside the mode and returns to the mode selection; the app closes only from the start screen.</li>
+<li><b>Header buttons and “Back”</b> — the 🏠 button in the header returns to the mode selection, 📊 is statistics, ⚙️ is settings, ❓ is help: on the start screen it opens as a table of contents (tap an item to read it), and inside a mode it shows only what concerns that mode; the “📖 All help” button at the bottom opens the contents. Choose the word category on the start screen. The Android “Back” button first closes an open window, then goes one step back inside the mode and returns to the mode selection; the app closes only from the start screen.</li>
 </ul>
 
 <h3>How to practice</h3>
@@ -8306,7 +8318,7 @@ function fillFromHeard(){
 <li><b>Choose the word</b> — pick the word you heard among the options. In <i>gentle mode</i> a wrong option fades out and you can choose again. In normal mode you have one attempt and the right answer is highlighted.</li>
 <li><b>Assemble from letters</b> — build the word from letters; syllables can be shown.</li>
 <li><b>Next word ➔</b> — move to the next task.</li>
-<li>The counters above the task show correct answers and total tasks.</li>
+<li><b>Counters</b> — above the task show correct answers and total tasks.</li>
 </ul>
 
 <h3>Checking your pronunciation</h3>
@@ -8360,15 +8372,99 @@ function fillFromHeard(){
         }
     };
 
-    function renderHelp() {
+    // Пункты справки: текст в helpI18n остаётся одним HTML; здесь он разбирается на пункты.
+    // Раздел <h3> со списком, где каждый пункт начинается с <b>Заголовок</b>, даёт по пункту на строку списка,
+    // остальные разделы — один пункт с заголовком <h3>. Порядок пунктов одинаков во всех языках;
+    // HELP_KEYS — их ключи в том же порядке (если число не совпало, справка по режиму показывает всё).
+    const HELP_KEYS = [
+        'm_full', 'm_ser', 'm_listen', 'm_wr', 'm_quiz', 'm_abc', 'm_hear', 'm_phr', 'nav',
+        'listen', 'syll', 'hint', 'choose', 'build', 'next', 'counters',
+        'pron', 'stats',
+        's_groups', 's_verdict', 's_lang', 's_options', 's_voice', 's_gentle', 's_emoji', 's_autospeak', 's_blocks', 's_strict', 's_require', 's_timer', 's_idlehint', 's_about', 's_start', 's_abcset', 's_mywords', 's_data', 's_fb',
+        'dict', 'offline'
+    ];
+    const HELP_MODE = {
+        full:   ['m_full', 'listen', 'syll', 'hint', 'choose', 'build', 'next', 'counters', 'pron', 's_blocks', 's_require', 's_strict', 's_verdict', 's_idlehint', 'stats'],
+        ser:    ['m_ser', 's_verdict', 's_idlehint', 'stats'],
+        listen: ['m_listen', 'pron', 's_require', 's_strict', 's_verdict', 's_idlehint', 'stats'],
+        wr:     ['m_wr', 's_idlehint', 'stats'],
+        quiz:   ['m_quiz', 'pron', 's_strict', 'stats'],
+        abc:    ['m_abc', 's_abcset', 's_mywords'],
+        hear:   ['m_hear', 's_abcset', 's_mywords'],
+        phr:    ['m_phr', 's_verdict', 's_abcset']
+    };
+    const helpCache = {};
+    function helpParse(lang) {
+        if (helpCache[lang]) return helpCache[lang];
+        const h = helpI18n[lang] || helpI18n.ru;
+        const box = document.createElement('div'); box.innerHTML = h.body;
+        const intro = [], groups = [], items = [];
+        let g = null;
+        [...box.children].forEach(el => {
+            if (el.tagName === 'H3') { g = { title: el.innerHTML, nodes: [] }; groups.push(g); }
+            else if (g) g.nodes.push(el); else intro.push(el.outerHTML);
+        });
+        groups.forEach((gr, gi) => {
+            const lis = gr.nodes.length === 1 && gr.nodes[0].tagName === 'UL' ? [...gr.nodes[0].children] : null;
+            const titled = lis && lis.every(li => { const b = li.firstElementChild, fc = li.firstChild; return b && b.tagName === 'B' && (fc === b || (fc.nodeType === 3 && !fc.textContent.trim() && fc.nextSibling === b)); });
+            if (titled) {
+                lis.forEach(li => {
+                    const c = li.cloneNode(true), b = c.firstElementChild;
+                    const title = b.innerHTML.replace(/:\s*$/, '');
+                    b.remove();
+                    // «— одне слово…» → «Одне слово…»: убрать тире после заголовка и начать с заглавной
+                    const tn = c.firstChild;
+                    if (tn && tn.nodeType === 3) {
+                        const t = tn.textContent.replace(/^\s*(—|-|:)?\s*/, '');
+                        tn.textContent = t.charAt(0).toLocaleUpperCase() + t.slice(1);
+                    }
+                    const html = c.innerHTML.trim();
+                    items.push({ group: gi, title, html });
+                });
+            } else items.push({ group: gi, title: gr.title, html: gr.nodes.map(n => n.outerHTML).join(''), whole: true });
+        });
+        items.forEach((it, i) => { it.key = items.length === HELP_KEYS.length ? HELP_KEYS[i] : null; });
+        return (helpCache[lang] = { intro: intro.join(''), groups, items, keysOk: items.length === HELP_KEYS.length });
+    }
+    function helpItemHtml(it, open) {
+        return '<details class="hp-item"' + (open ? ' open' : '') + (it.key ? ' data-key="' + it.key + '"' : '') + '><summary>' + it.title + '</summary><div class="hp-text">' + it.html + '</div></details>';
+    }
+    let helpView = 'all';
+    function renderHelp(view) {
         const h = helpI18n[currentLang] || helpI18n.ru;
-        document.getElementById('helpTitle').innerText = h.title;
+        const P = helpParse(currentLang);
+        if (view) helpView = view;
+        const mode = helpView === 'mode' && HELP_MODE[screenName] && P.keysOk ? screenName : null;
+        const body = document.getElementById('helpBody');
         document.getElementById('helpClose').setAttribute('aria-label', h.close);
-        document.getElementById('helpBody').innerHTML = h.body;
+        if (mode) {
+            const name = (document.querySelector('#modeSelect .mode-card[data-m="' + mode + '"] .mode-title') || {}).textContent || h.title;
+            document.getElementById('helpTitle').innerText = h.modeTitle.replace('{m}', name.trim());
+            const byKey = {}; P.items.forEach(it => { byKey[it.key] = it; });
+            body.innerHTML = HELP_MODE[mode].filter(k => byKey[k]).map(k => helpItemHtml(byKey[k], true)).join('') +
+                '<button type="button" class="primary-btn hp-all" onclick="renderHelp(\'all\'); document.getElementById(\'helpBody\').scrollTop = 0;">' + escHtml(h.all) + '</button>';
+            return;
+        }
+        document.getElementById('helpTitle').innerText = h.title;
+        let html = P.intro + '<p class="hp-note">' + escHtml(h.tocNote) + '</p>' +
+            '<button type="button" class="assist-btn hp-toggle" onclick="helpToggleAll(this)">' + escHtml(h.expandAll) + '</button>';
+        P.groups.forEach((gr, gi) => {
+            const its = P.items.filter(it => it.group === gi);
+            if (its.length === 1 && its[0].whole) { html += helpItemHtml(its[0], false); return; }
+            html += '<h3>' + gr.title + '</h3>' + its.map(it => helpItemHtml(it, false)).join('');
+        });
+        body.innerHTML = html;
+    }
+    function helpToggleAll(btn) {
+        const h = helpI18n[currentLang] || helpI18n.ru;
+        const all = [...document.querySelectorAll('#helpBody details.hp-item')];
+        const open = all.some(d => !d.open);
+        all.forEach(d => { d.open = open; });
+        btn.textContent = open ? h.collapseAll : h.expandAll;
     }
 
     function openHelp() {
-        renderHelp();
+        renderHelp(HELP_MODE[screenName] ? 'mode' : 'all');
         const overlay = document.getElementById('helpOverlay');
         overlay.classList.remove('hidden');
         document.getElementById('helpBody').scrollTop = 0;
