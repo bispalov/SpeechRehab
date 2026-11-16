@@ -559,6 +559,7 @@
         .ih-dim { opacity: 0.3 !important; }
         .ih-note { position: fixed; left: 0; right: 0; margin: 0 auto; width: fit-content; z-index: 900; max-width: min(92vw, 520px); padding: 8px 14px; border-radius: 12px;
                    background: #fff8e1; color: #1f2937; border: 2px solid #ffc107; box-shadow: 0 4px 14px rgba(0,0,0,0.18); font-size: 17px; font-weight: 700; text-align: center; pointer-events: none; }
+        .ih-note.hidden { display: none; }
         @media (prefers-reduced-motion: reduce) { .ih-pulse { animation: none; outline: 4px solid #ffc107; outline-offset: 2px; } }
         .app-ver { text-align: center; font-size: 0.9em; opacity: 0.75; padding: 4px 0 2px; }
         .sg-arr { flex: 0 0 auto; width: 1.2em; font-size: 0.9em; }
@@ -1983,6 +1984,7 @@
     }
 
     function toggleLanguage() {
+        try { ihKick(); } catch (e) {}
         if (currentLang === 'uk') currentLang = 'ru';
         else if (currentLang === 'ru') currentLang = 'en';
         else currentLang = 'uk';
@@ -4100,10 +4102,14 @@
         } catch (e) {}
     }
     document.addEventListener('visibilitychange', () => ihWakeSync());
+    // Убрать всё, что показала подсказка: строку, пульсацию, бледный вариант, подсветку буквы, её голос.
     function ihClearVisual() {
-        document.querySelectorAll('.ih-pulse').forEach(e => e.classList.remove('ih-pulse'));
-        const n = document.getElementById('ihNote'); if (n) n.classList.add('hidden');
+        IH.token = (IH.token || 0) + 1;   // отменяет ещё не прозвучавший образец слова после фразы подсказки
+        document.querySelectorAll('.ih-pulse, .ih-dim, .ih-next').forEach(e => e.classList.remove('ih-pulse', 'ih-dim', 'ih-next'));
+        const n = document.getElementById('ihNote'); if (n) { n.classList.add('hidden'); n.textContent = ''; }
+        if (IH.speaking) { IH.speaking = false; try { window.speechSynthesis.cancel(); } catch (e) {} }   // только голос подсказки
     }
+    function ihClear() { clearTimeout(IH.timer); IH.timer = null; IH.level = 0; ihClearVisual(); }
     // любое действие человека: сбросить ступени и начать отсчёт заново
     function ihKick() {
         clearTimeout(IH.timer); IH.timer = null;
@@ -4134,11 +4140,15 @@
     }
     function ihSay(text, after) {
         if (!ihVoiceOn() || !('speechSynthesis' in window)) { if (after) after(); return; }
+        const tok = IH.token;
         try {
             const u = makeUtterance(text, 1);
-            if (after) { let done = false; const go = () => { if (!done) { done = true; after(); } }; u.onend = go; u.onerror = go; }
+            let done = false;
+            const go = () => { if (done) return; done = true; IH.speaking = false; if (after && tok === IH.token) after(); };
+            u.onend = go; u.onerror = go;
+            IH.speaking = true;
             window.speechSynthesis.speak(u);
-        } catch (e) { if (after) after(); }
+        } catch (e) { IH.speaking = false; if (after) after(); }
     }
     function ihNote(text) {
         let n = document.getElementById('ihNote');
@@ -4234,7 +4244,7 @@
             if (g.el) ihPulse(g.el);
             ihNote(g.text);
             if (!ihVoiceOn()) return;   // без голоса — ни фразы, ни образца
-            if (g.word) ihSay(g.voice, () => { if (!micBusy()) speakWord(g.word); });
+            if (g.word) ihSay(g.voice, () => { if (!micBusy() && ihModeOk()) speakWord(g.word); });
             else ihSay(g.voice);
             return;
         }
@@ -4251,6 +4261,7 @@
         if (el && !el.disabled) ihKick();   // касание пустого места (чтобы экран не гас) и прокрутка отсчёт не сбрасывают
     }, true);
     window.addEventListener('keydown', () => ihKick(), true);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) ihKick(); });
 
     // ===== Стартовый экран: последний режим, скрытые режимы, итог дня =====
     const HOME_MODES = ['full', 'ser', 'listen', 'wr', 'quiz', 'abc', 'hear', 'phr'];
@@ -4671,7 +4682,7 @@
         box.innerHTML = h;
     }
     // Номер версии приложения (совпадает с номером в sw.js) — виден внизу настроек
-    const APP_VERSION = 76;
+    const APP_VERSION = 77;
     function syncSettGroups() {
         let ver = document.getElementById('appVer');
         if (!ver) { ver = document.createElement('div'); ver.id = 'appVer'; ver.className = 'app-ver'; document.getElementById('settingsPanel').appendChild(ver); }
@@ -8762,6 +8773,7 @@ function fillFromHeard(){
     }
 
     function showRestOverlay(show) {
+        try { ihKick(); } catch (e) {}
         const overlay = document.getElementById('restOverlay');
         const container = document.querySelector('.container');
         if (show) {
