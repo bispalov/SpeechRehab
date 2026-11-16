@@ -51,6 +51,7 @@
 - **Голосова оцінка** — одне налаштування для всіх режимів; після помилки звучить правильне слово. У «Тесті на слух» можна дозволити один повтор слова.
 - **Робота офлайн** як встановлюваний PWA-застосунок (маніфест + іконки); усі налаштування (мова, голос, тема, таймер, категорія тощо) зберігаються локально на пристрої.
 - **Підказка, якщо довго немає дії** (за бажанням, 15–30 с) — у тренажері, тренуванні слуху, письмі й переліченнях: спершу пульсує потрібна кнопка, потім підказка голосом, потім сильна підказка (наступна літера, перший склад).
+- **Навчання по кроках** — під час першого входу в режим застосунок пропонує показати, як займатися: підсвічує потрібні кнопки, пояснює коротко й голосом; повторити — ❓ у режимі → «🎓 Навчання».
 - **Довідка ❓** — на стартовому екрані вся довідка змістом (пункти розгортаються натисканням), у режимі — лише про цей режим, з кнопкою «📖 Уся довідка».
 - **Стартовий екран** — останній режим позначено «▶ Продовжити», під заголовком підсумок дня; непотрібні зараз режими можна сховати в налаштуваннях; за бажанням застосунок під час запуску одразу відкриває режим, у якому закінчили.
 - **Резервна копія даних** — у налаштуваннях (група «💾 Дані») можна зберегти всі налаштування, свої слова й фрази та статистику в один файл і завантажити їх на іншому телефоні або після перевстановлення.
@@ -167,6 +168,7 @@ The app runs entirely in the browser — no installation, no backend, no account
 - **Spoken verdict** — one setting for all modes; after a mistake the right word is spoken. The hearing test can allow one replay of each word.
 - **Works offline** as an installable PWA (manifest + icons); all settings (language, voice, theme, timer, category, etc.) are saved locally on the device.
 - **Hint when nothing happens for a while** (optional, 15–30 s) — in the trainer, listening, writing and sequences: first the needed button pulses, then a spoken hint, then a strong hint (next letter, first syllable).
+- **Step-by-step tutorial** — on first entering a mode the app offers to show how to practise: it highlights the needed buttons and explains briefly and aloud; repeat via ❓ inside the mode → “🎓 Tutorial”.
 - **Help ❓** — on the start screen all help as a table of contents (items open with a tap), inside a mode only about that mode, with an “📖 All help” button.
 - **Start screen** — the last used mode is marked “▶ Continue”, today's summary is shown under the title; modes you don't need now can be hidden in Settings; optionally the app opens the mode you finished in right on start.
 - **Data backup** — in Settings (the “💾 Data” group) all settings, your own words and phrases, and statistics can be saved to one file and loaded on another phone or after reinstalling.
