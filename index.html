@@ -1155,6 +1155,7 @@
                 <input type="checkbox" id="hintVoice" onchange="ihSetChanged()">
                 <span id="labelHintVoice"></span>
             </label>
+            <p class="bk-note" id="hintWakeNote"></p>
         </div>
         <div class="control-group">
             <label class="checkbox-label" for="setQuizReplay">
@@ -4043,19 +4044,19 @@
               build: 'Соберите слово из букв.', fix: 'Нажмите на красную букву, чтобы заменить её.', next: 'Готово. Можно дальше ➔', nextV: 'Готово. Можно дальше.',
               type: 'Наберите слово по буквам.', check: 'Нажмите «Проверить».', wrfix: 'Исправьте отмеченные буквы.',
               ser: 'Нажмите «Назвать» и скажите следующее слово.', serV: 'Назовите следующее слово.', serAll: 'Нажмите «Говорить» и назовите ряд.', serAllV: 'Назовите ряд по порядку.',
-              starts: 'Начинается так:', strongNote: '💡 Подсказка', hinted: 'с подсказкой' },
+              starts: 'Начинается так:', strongNote: '💡 Подсказка', hinted: 'с подсказкой', wake: 'Пока подсказка включена, экран в этих режимах не гаснет.' },
         uk: { label: 'Підказувати, якщо довго немає дії (🧩 👂 ✍️ 🔢)', off: 'Вимкнено', voice: 'Підказка голосом',
               listen: 'Послухайте:', choose: 'Послухайте слово ще раз 🔊 і виберіть відповідь.', say: 'Натисніть 🎤 і повторіть слово.', sayV: 'Повторіть:',
               build: 'Зберіть слово з літер.', fix: 'Натисніть на червону літеру, щоб замінити її.', next: 'Готово. Можна далі ➔', nextV: 'Готово. Можна далі.',
               type: 'Наберіть слово по літерах.', check: 'Натисніть «Перевірити».', wrfix: 'Виправте позначені літери.',
               ser: 'Натисніть «Назвати» і скажіть наступне слово.', serV: 'Назвіть наступне слово.', serAll: 'Натисніть «Говорити» і назвіть ряд.', serAllV: 'Назвіть ряд по порядку.',
-              starts: 'Починається так:', strongNote: '💡 Підказка', hinted: 'з підказкою' },
+              starts: 'Починається так:', strongNote: '💡 Підказка', hinted: 'з підказкою', wake: 'Поки підказку ввімкнено, екран у цих режимах не гасне.' },
         en: { label: 'Give a hint when nothing happens for a while (🧩 👂 ✍️ 🔢)', off: 'Off', voice: 'Spoken hint',
               listen: 'Listen:', choose: 'Listen to the word again 🔊 and choose the answer.', say: 'Tap 🎤 and repeat the word.', sayV: 'Repeat:',
               build: 'Assemble the word from letters.', fix: 'Tap a red letter to replace it.', next: 'Done. You can go on ➔', nextV: 'Done. You can go on.',
               type: 'Type the word letter by letter.', check: 'Tap “Check”.', wrfix: 'Fix the marked letters.',
               ser: 'Tap “Say” and say the next word.', serV: 'Say the next word.', serAll: 'Tap “Speak” and say the series.', serAllV: 'Say the series in order.',
-              starts: 'It starts like this:', strongNote: '💡 Hint', hinted: 'with a hint' }
+              starts: 'It starts like this:', strongNote: '💡 Hint', hinted: 'with a hint', wake: 'While the hint is on, the screen stays on in these modes.' }
     };
     const IH = { timer: null, level: 0, used: false };
     function ihT() { return IH_T[currentLang] || IH_T.uk; }
@@ -4064,7 +4065,7 @@
     function ihSyncSettings() {
         const t = ihT();
         const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
-        set('labelHintIdle', t.label); set('optHintOff', t.off); set('labelHintVoice', t.voice);
+        set('labelHintIdle', t.label); set('optHintOff', t.off); set('labelHintVoice', t.voice); set('hintWakeNote', ihSec() ? t.wake : '');
         const sel = document.getElementById('hintIdleSelect'); if (sel) sel.value = String(ihSec());
         const cb = document.getElementById('hintVoice'); if (cb) { cb.checked = ihVoiceOn(); cb.disabled = !ihSec(); }
     }
@@ -4075,7 +4076,30 @@
         } catch (e) {}
         ihSyncSettings();
         ihKick();
+        ihWakeSync();
     }
+    // Экран не гаснет, пока включена подсказка и открыт режим с подсказками (Wake Lock API; где его нет — ничего не происходит).
+    // Блокировку браузер сам снимает, когда приложение свёрнуто; при возврате она запрашивается снова.
+    let ihWake = null, ihWakeReq = false;
+    function ihWakeWanted() { return !!ihSec() && ['full', 'listen', 'wr', 'ser'].includes(screenName) && !document.hidden; }
+    function ihWakeSync() {
+        try {
+            if (!('wakeLock' in navigator)) return;
+            if (ihWakeWanted()) {
+                if (ihWake || ihWakeReq) return;
+                ihWakeReq = true;
+                navigator.wakeLock.request('screen').then(l => {
+                    ihWakeReq = false; ihWake = l;
+                    l.addEventListener('release', () => { if (ihWake === l) ihWake = null; });
+                    if (!ihWakeWanted()) ihWakeSync();
+                }).catch(() => { ihWakeReq = false; });
+            } else if (ihWake) {
+                const l = ihWake; ihWake = null;
+                l.release().catch(() => {});
+            }
+        } catch (e) {}
+    }
+    document.addEventListener('visibilitychange', () => ihWakeSync());
     function ihClearVisual() {
         document.querySelectorAll('.ih-pulse').forEach(e => e.classList.remove('ih-pulse'));
         const n = document.getElementById('ihNote'); if (n) n.classList.add('hidden');
@@ -4221,9 +4245,12 @@
         if (g.el && !revealed) ihPulse(g.el);
         ihNote((revealed ? t.strongNote + ' · ' : '') + g.text);
     }
-    window.addEventListener('pointerdown', () => ihKick(), true);
+    const IH_ACTION = 'button, a[href], input, select, textarea, label, [onclick], [role="button"], .letter-tile, .letter-slot, .ph-chip, .option-btn, .mode-card, .wr-typed, .abc-letter';
+    window.addEventListener('pointerdown', e => {
+        const el = e.target && e.target.closest ? e.target.closest(IH_ACTION) : null;
+        if (el && !el.disabled) ihKick();   // касание пустого места (чтобы экран не гас) и прокрутка отсчёт не сбрасывают
+    }, true);
     window.addEventListener('keydown', () => ihKick(), true);
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) ihKick(); });
 
     // ===== Стартовый экран: последний режим, скрытые режимы, итог дня =====
     const HOME_MODES = ['full', 'ser', 'listen', 'wr', 'quiz', 'abc', 'hear', 'phr'];
@@ -4333,6 +4360,7 @@
         navSync();
         if (name === 'select') homeSync();
         ihNewTask();
+        ihWakeSync();
         if (restPending && !REST_DEFER[name]) startRestNow();
     }
 
@@ -4643,7 +4671,7 @@
         box.innerHTML = h;
     }
     // Номер версии приложения (совпадает с номером в sw.js) — виден внизу настроек
-    const APP_VERSION = 74;
+    const APP_VERSION = 76;
     function syncSettGroups() {
         let ver = document.getElementById('appVer');
         if (!ver) { ver = document.createElement('div'); ver.id = 'appVer'; ver.className = 'app-ver'; document.getElementById('settingsPanel').appendChild(ver); }
@@ -8137,10 +8165,10 @@ function fillFromHeard(){
 <li><b>Картинки (эмодзи)</b> — показывать рисунок рядом со словом.</li>
 <li><b>Автоозвучивание</b> — новое слово или фраза (в «Моих фразах») произносится само.</li>
 <li><b>Блоки заданий</b> — можно включать и отключать «выбор слова» и «сбор из букв»; для режима только из букв можно показывать слоги.</li>
-<li><b>Строгая проверка речи</b> — в ответе не должно быть других слов. Слово должно совпасть точно; похожее, но неточное слово не засчитывается.</li>
+<li><b>Строгая проверка речи</b> — в ответе не должно быть других слов. Слово должно совпасть точно; похожее, но неточное слово не засчитывается. Служебные слова, которые распознавание дописывает само («в воскресенье», «и кот»), лишними не считаются.</li>
 <li><b>Обязательно проговаривать слово</b> — пока слово не произнесено верно, «Следующее слово» не срабатывает, а страница возвращается к блоку проговаривания. После трёх неудачных попыток переход открывается, чтобы не застрять.</li>
 <li><b>Таймер «Игра / Отдых»</b> — после времени игры включается пауза для отдыха; длительность задаётся в минутах. Время игры идёт только внутри режимов тренировки; на стартовом экране таймер не показывается, а пока открыты настройки, справка или статистика, он стоит (в шапке значок ⏸). В «Азбуке» и «Подсказке по сказанному» перерыв не прерывает человека: он начнётся после того, как фраза озвучена, или при выходе из режима (в шапке ☕). Оставшееся время видно в шапке во всех режимах, включая «Полный тренажёр»; нажатие на него ставит паузу.</li>
-<li><b>💡 Подсказка, если долго нет действия</b> — в настройках, группа «Слова»: выключено (по умолчанию), 15, 20 или 30 секунд. Работает в «Полном тренажёре», «Тренировке слуха», «Письме» и «Перечислениях». Если человек ничего не делает выбранное время, подсказка идёт ступенями: 1) мягко пульсирует кнопка, которую нужно нажать, сверху короткая строка; 2) приложение говорит, что сделать, и ещё раз произносит слово (если включена «Подсказка голосом»); 3) сильная подсказка: бледнеет неверный вариант, подсвечивается следующая нужная буква, звучит первый слог следующего слова в ряду. Дальше ничего не повторяется. Любое касание начинает отсчёт заново; пока говорит приложение или идёт запись, время не считается. Ответ после сильной подсказки не засчитывается как верный с первого раза. В «Тесте на слух» подсказок нет.</li>
+<li><b>💡 Подсказка, если долго нет действия</b> — в настройках, группа «Слова»: выключено (по умолчанию), 15, 20 или 30 секунд. Работает в «Полном тренажёре», «Тренировке слуха», «Письме» и «Перечислениях». Если человек ничего не делает выбранное время, подсказка идёт ступенями: 1) мягко пульсирует кнопка, которую нужно нажать, сверху короткая строка; 2) приложение говорит, что сделать, и ещё раз произносит слово (если включена «Подсказка голосом»); 3) сильная подсказка: бледнеет неверный вариант, подсвечивается следующая нужная буква, звучит первый слог следующего слова в ряду. Дальше ничего не повторяется. Отсчёт начинается заново после любого нажатия на кнопку, букву или вариант; касание пустого места (чтобы экран не погас) и прокрутка его не сбрасывают. Пока говорит приложение или идёт запись, время не считается. Ответ после сильной подсказки не засчитывается как верный с первого раза. В «Тесте на слух» подсказок нет. Пока подсказка включена, экран в этих режимах не гаснет (на стартовом экране и в других режимах — как обычно).</li>
 <li><b>ℹ️ О приложении</b> — в настройках: версия, коротко о приложении, ссылки на автора и исходный код на GitHub. Там же (в README) — как разместить приложение на своём сайте.</li>
 <li><b>Стартовый экран</b> — режим, в котором вы занимались в прошлый раз, выделен и помечен «▶ Продолжить». Под заголовком — итог дня: сколько упражнений сделано сегодня и сколько верно. В основных настройках можно спрятать ненужные сейчас режимы («Режимы на стартовом экране»); их данные и статистика сохраняются. Там же — «При запуске открывать режим, в котором закончили»: приложение сразу откроет этот режим на его начальном экране (если закончили на стартовом экране — откроется он); микрофон и озвучка сами не включаются. В «Полном тренажёре» выбор категории свёрнут в строку «▶ ⚙️ Категория: …».</li>
 <li><b>🔤 Азбука, 🎤 Подсказка по сказанному и 🗣 Мои фразы</b> — онлайн-поиск слов, сворачивание букв, упрощённый вид подсказки; поведение слова из списка (нажатие говорит, удержание добавляет) общее для «Азбуки» и подсказки; показ текста фразы при повторении в «Моих фразах».</li>
@@ -8215,10 +8243,10 @@ function fillFromHeard(){
 <li><b>Картинки (емодзі)</b> — показувати малюнок поруч зі словом.</li>
 <li><b>Автоозвучення</b> — нове слово або фраза (у «Моїх фразах») вимовляється саме.</li>
 <li><b>Блоки завдань</b> — можна вмикати й вимикати «вибір слова» та «збирання з літер»; для режиму лише з літер можна показувати склади.</li>
-<li><b>Сувора перевірка мовлення</b> — у відповіді не має бути інших слів. Слово має збігтися точно; схоже, але неточне слово не зараховується.</li>
+<li><b>Сувора перевірка мовлення</b> — у відповіді не має бути інших слів. Слово має збігтися точно; схоже, але неточне слово не зараховується. Службові слова, які розпізнавання дописує саме («в неділю», «і кіт»), зайвими не вважаються.</li>
 <li><b>Обов’язково промовляти слово</b> — доки слово не вимовлено правильно, «Наступне слово» не спрацьовує, а сторінка повертається до блоку промовляння. Після трьох невдалих спроб перехід відкривається, щоб не застрягти.</li>
 <li><b>Таймер «Гра / Відпочинок»</b> — після часу гри вмикається пауза для відпочинку; тривалість задається в хвилинах. Час гри йде лише всередині режимів тренування; на стартовому екрані таймер не показується, а поки відкрито налаштування, довідку чи статистику, він стоїть (у шапці значок ⏸). В «Абетці» й «Підказці за сказаним» перерва не перериває людину: вона почнеться після того, як фразу озвучено, або при виході з режиму (у шапці ☕). Залишок часу видно в шапці в усіх режимах, зокрема в «Повному тренажері»; натискання на нього ставить паузу.</li>
-<li><b>💡 Підказка, якщо довго немає дії</b> — у налаштуваннях, група «Слова»: вимкнено (за замовчуванням), 15, 20 або 30 секунд. Працює в «Повному тренажері», «Тренуванні слуху», «Письмі» та «Переліченнях». Якщо людина нічого не робить обраний час, підказка йде сходинками: 1) м’яко пульсує кнопка, яку треба натиснути, згори короткий рядок; 2) застосунок каже, що зробити, і ще раз вимовляє слово (якщо ввімкнено «Підказка голосом»); 3) сильна підказка: блідне неправильний варіант, підсвічується наступна потрібна літера, звучить перший склад наступного слова в ряду. Далі нічого не повторюється. Будь-який дотик починає відлік заново; поки говорить застосунок або йде запис, час не рахується. Відповідь після сильної підказки не зараховується як правильна з першого разу. У «Тесті на слух» підказок немає.</li>
+<li><b>💡 Підказка, якщо довго немає дії</b> — у налаштуваннях, група «Слова»: вимкнено (за замовчуванням), 15, 20 або 30 секунд. Працює в «Повному тренажері», «Тренуванні слуху», «Письмі» та «Переліченнях». Якщо людина нічого не робить обраний час, підказка йде сходинками: 1) м’яко пульсує кнопка, яку треба натиснути, згори короткий рядок; 2) застосунок каже, що зробити, і ще раз вимовляє слово (якщо ввімкнено «Підказка голосом»); 3) сильна підказка: блідне неправильний варіант, підсвічується наступна потрібна літера, звучить перший склад наступного слова в ряду. Далі нічого не повторюється. Відлік починається заново після будь-якого натискання на кнопку, літеру чи варіант; дотик до порожнього місця (щоб екран не згас) і прокручування його не скидають. Поки говорить застосунок або йде запис, час не рахується. Відповідь після сильної підказки не зараховується як правильна з першого разу. У «Тесті на слух» підказок немає. Поки підказку ввімкнено, екран у цих режимах не гасне (на стартовому екрані й в інших режимах — як зазвичай).</li>
 <li><b>ℹ️ Про застосунок</b> — у налаштуваннях: версія, коротко про застосунок, посилання на автора й вихідний код на GitHub. Там же (у README) — як розмістити застосунок на своєму сайті.</li>
 <li><b>Стартовий екран</b> — режим, у якому ви займалися минулого разу, виділено й позначено «▶ Продовжити». Під заголовком — підсумок дня: скільки вправ зроблено сьогодні й скільки правильно. В основних налаштуваннях можна сховати непотрібні зараз режими («Режими на стартовому екрані»); їхні дані й статистика зберігаються. Там само — «Під час запуску відкривати режим, у якому закінчили»: застосунок одразу відкриє цей режим на його початковому екрані (якщо закінчили на стартовому екрані — відкриється він); мікрофон і озвучення самі не вмикаються. У «Повному тренажері» вибір категорії згорнуто в рядок «▶ ⚙️ Категорія: …».</li>
 <li><b>🔤 Абетка, 🎤 Підказка за сказаним і 🗣 Мої фрази</b> — онлайн-пошук слів, згортання літер, спрощений вигляд підказки; поведінка слова зі списку (натискання говорить, утримання додає) спільна для «Абетки» й підказки; показ тексту фрази під час повторення в «Моїх фразах».</li>
@@ -8293,10 +8321,10 @@ function fillFromHeard(){
 <li><b>Pictures (emoji)</b> — show a picture next to the word.</li>
 <li><b>Speak a new word or phrase automatically</b> — the new word, or the phrase in “My phrases”, is spoken on its own.</li>
 <li><b>Task blocks</b> — “choose the word” and “assemble from letters” can be turned on and off; in letters-only mode syllables can be shown.</li>
-<li><b>Strict speech check</b> — no other words allowed in the answer. The word must match exactly; a similar but inexact word is not accepted.</li>
+<li><b>Strict speech check</b> — no other words allowed in the answer. The word must match exactly; a similar but inexact word is not accepted. Little words that recognition adds by itself (“on Sunday”, “and cat”) are not counted as extra.</li>
 <li><b>Require saying the word aloud</b> — “Next word” does not work until the word is pronounced correctly, and the page scrolls back to the speaking block. After three failed attempts it unlocks so you never get stuck.</li>
 <li><b>Play / Rest timer</b> — after the play time a rest break starts; durations are set in minutes. Play time runs only inside training modes; on the start screen the timer is hidden, and while Settings, Help or Statistics are open the timer stands still (⏸ in the header). In ABC and “Suggestions from what was said” the break does not interrupt the person: it starts after a phrase has been spoken or when leaving the mode (☕ in the header). The time left is shown in the header in every mode; tapping it pauses the timer.</li>
-<li><b>💡 Hint when nothing happens for a while</b> — in Settings, the “Words” group: off (default), 15, 20 or 30 seconds. Works in the Full trainer, Listening practice, Writing and Sequences. If the person does nothing for the chosen time, the hint comes in steps: 1) the button to press pulses gently and a short line appears at the top; 2) the app says what to do and says the word again (if “Spoken hint” is on); 3) a strong hint: a wrong option fades, the next needed letter is highlighted, the first syllable of the next word in a series is heard. Nothing repeats after that. Any touch restarts the count; while the app speaks or records, time does not count. An answer after a strong hint is not counted as right the first time. The Hearing test has no hints.</li>
+<li><b>💡 Hint when nothing happens for a while</b> — in Settings, the “Words” group: off (default), 15, 20 or 30 seconds. Works in the Full trainer, Listening practice, Writing and Sequences. If the person does nothing for the chosen time, the hint comes in steps: 1) the button to press pulses gently and a short line appears at the top; 2) the app says what to do and says the word again (if “Spoken hint” is on); 3) a strong hint: a wrong option fades, the next needed letter is highlighted, the first syllable of the next word in a series is heard. Nothing repeats after that. The count restarts after any tap on a button, letter or option; touching an empty spot (to keep the screen on) or scrolling does not reset it. While the app speaks or records, time does not count. An answer after a strong hint is not counted as right the first time. The Hearing test has no hints. While the hint is on, the screen stays on in these modes (on the start screen and in other modes it behaves as usual).</li>
 <li><b>ℹ️ About the app</b> — in Settings: version, a short description, links to the author and the source code on GitHub. The README there explains how to host the app on your own site.</li>
 <li><b>Start screen</b> — the mode you used last time is highlighted and marked “▶ Continue”. Under the title is today's summary: how many exercises were done today and how many were right. In the main settings you can hide modes you don't need now (“Modes on the start screen”); their data and statistics are kept. There is also “On start, open the mode you finished in”: the app opens that mode right away on its first screen (if you finished on the start screen, that opens); the microphone and speech do not start by themselves. In the Full trainer the category choice is collapsed into the line “▶ ⚙️ Category: …”.</li>
 <li><b>🔤 ABC, 🎤 Suggestions from what was said and 🗣 My phrases</b> — online word search, collapsing letters, the simple view of suggestions; how a listed word behaves (tap speaks, hold adds) is shared by ABC and suggestions; showing the phrase text while repeating in “My phrases”.</li>
@@ -8378,9 +8406,17 @@ function fillFromHeard(){
     }
 
     function isSpeechMatch(transcript, target, strict) {
-        const t = normSpeech(transcript);
+        let t = normSpeech(transcript);
         const w = normSpeech(target);
         if (!t || !w) return false;
+        // Служебные слова, которые распознавание само дописывает («в воскресенье», «и кот»), не считаются лишними,
+        // если их нет в самом слове-цели (тот же список, что в «Перечислениях»).
+        try {
+            const own = new Set(w.split(' '));
+            const fill = new Set((SER_FILL[currentLang] || '').split(' ').map(normSpeech));
+            const kept = t.split(' ').filter(x => own.has(x) || !fill.has(x));
+            if (kept.length) t = kept.join(' ');
+        } catch (e) {}
         if (t.replace(/ /g, '') === w.replace(/ /g, '')) return true;
         if (strict) return false;
         return t.split(' ').includes(w);
