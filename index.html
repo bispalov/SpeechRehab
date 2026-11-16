@@ -551,6 +551,15 @@
         .about-name { font-size: 1.1em; }
         .about-facts { margin: 0 0 8px 1.1em; padding: 0; line-height: 1.4; }
         .about-box a { color: var(--option-btn-border); font-weight: 700; word-break: break-all; }
+
+        /* Подсказка при бездействии */
+        @keyframes ihPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); } 50% { box-shadow: 0 0 0 7px rgba(255, 193, 7, 0.9); } }
+        .ih-pulse { animation: ihPulse 1.5s ease-in-out infinite; }
+        .ih-next { outline: 4px solid #ffc107 !important; outline-offset: 2px; }
+        .ih-dim { opacity: 0.3 !important; }
+        .ih-note { position: fixed; left: 0; right: 0; margin: 0 auto; width: fit-content; z-index: 900; max-width: min(92vw, 520px); padding: 8px 14px; border-radius: 12px;
+                   background: #fff8e1; color: #1f2937; border: 2px solid #ffc107; box-shadow: 0 4px 14px rgba(0,0,0,0.18); font-size: 17px; font-weight: 700; text-align: center; pointer-events: none; }
+        @media (prefers-reduced-motion: reduce) { .ih-pulse { animation: none; outline: 4px solid #ffc107; outline-offset: 2px; } }
         .app-ver { text-align: center; font-size: 0.9em; opacity: 0.75; padding: 4px 0 2px; }
         .sg-arr { flex: 0 0 auto; width: 1.2em; font-size: 0.9em; }
         .sg-b { display: none; flex-direction: column; gap: 12px; padding: 12px 10px; }
@@ -1133,6 +1142,19 @@
                 <option value="extra" id="optBuildExtra"></option>
                 <option value="abc" id="optBuildAbc"></option>
             </select>
+        </div>
+        <div class="control-group">
+            <label for="hintIdleSelect" id="labelHintIdle"></label>
+            <select id="hintIdleSelect" onchange="ihSetChanged()">
+                <option value="0" id="optHintOff"></option>
+                <option value="15">15 с</option>
+                <option value="20">20 с</option>
+                <option value="30">30 с</option>
+            </select>
+            <label class="checkbox-label" for="hintVoice">
+                <input type="checkbox" id="hintVoice" onchange="ihSetChanged()">
+                <span id="labelHintVoice"></span>
+            </label>
         </div>
         <div class="control-group">
             <label class="checkbox-label" for="setQuizReplay">
@@ -2714,6 +2736,7 @@
 
     function nextQuestion() {
         isAnswered = false;
+        try { ihNewTask(); } catch (e) {}
         resetHint();
         clearFeedback();
         document.getElementById('speechResultBox').className = 'speech-result-box';
@@ -2910,6 +2933,8 @@
         }
     }
     function recordResult(kind, target, said, ok) {
+        // после сильной подсказки (ступень 3) ответ считается ошибкой: слово далось с подсказкой
+        try { if (IH.used && kind !== 'fix') { IH.used = false; if (ok) { ok = false; said = ''; } } } catch (e) {}
         try {
             const tw = (target || '').toLowerCase().trim();
             if (!tw) return;
@@ -4004,6 +4029,202 @@
     }
 
 
+
+    // ===== Подсказка при бездействии (🧩 тренажёр, 👂 слух, ✍️ письмо, 🔢 перечисления) =====
+    // Если человек не действует выбранное время (sr.hint.sec: 0 — выкл, 15/20/30 с), подсказка идёт ступенями:
+    // 1 — пульсирует нужная кнопка и короткая строка; 2 — голосом (sr.hint.voice) с образцом слова;
+    // 3 — сильная подсказка по заданию (бледнеет неверный вариант, подсвечивается нужная буква, первый слог…).
+    // Дальше ничего не повторяется. Любое касание сбрасывает отсчёт. Пока говорит приложение или идёт запись,
+    // открыто окно, перерыв или приложение свёрнуто, время не считается.
+    // Ответ после третьей ступени не засчитывается как верный «с первой попытки» (IH.used, см. recordResult).
+    const IH_T = {
+        ru: { label: 'Подсказывать, если долго нет действия (🧩 👂 ✍️ 🔢)', off: 'Выключено', voice: 'Подсказка голосом',
+              listen: 'Послушайте:', choose: 'Послушайте слово ещё раз 🔊 и выберите ответ.', say: 'Нажмите 🎤 и повторите слово.', sayV: 'Повторите:',
+              build: 'Соберите слово из букв.', fix: 'Нажмите на красную букву, чтобы заменить её.', next: 'Готово. Можно дальше ➔', nextV: 'Готово. Можно дальше.',
+              type: 'Наберите слово по буквам.', check: 'Нажмите «Проверить».', wrfix: 'Исправьте отмеченные буквы.',
+              ser: 'Нажмите «Назвать» и скажите следующее слово.', serV: 'Назовите следующее слово.', serAll: 'Нажмите «Говорить» и назовите ряд.', serAllV: 'Назовите ряд по порядку.',
+              starts: 'Начинается так:', strongNote: '💡 Подсказка', hinted: 'с подсказкой' },
+        uk: { label: 'Підказувати, якщо довго немає дії (🧩 👂 ✍️ 🔢)', off: 'Вимкнено', voice: 'Підказка голосом',
+              listen: 'Послухайте:', choose: 'Послухайте слово ще раз 🔊 і виберіть відповідь.', say: 'Натисніть 🎤 і повторіть слово.', sayV: 'Повторіть:',
+              build: 'Зберіть слово з літер.', fix: 'Натисніть на червону літеру, щоб замінити її.', next: 'Готово. Можна далі ➔', nextV: 'Готово. Можна далі.',
+              type: 'Наберіть слово по літерах.', check: 'Натисніть «Перевірити».', wrfix: 'Виправте позначені літери.',
+              ser: 'Натисніть «Назвати» і скажіть наступне слово.', serV: 'Назвіть наступне слово.', serAll: 'Натисніть «Говорити» і назвіть ряд.', serAllV: 'Назвіть ряд по порядку.',
+              starts: 'Починається так:', strongNote: '💡 Підказка', hinted: 'з підказкою' },
+        en: { label: 'Give a hint when nothing happens for a while (🧩 👂 ✍️ 🔢)', off: 'Off', voice: 'Spoken hint',
+              listen: 'Listen:', choose: 'Listen to the word again 🔊 and choose the answer.', say: 'Tap 🎤 and repeat the word.', sayV: 'Repeat:',
+              build: 'Assemble the word from letters.', fix: 'Tap a red letter to replace it.', next: 'Done. You can go on ➔', nextV: 'Done. You can go on.',
+              type: 'Type the word letter by letter.', check: 'Tap “Check”.', wrfix: 'Fix the marked letters.',
+              ser: 'Tap “Say” and say the next word.', serV: 'Say the next word.', serAll: 'Tap “Speak” and say the series.', serAllV: 'Say the series in order.',
+              starts: 'It starts like this:', strongNote: '💡 Hint', hinted: 'with a hint' }
+    };
+    const IH = { timer: null, level: 0, used: false };
+    function ihT() { return IH_T[currentLang] || IH_T.uk; }
+    function ihSec() { try { const v = parseInt(localStorage.getItem('sr.hint.sec') || '0', 10); return [15, 20, 30].includes(v) ? v : 0; } catch (e) { return 0; } }
+    function ihVoiceOn() { try { return localStorage.getItem('sr.hint.voice') !== '0'; } catch (e) { return true; } }
+    function ihSyncSettings() {
+        const t = ihT();
+        const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+        set('labelHintIdle', t.label); set('optHintOff', t.off); set('labelHintVoice', t.voice);
+        const sel = document.getElementById('hintIdleSelect'); if (sel) sel.value = String(ihSec());
+        const cb = document.getElementById('hintVoice'); if (cb) { cb.checked = ihVoiceOn(); cb.disabled = !ihSec(); }
+    }
+    function ihSetChanged() {
+        try {
+            localStorage.setItem('sr.hint.sec', document.getElementById('hintIdleSelect').value);
+            localStorage.setItem('sr.hint.voice', document.getElementById('hintVoice').checked ? '1' : '0');
+        } catch (e) {}
+        ihSyncSettings();
+        ihKick();
+    }
+    function ihClearVisual() {
+        document.querySelectorAll('.ih-pulse').forEach(e => e.classList.remove('ih-pulse'));
+        const n = document.getElementById('ihNote'); if (n) n.classList.add('hidden');
+    }
+    // любое действие человека: сбросить ступени и начать отсчёт заново
+    function ihKick() {
+        clearTimeout(IH.timer); IH.timer = null;
+        IH.level = 0;
+        ihClearVisual();
+        if (ihSec()) IH.timer = setTimeout(ihTick, ihSec() * 1000);
+    }
+    // новое задание: следующая ступень 3 снова может пометить ответ
+    function ihNewTask() { IH.used = false; ihKick(); }
+    function ihModeOk() {
+        if (screenName === 'full' || screenName === 'listen') return true;
+        if (screenName === 'wr') return true;
+        if (screenName === 'ser') return ser.view === 'do' && !ser.form && !ser.res;
+        return false;
+    }
+    function ihBlocked() {
+        let speaking = false; try { speaking = window.speechSynthesis && window.speechSynthesis.speaking; } catch (e) {}
+        return !ihModeOk() || micBusy() || speaking || NAV_OVERLAYS.some(overlayOpen) || overlayOpen('restOverlay') || document.hidden;
+    }
+    function ihTick() {
+        IH.timer = null;
+        if (!ihSec()) return;
+        if (ihBlocked()) { IH.timer = setTimeout(ihTick, ihSec() * 1000); return; }   // время не считается — ждём ещё один полный интервал
+        IH.level++;
+        const g = ihTarget();
+        if (g) ihApply(g, IH.level);
+        if (IH.level < 3) IH.timer = setTimeout(ihTick, ihSec() * 1000);
+    }
+    function ihSay(text, after) {
+        if (!ihVoiceOn() || !('speechSynthesis' in window)) { if (after) after(); return; }
+        try {
+            const u = makeUtterance(text, 1);
+            if (after) { let done = false; const go = () => { if (!done) { done = true; after(); } }; u.onend = go; u.onerror = go; }
+            window.speechSynthesis.speak(u);
+        } catch (e) { if (after) after(); }
+    }
+    function ihNote(text) {
+        let n = document.getElementById('ihNote');
+        if (!n) { n = document.createElement('div'); n.id = 'ihNote'; n.className = 'ih-note hidden'; n.setAttribute('role', 'status'); n.setAttribute('aria-live', 'polite'); document.body.append(n); }
+        const hdr = document.querySelector('.app-header');
+        n.style.top = Math.max(6, (hdr ? hdr.getBoundingClientRect().bottom : 0) + 6) + 'px';
+        n.textContent = text;
+        n.classList.remove('hidden');
+    }
+    function ihPulse(el) {
+        if (!el) return;
+        el.classList.add('ih-pulse');
+        try {
+            const r = el.getBoundingClientRect();
+            if (r.top < 70 || r.bottom > (window.innerHeight || 0) - 8) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        } catch (e) {}
+    }
+    // первый слог: буквы до первой гласной включительно
+    function ihFirstSyl(w) {
+        const v = 'аеёиоуыэюяіїєaeiouy';
+        const s = String(w || '').toLowerCase();
+        for (let i = 0; i < s.length; i++) if (v.includes(s[i])) return s.slice(0, i + 1);
+        return s.slice(0, 2);
+    }
+    // номер плитки со следующей нужной буквой в наборе
+    function ihNextTile(st) {
+        let pos = -1;
+        for (let i = 0; i < st.letters.length; i++) if (st.placed[i] === undefined) { pos = i; break; }
+        if (pos < 0) return -1;
+        return st.tiles.findIndex(tl => (!tl.used || tl.reuse) && tl.ch === st.letters[pos]);
+    }
+    function ihBuildTarget(st, slotsSel, tilesSel, nextSel, word) {
+        const t = ihT(), built = lbBuilt(st);
+        if (built !== null && built === st.letters.join('')) return { el: document.querySelector(nextSel), text: t.next, voice: t.nextV };
+        if (built !== null) {
+            const bad = document.querySelector(slotsSel + ' .letter-tile.bad');
+            return { el: bad, text: t.fix, voice: t.fix, strong: () => { ihPulse(bad); return false; } };
+        }
+        return { el: null, text: t.build, voice: t.listen, word,
+                 strong: () => { const i = ihNextTile(st); const b = document.querySelectorAll(tilesSel + ' .letter-tile')[i]; if (b) { b.classList.add('ih-next'); ihPulse(b); return true; } return false; } };
+    }
+    // что подсказать сейчас: { el — что пульсирует, text, voice, word — образец, strong() — сильная подсказка (true — подсказан ответ) }
+    function ihTarget() {
+        const t = ihT();
+        if (screenName === 'full') {
+            const card = document.getElementById('spellBuilderCard');
+            if (isChecked('modeChoice') && !isAnswered) {
+                return { el: document.getElementById('speakMainBtn'), text: t.choose, voice: t.listen, word: targetWordSyllables,
+                         strong: () => {
+                             const tc = cleanWord(targetWordSyllables).toLowerCase();
+                             const wrong = [...document.querySelectorAll('#optionsContainer .option-btn')].filter(b => !b.disabled && cleanWord(b.innerText).toLowerCase() !== tc && !b.closest('.ih-dim'));
+                             if (!wrong.length) return false;
+                             (wrong[0].closest('.option-row') || wrong[0]).classList.add('ih-dim');
+                             return true;
+                         } };
+            }
+            if (card && !card.classList.contains('hidden') && spell.letters.length && lbBuilt(spell) !== spell.letters.join('')) {
+                return ihBuildTarget(spell, '#lettersTarget', '#lettersPool', '#nextBtn', targetWordSyllables);
+            }
+            if (nextIsLocked()) return { el: document.getElementById('recordBtn'), text: t.say, voice: t.sayV, word: targetWordSyllables, strong: () => { speakSyllables(targetWordSyllables); return false; } };
+            return { el: document.getElementById('nextBtn'), text: t.next, voice: t.nextV };
+        }
+        if (screenName === 'listen') {
+            if (train.step === 1) {
+                if (!train.attempts || trainNextLocked()) return { el: document.getElementById('trainMicBtn'), text: t.say, voice: t.sayV, word: train.word, strong: () => { trainSyllables(); return false; } };
+                return { el: document.getElementById('trainNextSay'), text: t.next, voice: t.nextV };
+            }
+            if (train.step === 2) return ihBuildTarget(train, '#trainSlots', '#trainTiles', '#trainNextBuild', train.word);
+            return { el: document.querySelector('#listenScreen .primary-btn'), text: t.next, voice: t.nextV };
+        }
+        if (screenName === 'wr') {
+            if (wr.solved) return { el: document.querySelector('#wrScreen .primary-btn'), text: t.next, voice: t.nextV };
+            const T = wrNorm(wr.target), Y = wrNorm(wr.typed);
+            const fixing = wr.res && !wr.res.ok;
+            const full = Y.length >= T.length;
+            return { el: full ? document.querySelector('#wrScreen .wr-check') : document.querySelector('#wrScreen .wr-typed'),
+                     text: fixing ? t.wrfix : (full ? t.check : t.type), voice: t.listen, word: wr.word,
+                     strong: () => { if (fixing || full) return false; wrHint(); return true; } };
+        }
+        if (screenName === 'ser') {
+            const step = ser.step, items = serTarget();
+            const k = step ? step.i : 0, w = items[k];
+            const g = { el: document.querySelector('#serScreen .ph-say'), text: step ? t.ser : t.serAll, voice: step ? t.serV : t.serAllV };
+            g.strong = () => { if (!w) return false; const cue = t.starts + ' ' + ihFirstSyl(w) + '…'; g.text = cue; ihSay(cue); return true; };
+            return g;
+        }
+        return null;
+    }
+    function ihApply(g, level) {
+        const t = ihT();
+        if (level === 1) { if (g.el) ihPulse(g.el); ihNote(g.text); return; }
+        if (level === 2) {
+            if (g.el) ihPulse(g.el);
+            ihNote(g.text);
+            if (!ihVoiceOn()) return;   // без голоса — ни фразы, ни образца
+            if (g.word) ihSay(g.voice, () => { if (!micBusy()) speakWord(g.word); });
+            else ihSay(g.voice);
+            return;
+        }
+        // ступень 3
+        let revealed = false;
+        if (g.strong) { try { revealed = !!g.strong(); } catch (e) {} }
+        if (revealed) IH.used = true;
+        if (g.el && !revealed) ihPulse(g.el);
+        ihNote((revealed ? t.strongNote + ' · ' : '') + g.text);
+    }
+    window.addEventListener('pointerdown', () => ihKick(), true);
+    window.addEventListener('keydown', () => ihKick(), true);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) ihKick(); });
+
     // ===== Стартовый экран: последний режим, скрытые режимы, итог дня =====
     const HOME_MODES = ['full', 'ser', 'listen', 'wr', 'quiz', 'abc', 'hear', 'phr'];
     const HOME_T = {
@@ -4111,6 +4332,7 @@
         syncHdrTimer();
         navSync();
         if (name === 'select') homeSync();
+        ihNewTask();
         if (restPending && !REST_DEFER[name]) startRestNow();
     }
 
@@ -4421,13 +4643,14 @@
         box.innerHTML = h;
     }
     // Номер версии приложения (совпадает с номером в sw.js) — виден внизу настроек
-    const APP_VERSION = 73;
+    const APP_VERSION = 74;
     function syncSettGroups() {
         let ver = document.getElementById('appVer');
         if (!ver) { ver = document.createElement('div'); ver.id = 'appVer'; ver.className = 'app-ver'; document.getElementById('settingsPanel').appendChild(ver); }
         ver.textContent = ({ ru: 'Версия приложения: ', uk: 'Версія застосунку: ', en: 'App version: ' }[currentLang] || 'Version: ') + APP_VERSION;
         const t = SETT_T[currentLang] || SETT_T.ru;
         ['main', 'train', 'abc', 'phr', 'ser', 'data', 'about'].forEach(g => { const e = document.getElementById('sgt_' + g); if (e) e.textContent = t[g]; });
+        ihSyncSettings();
         const lt = LB_T[currentLang] || LB_T.uk;
         [['labelBuildLetters', lt.label], ['optBuildWord', lt.word], ['optBuildExtra', lt.extra], ['optBuildAbc', lt.abc]].forEach(([id, v]) => { const e = document.getElementById(id); if (e) e.textContent = v; });
         const ls = document.getElementById('buildLettersSelect'); if (ls) ls.value = lbSet();
@@ -4675,6 +4898,7 @@
         train.selfOk = false;
         train.buildRec = false;
         train.order = [];
+        try { ihNewTask(); } catch (e) {}
         train.firstBuilt = null;
         train.firstBuiltOk = null;
         train.spokenBuilt = null;
@@ -6021,6 +6245,7 @@
         wrNew();
     }
     function wrNew(same) {
+        try { ihNewTask(); } catch (e) {}
         if (!same) {
             const prev = wr.word;
             if (wr.level === 3) {
@@ -6480,6 +6705,7 @@
     }
     // Для «Продолжить»: сколько первых слов дано
     function serNewTask() {
+        try { ihNewTask(); } catch (e) {}
         const n = serSeries().length;
         ser.given = ser.mode === 'cont' ? Math.min(Math.max(2, n - 2), 2 + Math.floor(Math.random() * Math.max(1, Math.min(3, n - 3)))) : 0;
         ser.res = null; ser.msg = ''; ser.reveal = false; ser.errSeen = false;
@@ -6528,7 +6754,8 @@
         const k = st.i, word = items[k];
         st.tries[k] = (st.tries[k] || 0) + 1;
         if (alts.some(a => serStepHas(word, a))) {
-            st.marks[k] = { st: 'ok' };
+            st.marks[k] = { st: 'ok', hint: IH.used };
+            IH.used = false;
             const lastWord = k === items.length - 1;
             serStepNext();
             // отмеченное слово ушло за край экрана (кнопка важнее) — короткое «Да» голосом; после последнего слова звучит итог
@@ -6548,6 +6775,7 @@
     function serStepNext() {
         const st = ser.step;
         ser.fit = true;
+        IH.used = false; ihKick();
         st.i++;
         if (st.i < serTarget().length) { serRender(true); return; }
         serStepFinish();
@@ -6563,8 +6791,8 @@
         const st = ser.step, items = serTarget(), t = sT(), V = SER_VOICE[currentLang] || SER_VOICE.ru;
         const seq = items.map((w, k) => {
             const m = st.marks[k] || { st: 'bad', h: '' }, n = st.tries[k] || 0;
-            if (m.st === 'ok' && n <= 1 && !m.fix) return { i: k, st: 'ok', h: '' };
-            if (m.st === 'ok') return { i: k, st: 'near', h: '', note: m.fix ? t.stFixed : t.stLate };
+            if (m.st === 'ok' && n <= 1 && !m.fix && !m.hint) return { i: k, st: 'ok', h: '' };
+            if (m.st === 'ok') return { i: k, st: 'near', h: '', note: m.fix ? t.stFixed : (m.hint ? ihT().hinted : t.stLate) };
             return { i: k, st: n ? 'bad' : 'miss', h: '', note: n ? t.stSkipped : '' };
         });
         const k = seq.filter(x => x.st === 'ok').length;
@@ -6649,10 +6877,11 @@
         const items = serTarget();
         if (!ser.buf.trim()) { ser.res = null; ser.msg = sT().nothing; serRender(true); serVoice((SER_VOICE[currentLang] || SER_VOICE.ru).none); return; }
         const res = serEval(items, ser.buf, serTurnWord());
-        res.counted = res.allOk;
+        if (IH.used) { res.hinted = true; IH.used = false; }
+        res.counted = res.allOk && !res.hinted;
         ser.res = res;
         if (!res.allOk) ser.errSeen = true;
-        serStat(ser.sid, ser.dir + (ser.mode === 'cont' ? 'c' : ''), res.allOk);
+        serStat(ser.sid, ser.dir + (ser.mode === 'cont' ? 'c' : ''), res.allOk && !res.hinted);
         serRender(true);
         const V = SER_VOICE[currentLang] || SER_VOICE.ru;
         if (res.allOk) serVoice(V.ok[Math.floor(Math.random() * V.ok.length)]);
@@ -7911,6 +8140,7 @@ function fillFromHeard(){
 <li><b>Строгая проверка речи</b> — в ответе не должно быть других слов. Слово должно совпасть точно; похожее, но неточное слово не засчитывается.</li>
 <li><b>Обязательно проговаривать слово</b> — пока слово не произнесено верно, «Следующее слово» не срабатывает, а страница возвращается к блоку проговаривания. После трёх неудачных попыток переход открывается, чтобы не застрять.</li>
 <li><b>Таймер «Игра / Отдых»</b> — после времени игры включается пауза для отдыха; длительность задаётся в минутах. Время игры идёт только внутри режимов тренировки; на стартовом экране таймер не показывается, а пока открыты настройки, справка или статистика, он стоит (в шапке значок ⏸). В «Азбуке» и «Подсказке по сказанному» перерыв не прерывает человека: он начнётся после того, как фраза озвучена, или при выходе из режима (в шапке ☕). Оставшееся время видно в шапке во всех режимах, включая «Полный тренажёр»; нажатие на него ставит паузу.</li>
+<li><b>💡 Подсказка, если долго нет действия</b> — в настройках, группа «Слова»: выключено (по умолчанию), 15, 20 или 30 секунд. Работает в «Полном тренажёре», «Тренировке слуха», «Письме» и «Перечислениях». Если человек ничего не делает выбранное время, подсказка идёт ступенями: 1) мягко пульсирует кнопка, которую нужно нажать, сверху короткая строка; 2) приложение говорит, что сделать, и ещё раз произносит слово (если включена «Подсказка голосом»); 3) сильная подсказка: бледнеет неверный вариант, подсвечивается следующая нужная буква, звучит первый слог следующего слова в ряду. Дальше ничего не повторяется. Любое касание начинает отсчёт заново; пока говорит приложение или идёт запись, время не считается. Ответ после сильной подсказки не засчитывается как верный с первого раза. В «Тесте на слух» подсказок нет.</li>
 <li><b>ℹ️ О приложении</b> — в настройках: версия, коротко о приложении, ссылки на автора и исходный код на GitHub. Там же (в README) — как разместить приложение на своём сайте.</li>
 <li><b>Стартовый экран</b> — режим, в котором вы занимались в прошлый раз, выделен и помечен «▶ Продолжить». Под заголовком — итог дня: сколько упражнений сделано сегодня и сколько верно. В основных настройках можно спрятать ненужные сейчас режимы («Режимы на стартовом экране»); их данные и статистика сохраняются. Там же — «При запуске открывать режим, в котором закончили»: приложение сразу откроет этот режим на его начальном экране (если закончили на стартовом экране — откроется он); микрофон и озвучка сами не включаются. В «Полном тренажёре» выбор категории свёрнут в строку «▶ ⚙️ Категория: …».</li>
 <li><b>🔤 Азбука, 🎤 Подсказка по сказанному и 🗣 Мои фразы</b> — онлайн-поиск слов, сворачивание букв, упрощённый вид подсказки; поведение слова из списка (нажатие говорит, удержание добавляет) общее для «Азбуки» и подсказки; показ текста фразы при повторении в «Моих фразах».</li>
@@ -7988,6 +8218,7 @@ function fillFromHeard(){
 <li><b>Сувора перевірка мовлення</b> — у відповіді не має бути інших слів. Слово має збігтися точно; схоже, але неточне слово не зараховується.</li>
 <li><b>Обов’язково промовляти слово</b> — доки слово не вимовлено правильно, «Наступне слово» не спрацьовує, а сторінка повертається до блоку промовляння. Після трьох невдалих спроб перехід відкривається, щоб не застрягти.</li>
 <li><b>Таймер «Гра / Відпочинок»</b> — після часу гри вмикається пауза для відпочинку; тривалість задається в хвилинах. Час гри йде лише всередині режимів тренування; на стартовому екрані таймер не показується, а поки відкрито налаштування, довідку чи статистику, він стоїть (у шапці значок ⏸). В «Абетці» й «Підказці за сказаним» перерва не перериває людину: вона почнеться після того, як фразу озвучено, або при виході з режиму (у шапці ☕). Залишок часу видно в шапці в усіх режимах, зокрема в «Повному тренажері»; натискання на нього ставить паузу.</li>
+<li><b>💡 Підказка, якщо довго немає дії</b> — у налаштуваннях, група «Слова»: вимкнено (за замовчуванням), 15, 20 або 30 секунд. Працює в «Повному тренажері», «Тренуванні слуху», «Письмі» та «Переліченнях». Якщо людина нічого не робить обраний час, підказка йде сходинками: 1) м’яко пульсує кнопка, яку треба натиснути, згори короткий рядок; 2) застосунок каже, що зробити, і ще раз вимовляє слово (якщо ввімкнено «Підказка голосом»); 3) сильна підказка: блідне неправильний варіант, підсвічується наступна потрібна літера, звучить перший склад наступного слова в ряду. Далі нічого не повторюється. Будь-який дотик починає відлік заново; поки говорить застосунок або йде запис, час не рахується. Відповідь після сильної підказки не зараховується як правильна з першого разу. У «Тесті на слух» підказок немає.</li>
 <li><b>ℹ️ Про застосунок</b> — у налаштуваннях: версія, коротко про застосунок, посилання на автора й вихідний код на GitHub. Там же (у README) — як розмістити застосунок на своєму сайті.</li>
 <li><b>Стартовий екран</b> — режим, у якому ви займалися минулого разу, виділено й позначено «▶ Продовжити». Під заголовком — підсумок дня: скільки вправ зроблено сьогодні й скільки правильно. В основних налаштуваннях можна сховати непотрібні зараз режими («Режими на стартовому екрані»); їхні дані й статистика зберігаються. Там само — «Під час запуску відкривати режим, у якому закінчили»: застосунок одразу відкриє цей режим на його початковому екрані (якщо закінчили на стартовому екрані — відкриється він); мікрофон і озвучення самі не вмикаються. У «Повному тренажері» вибір категорії згорнуто в рядок «▶ ⚙️ Категорія: …».</li>
 <li><b>🔤 Абетка, 🎤 Підказка за сказаним і 🗣 Мої фрази</b> — онлайн-пошук слів, згортання літер, спрощений вигляд підказки; поведінка слова зі списку (натискання говорить, утримання додає) спільна для «Абетки» й підказки; показ тексту фрази під час повторення в «Моїх фразах».</li>
@@ -8065,6 +8296,7 @@ function fillFromHeard(){
 <li><b>Strict speech check</b> — no other words allowed in the answer. The word must match exactly; a similar but inexact word is not accepted.</li>
 <li><b>Require saying the word aloud</b> — “Next word” does not work until the word is pronounced correctly, and the page scrolls back to the speaking block. After three failed attempts it unlocks so you never get stuck.</li>
 <li><b>Play / Rest timer</b> — after the play time a rest break starts; durations are set in minutes. Play time runs only inside training modes; on the start screen the timer is hidden, and while Settings, Help or Statistics are open the timer stands still (⏸ in the header). In ABC and “Suggestions from what was said” the break does not interrupt the person: it starts after a phrase has been spoken or when leaving the mode (☕ in the header). The time left is shown in the header in every mode; tapping it pauses the timer.</li>
+<li><b>💡 Hint when nothing happens for a while</b> — in Settings, the “Words” group: off (default), 15, 20 or 30 seconds. Works in the Full trainer, Listening practice, Writing and Sequences. If the person does nothing for the chosen time, the hint comes in steps: 1) the button to press pulses gently and a short line appears at the top; 2) the app says what to do and says the word again (if “Spoken hint” is on); 3) a strong hint: a wrong option fades, the next needed letter is highlighted, the first syllable of the next word in a series is heard. Nothing repeats after that. Any touch restarts the count; while the app speaks or records, time does not count. An answer after a strong hint is not counted as right the first time. The Hearing test has no hints.</li>
 <li><b>ℹ️ About the app</b> — in Settings: version, a short description, links to the author and the source code on GitHub. The README there explains how to host the app on your own site.</li>
 <li><b>Start screen</b> — the mode you used last time is highlighted and marked “▶ Continue”. Under the title is today's summary: how many exercises were done today and how many were right. In the main settings you can hide modes you don't need now (“Modes on the start screen”); their data and statistics are kept. There is also “On start, open the mode you finished in”: the app opens that mode right away on its first screen (if you finished on the start screen, that opens); the microphone and speech do not start by themselves. In the Full trainer the category choice is collapsed into the line “▶ ⚙️ Category: …”.</li>
 <li><b>🔤 ABC, 🎤 Suggestions from what was said and 🗣 My phrases</b> — online word search, collapsing letters, the simple view of suggestions; how a listed word behaves (tap speaks, hold adds) is shared by ABC and suggestions; showing the phrase text while repeating in “My phrases”.</li>
