@@ -582,6 +582,7 @@
         .tour-box { position: fixed; left: 0; right: 0; margin: 0 auto; width: min(92vw, 520px); box-sizing: border-box; z-index: 990; display: none; background: var(--card-bg, #fff); color: var(--text-color, #1f2937);
                     border: 3px solid #ffc107; border-radius: 14px; padding: 12px 14px; box-shadow: 0 6px 22px rgba(0,0,0,0.3); }
         .tour-box.on { display: block; }
+        .tour-box.mini .tour-text { display: none; }
         .tour-text { margin: 0 0 10px; font-size: 1.2em; font-weight: 700; line-height: 1.35; }
         .tour-row { display: flex; flex-wrap: wrap; gap: 8px; }
         .tour-row > button { flex: 1 1 0; width: auto; min-width: min-content; min-height: 52px; margin: 0; }
@@ -2444,6 +2445,8 @@
 
     function animateScrollTo(getTarget, duration) {
         if (autoScrollRaf) cancelAnimationFrame(autoScrollRaf);
+        // во время обучения экран прокручивает только обучение (иначе объясняемая кнопка уезжала за край)
+        if (typeof TOUR !== 'undefined' && (TOUR.active || TOUR.offer)) { autoScrollRaf = null; return; }
         const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const total = reduce ? 0 : duration;
         const startY = currentScrollY();
@@ -4114,7 +4117,7 @@
             { t: 'full1', el: () => $1('#speakMainBtn'), wait: true },
             { t: 'full2', el: () => isChecked('modeChoice') && !isAnswered ? $1('#optionsContainer') : null, wait: true },
             { t: 'full3', el: () => $1('#recordBtn') },
-            { t: 'full4', el: () => { const c = $1('#spellBuilderCard'); return c && !c.classList.contains('hidden') ? $1('#lettersPool') : null; } },
+            { t: 'full4', el: () => { const c = $1('#spellBuilderCard'); return c && !c.classList.contains('hidden') ? $1('#lettersTarget') : null; }, el2: () => $1('#lettersPool') },
             { t: 'full5', el: () => $1('#nextBtn') }
         ],
         listen: [
@@ -4149,7 +4152,7 @@
             { t: 'phr3', el: () => $1('#phrScreen .ph-open') }
         ]
     };
-    const TOUR = { active: false, offer: false, mode: null, i: -1, el: null, raf: 0, tok: 0 };
+    const TOUR = { active: false, offer: false, mode: null, i: -1, el: null, el2: null, raf: 0, tok: 0, fitKey: '', userScroll: false };
     function tourT() { return TOUR_T[currentLang] || TOUR_T.uk; }
     function tourSeen() { try { const o = JSON.parse(localStorage.getItem('sr.tour.seen') || '{}'); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } }
     function tourMarkSeen(m) { const o = tourSeen(); o[m] = 1; try { localStorage.setItem('sr.tour.seen', JSON.stringify(o)); } catch (e) {} }
@@ -4191,6 +4194,17 @@
         };
         setTimeout(go, 150);
     }
+    // прямоугольник подсветки: элемент шага и, если есть, второй элемент (el2) вместе
+    function tourRect() {
+        const r = TOUR.el.getBoundingClientRect();
+        const e2 = TOUR.el2 && document.body.contains(TOUR.el2) ? TOUR.el2.getBoundingClientRect() : null;
+        if (!e2 || !e2.height) return r;
+        const top = Math.min(r.top, e2.top), bottom = Math.max(r.bottom, e2.bottom), left = Math.min(r.left, e2.left), right = Math.max(r.right, e2.right);
+        return { top, bottom, left, right, width: right - left, height: bottom - top };
+    }
+    // человек сам листает — больше не подгонять прокрутку на этом шаге
+    ['touchmove', 'wheel'].forEach(ev => window.addEventListener(ev, () => { if (TOUR.active || TOUR.offer) TOUR.userScroll = true; }, { passive: true }));
+    function tourInEl(t) { return !!t && ((TOUR.el && TOUR.el.contains(t)) || (TOUR.el2 && TOUR.el2.contains(t))); }
     function tourHdrBottom() { const h = document.querySelector('.app-header'); return h ? Math.max(0, h.getBoundingClientRect().bottom) : 0; }
     // Окно обучения ставится под элементом или над ним — туда, где оно помещается целиком, не закрывая элемент.
     // Если не помещается ни там, ни там (маленький экран, высокий элемент) — туда, где места больше; верх элемента остаётся виден.
@@ -4205,16 +4219,16 @@
         return Math.max(top0, above);
     }
     // перед показом шага прокрутить так, чтобы поместились и элемент, и окно обучения
-    function tourFit(el) {
+    function tourFit() {
         const u = tourUi();
         const bh = u.box.offsetHeight || 160, H = window.innerHeight, top0 = tourHdrBottom() + 8, p = 6, gap = 8;
-        let r = el.getBoundingClientRect();
+        let r = tourRect();
         const fitsBelow = r.top - p >= top0 && r.bottom + p + gap + bh <= H - 6;
         const fitsAbove = r.top - p - gap - bh >= top0 - 4 && r.bottom + p <= H - 6;
         if (fitsBelow || fitsAbove) return;
         // элемент вверху видимой области, окно — под ним
         window.scrollBy(0, (r.top - p) - top0);
-        r = el.getBoundingClientRect();
+        r = tourRect();
         if (r.bottom + p + gap + bh > H - 6 && r.top - p - gap - bh < top0 - 4) {
             // внизу страницы прокрутить дальше нельзя — тогда окно над элементом: опустить элемент
             const need = (top0 + bh + gap + p) - r.top;
@@ -4225,7 +4239,16 @@
         if (!TOUR.active && !TOUR.offer) return;
         const u = tourUi();
         if (TOUR.el && document.body.contains(TOUR.el)) {
-            const r = TOUR.el.getBoundingClientRect(), p = 6;
+            if (!TOUR.userScroll) {
+                const k = Math.round(tourRect().height) + '|' + document.documentElement.scrollHeight + '|' + (u.box.offsetHeight || 0);
+                if (k !== TOUR.fitKey) { TOUR.fitKey = k; try { tourFit(); } catch (e) {} }
+                else {
+                    // элемент ушёл за край (прокрутила другая часть приложения) — вернуть, если он вообще помещается на экране
+                    const q = tourRect(), hb = tourHdrBottom();
+                    if ((q.top < hb - 2 || q.bottom > window.innerHeight + 2) && q.height + 12 <= window.innerHeight - hb) { try { tourFit(); } catch (e) {} }
+                }
+            }
+            const r = tourRect(), p = 6;
             Object.assign(u.hole.style, { display: '', left: (r.left - p) + 'px', top: (r.top - p) + 'px', width: (r.width + 2 * p) + 'px', height: (r.height + 2 * p) + 'px' });
             u.box.style.top = Math.max(6, tourBoxTop(r, u.box.offsetHeight || 140)) + 'px';
         } else {
@@ -4234,9 +4257,12 @@
         }
         TOUR.raf = requestAnimationFrame(tourPlace);
     }
-    function tourShow(text, buttons, el) {
+    function tourShow(text, buttons, el, el2) {
         const u = tourUi();
-        TOUR.el = el || null;
+        TOUR.el = el || null; TOUR.el2 = el && el2 && tourVisible(el2) ? el2 : null;
+        TOUR.fitKey = ''; TOUR.userScroll = false;
+        try { cancelAutoScroll(); } catch (e) {}
+        u.box.classList.remove('mini');
         u.dim.classList.add('on'); u.dim.classList.toggle('full', !el);
         u.box.innerHTML = '';
         const p = document.createElement('p'); p.className = 'tour-text'; p.textContent = text; u.box.append(p);
@@ -4244,7 +4270,7 @@
         buttons.forEach(([label, fn, cls]) => { const b = document.createElement('button'); b.type = 'button'; b.className = cls || 'assist-btn'; b.textContent = label; b.onclick = fn; row.append(b); });
         u.box.append(row);
         u.box.classList.add('on');
-        if (el) { try { tourFit(el); } catch (e) {} }
+        if (el) { try { tourFit(); TOUR.fitKey = Math.round(tourRect().height) + '|' + document.documentElement.scrollHeight + '|' + (u.box.offsetHeight || 0); } catch (e) {} }
         cancelAnimationFrame(TOUR.raf); TOUR.raf = requestAnimationFrame(tourPlace);
         tourSay(text);
     }
@@ -4253,7 +4279,7 @@
         const d = document.getElementById('tourDim'), b = document.getElementById('tourBox');
         if (d) d.classList.remove('on', 'full');
         if (b) { b.classList.remove('on'); b.innerHTML = ''; }
-        TOUR.el = null; TOUR.tok++;
+        TOUR.el = null; TOUR.el2 = null; TOUR.tok++;
     }
     function tourVisible(el) { if (!el) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && el.offsetParent !== null; }
     // предложить обучение при первом входе в режим
@@ -4283,7 +4309,7 @@
         if (i >= steps.length || i < 0) { tourFinish(); return; }
         TOUR.i = i;
         const last = !steps.slice(i + 1).some(s => tourVisible(s.el()));
-        tourShow(t[steps[i].t], [[last ? t.finish : t.next, () => tourStep(1), 'primary-btn'], [t.end, () => tourEnd(), 'assist-btn']], el);
+        tourShow(t[steps[i].t], [[last ? t.finish : t.next, () => tourStep(1), 'primary-btn'], [t.end, () => tourEnd(), 'assist-btn']], el, steps[i].el2 ? steps[i].el2() : null);
     }
     function tourFinish() {
         const t = tourT();
@@ -4300,9 +4326,10 @@
         if (!TOUR.active && !TOUR.offer) return;
         const box = document.getElementById('tourBox');
         if (box && box.contains(e.target)) return;
-        if (TOUR.active && TOUR.el && TOUR.el.contains(e.target)) {
+        if (TOUR.active && tourInEl(e.target)) {
             const st = (TOUR_STEPS[TOUR.mode] || [])[TOUR.i];
             if (type === 'click' && st && st.wait) setTimeout(() => tourStep(1), 350);   // человек сделал шаг сам — дальше
+            else if (type === 'click' && box) box.classList.add('mini');   // человек пробует сам — текст уже прочитан, оставить только кнопки
             return;
         }
         e.preventDefault(); e.stopPropagation();
@@ -4962,7 +4989,7 @@
         box.innerHTML = h;
     }
     // Номер версии приложения (совпадает с номером в sw.js) — виден внизу настроек
-    const APP_VERSION = 80;
+    const APP_VERSION = 81;
     function syncSettGroups() {
         let ver = document.getElementById('appVer');
         if (!ver) { ver = document.createElement('div'); ver.id = 'appVer'; ver.className = 'app-ver'; document.getElementById('settingsPanel').appendChild(ver); }
