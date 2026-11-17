@@ -997,6 +997,7 @@
         .abc-row > .assist-btn.abc-say { flex: 1 1 0; min-width: min-content; }
         .abc-kbh > .abc-kbt.wr-check { flex-grow: 1.4; }
         .abc-kbh > button { flex-basis: 0; padding: 4px 6px; }   /* кнопки панели делят ширину; текст переносится внутри кнопки */
+        html, body { overscroll-behavior-y: none; }   /* «потянуть вниз» у верхнего края не перезагружает страницу (Chrome) */
         .wr-kb .abc-letters { max-height: 40vh; overflow-y: auto; overscroll-behavior: contain; }   /* на тесном экране буквы листаются внутри, поле ввода остаётся видно */
         button, .mode-card, .ph-chip, .abc-word, .sug { overflow-wrap: anywhere; }
         .abc-row > button, .abc-kbh > button, .ser-seg > button, .assist-row > button { overflow-wrap: normal; }
@@ -4989,7 +4990,7 @@
         box.innerHTML = h;
     }
     // Номер версии приложения (совпадает с номером в sw.js) — виден внизу настроек
-    const APP_VERSION = 82;
+    const APP_VERSION = 83;
     function syncSettGroups() {
         let ver = document.getElementById('appVer');
         if (!ver) { ver = document.createElement('div'); ver.id = 'appVer'; ver.className = 'app-ver'; document.getElementById('settingsPanel').appendChild(ver); }
@@ -6186,6 +6187,7 @@
 
     // Лучший из вариантов распознавания (браузер даёт до трёх)
     function phrCompare(target, alts) {
+        if (!/\d/.test(String(target))) alts = (alts || []).map(numsToWords);   // «8» от распознавания = «восемь» в фразе
         const TW = phrWords(target), T = TW.map(phrNorm);
         let best = null, bestH = null;
         (alts.length ? alts : ['']).forEach(a => {
@@ -6869,7 +6871,17 @@
         if (n < 20) return w.t[n - 10];
         if (n < 100) return w.d[Math.floor(n / 10)] + (n % 10 ? ((l || currentLang) === 'en' ? '-' : ' ') + w.u[n % 10] : '');
         if (n === 100) return w.h;
+        if (n < 1000) { const hh = SER_HUND[l || currentLang] || SER_HUND.ru; return hh[Math.floor(n / 100)] + (n % 100 ? ' ' + serNum(n % 100, l) : ''); }
         return String(n);
+    }
+    const SER_HUND = {
+        ru: ['', 'сто', 'двести', 'триста', 'четыреста', 'пятьсот', 'шестьсот', 'семьсот', 'восемьсот', 'девятьсот'],
+        uk: ['', 'сто', 'двісті', 'триста', 'чотириста', "п'ятсот", 'шістсот', 'сімсот', 'вісімсот', "дев'ятсот"],
+        en: ['', 'one hundred', 'two hundred', 'three hundred', 'four hundred', 'five hundred', 'six hundred', 'seven hundred', 'eight hundred', 'nine hundred']
+    };
+    // Распознавание часто пишет числа цифрами («8» вместо «восемь»): для сравнения — словами языка интерфейса
+    function numsToWords(text) {
+        return String(text || '').replace(/\d+/g, m => { const n = parseInt(m, 10); return n < 1000 ? ' ' + serNum(n) + ' ' : m; }).replace(/\s{2,}/g, ' ').trim();
     }
     function serRange(a, b, step) { const o = []; for (let i = a; i <= b; i += step || 1) o.push(serNum(i)); return o; }
     function serBuiltin() {
@@ -8486,7 +8498,7 @@ function fillFromHeard(){
 <li><b>Блоки заданий</b> — можно включать и отключать «выбор слова» и «сбор из букв»; для режима только из букв можно показывать слоги.</li>
 <li><b>Строгая проверка речи</b> — в ответе не должно быть других слов. Слово должно совпасть точно; похожее, но неточное слово не засчитывается. Служебные слова, которые распознавание дописывает само («в воскресенье», «и кот»), лишними не считаются.</li>
 <li><b>Обязательно проговаривать слово</b> — пока слово не произнесено верно, «Следующее слово» не срабатывает, а страница возвращается к блоку проговаривания. После трёх неудачных попыток переход открывается, чтобы не застрять.</li>
-<li><b>Таймер «Игра / Отдых»</b> — после времени игры включается пауза для отдыха; длительность задаётся в минутах. Время игры идёт только внутри режимов тренировки; на стартовом экране таймер не показывается, а пока открыты настройки, справка или статистика, он стоит (в шапке значок ⏸). В «Азбуке» и «Подсказке по сказанному» перерыв не прерывает человека: он начнётся после того, как фраза озвучена, или при выходе из режима (в шапке ☕). Оставшееся время видно в шапке во всех режимах, включая «Полный тренажёр»; нажатие на него ставит паузу.</li>
+<li><b>Таймер «Игра / Отдых»</b> — после времени игры включается пауза для отдыха; длительность задаётся в минутах. Время игры идёт только внутри режимов тренировки; на стартовом экране таймер не показывается, а пока открыты настройки, справка или статистика, он стоит (в шапке значок ⏸). В «Азбуке» и «Подсказке по сказанному» перерыв не прерывает человека: он начнётся после того, как фраза озвучена, или при выходе из режима (в шапке ☕). Оставшееся время видно в шапке во всех режимах, включая «Полный тренажёр»; нажатие на него ставит паузу. Таймер не сбрасывается, если страница перезагрузилась или приложение перезапустилось: время игры и перерыв продолжаются. Если приложение было закрыто дольше перерыва, это считается отдыхом — время игры начинается заново.</li>
 <li><b>💡 Подсказка, если долго нет действия</b> — в настройках, группа «Слова»: выключено (по умолчанию), 15, 20 или 30 секунд. Работает в «Полном тренажёре», «Тренировке слуха», «Письме» и «Перечислениях». Если человек ничего не делает выбранное время, подсказка идёт ступенями: 1) мягко пульсирует кнопка, которую нужно нажать, сверху короткая строка; 2) приложение говорит, что сделать, и ещё раз произносит слово (если включена «Подсказка голосом»); 3) сильная подсказка: бледнеет неверный вариант, подсвечивается следующая нужная буква, звучит первый слог следующего слова в ряду. Дальше ничего не повторяется. Отсчёт начинается заново после любого нажатия на кнопку, букву или вариант; касание пустого места (чтобы экран не погас) и прокрутка его не сбрасывают. Пока говорит приложение или идёт запись, время не считается. Ответ после сильной подсказки не засчитывается как верный с первого раза. В «Тесте на слух» подсказок нет. Пока подсказка включена, экран в этих режимах не гаснет (на стартовом экране и в других режимах — как обычно).</li>
 <li><b>ℹ️ О приложении</b> — в настройках: версия, коротко о приложении, ссылки на автора и исходный код на GitHub. Там же (в README) — как разместить приложение на своём сайте.</li>
 <li><b>Стартовый экран</b> — режим, в котором вы занимались в прошлый раз, выделен и помечен «▶ Продолжить». Под заголовком — итог дня: сколько упражнений сделано сегодня и сколько верно. В основных настройках можно спрятать ненужные сейчас режимы («Режимы на стартовом экране»); их данные и статистика сохраняются. Там же — «При запуске открывать режим, в котором закончили»: приложение сразу откроет этот режим на его начальном экране (если закончили на стартовом экране — откроется он); микрофон и озвучка сами не включаются. В «Полном тренажёре» выбор категории свёрнут в строку «▶ ⚙️ Категория: …».</li>
@@ -8565,7 +8577,7 @@ function fillFromHeard(){
 <li><b>Блоки завдань</b> — можна вмикати й вимикати «вибір слова» та «збирання з літер»; для режиму лише з літер можна показувати склади.</li>
 <li><b>Сувора перевірка мовлення</b> — у відповіді не має бути інших слів. Слово має збігтися точно; схоже, але неточне слово не зараховується. Службові слова, які розпізнавання дописує саме («в неділю», «і кіт»), зайвими не вважаються.</li>
 <li><b>Обов’язково промовляти слово</b> — доки слово не вимовлено правильно, «Наступне слово» не спрацьовує, а сторінка повертається до блоку промовляння. Після трьох невдалих спроб перехід відкривається, щоб не застрягти.</li>
-<li><b>Таймер «Гра / Відпочинок»</b> — після часу гри вмикається пауза для відпочинку; тривалість задається в хвилинах. Час гри йде лише всередині режимів тренування; на стартовому екрані таймер не показується, а поки відкрито налаштування, довідку чи статистику, він стоїть (у шапці значок ⏸). В «Абетці» й «Підказці за сказаним» перерва не перериває людину: вона почнеться після того, як фразу озвучено, або при виході з режиму (у шапці ☕). Залишок часу видно в шапці в усіх режимах, зокрема в «Повному тренажері»; натискання на нього ставить паузу.</li>
+<li><b>Таймер «Гра / Відпочинок»</b> — після часу гри вмикається пауза для відпочинку; тривалість задається в хвилинах. Час гри йде лише всередині режимів тренування; на стартовому екрані таймер не показується, а поки відкрито налаштування, довідку чи статистику, він стоїть (у шапці значок ⏸). В «Абетці» й «Підказці за сказаним» перерва не перериває людину: вона почнеться після того, як фразу озвучено, або при виході з режиму (у шапці ☕). Залишок часу видно в шапці в усіх режимах, зокрема в «Повному тренажері»; натискання на нього ставить паузу. Таймер не скидається, якщо сторінка перезавантажилася або застосунок перезапустився: час гри й перерва тривають далі. Якщо застосунок був закритий довше за перерву, це вважається відпочинком — час гри починається заново.</li>
 <li><b>💡 Підказка, якщо довго немає дії</b> — у налаштуваннях, група «Слова»: вимкнено (за замовчуванням), 15, 20 або 30 секунд. Працює в «Повному тренажері», «Тренуванні слуху», «Письмі» та «Переліченнях». Якщо людина нічого не робить обраний час, підказка йде сходинками: 1) м’яко пульсує кнопка, яку треба натиснути, згори короткий рядок; 2) застосунок каже, що зробити, і ще раз вимовляє слово (якщо ввімкнено «Підказка голосом»); 3) сильна підказка: блідне неправильний варіант, підсвічується наступна потрібна літера, звучить перший склад наступного слова в ряду. Далі нічого не повторюється. Відлік починається заново після будь-якого натискання на кнопку, літеру чи варіант; дотик до порожнього місця (щоб екран не згас) і прокручування його не скидають. Поки говорить застосунок або йде запис, час не рахується. Відповідь після сильної підказки не зараховується як правильна з першого разу. У «Тесті на слух» підказок немає. Поки підказку ввімкнено, екран у цих режимах не гасне (на стартовому екрані й в інших режимах — як зазвичай).</li>
 <li><b>ℹ️ Про застосунок</b> — у налаштуваннях: версія, коротко про застосунок, посилання на автора й вихідний код на GitHub. Там же (у README) — як розмістити застосунок на своєму сайті.</li>
 <li><b>Стартовий екран</b> — режим, у якому ви займалися минулого разу, виділено й позначено «▶ Продовжити». Під заголовком — підсумок дня: скільки вправ зроблено сьогодні й скільки правильно. В основних налаштуваннях можна сховати непотрібні зараз режими («Режими на стартовому екрані»); їхні дані й статистика зберігаються. Там само — «Під час запуску відкривати режим, у якому закінчили»: застосунок одразу відкриє цей режим на його початковому екрані (якщо закінчили на стартовому екрані — відкриється він); мікрофон і озвучення самі не вмикаються. У «Повному тренажері» вибір категорії згорнуто в рядок «▶ ⚙️ Категорія: …».</li>
@@ -8644,7 +8656,7 @@ function fillFromHeard(){
 <li><b>Task blocks</b> — “choose the word” and “assemble from letters” can be turned on and off; in letters-only mode syllables can be shown.</li>
 <li><b>Strict speech check</b> — no other words allowed in the answer. The word must match exactly; a similar but inexact word is not accepted. Little words that recognition adds by itself (“on Sunday”, “and cat”) are not counted as extra.</li>
 <li><b>Require saying the word aloud</b> — “Next word” does not work until the word is pronounced correctly, and the page scrolls back to the speaking block. After three failed attempts it unlocks so you never get stuck.</li>
-<li><b>Play / Rest timer</b> — after the play time a rest break starts; durations are set in minutes. Play time runs only inside training modes; on the start screen the timer is hidden, and while Settings, Help or Statistics are open the timer stands still (⏸ in the header). In ABC and “Suggestions from what was said” the break does not interrupt the person: it starts after a phrase has been spoken or when leaving the mode (☕ in the header). The time left is shown in the header in every mode; tapping it pauses the timer.</li>
+<li><b>Play / Rest timer</b> — after the play time a rest break starts; durations are set in minutes. Play time runs only inside training modes; on the start screen the timer is hidden, and while Settings, Help or Statistics are open the timer stands still (⏸ in the header). In ABC and “Suggestions from what was said” the break does not interrupt the person: it starts after a phrase has been spoken or when leaving the mode (☕ in the header). The time left is shown in the header in every mode; tapping it pauses the timer. The timer is not reset if the page reloads or the app restarts: play time and the break continue. If the app was closed for longer than the break, that counts as rest and play time starts again.</li>
 <li><b>💡 Hint when nothing happens for a while</b> — in Settings, the “Words” group: off (default), 15, 20 or 30 seconds. Works in the Full trainer, Listening practice, Writing and Sequences. If the person does nothing for the chosen time, the hint comes in steps: 1) the button to press pulses gently and a short line appears at the top; 2) the app says what to do and says the word again (if “Spoken hint” is on); 3) a strong hint: a wrong option fades, the next needed letter is highlighted, the first syllable of the next word in a series is heard. Nothing repeats after that. The count restarts after any tap on a button, letter or option; touching an empty spot (to keep the screen on) or scrolling does not reset it. While the app speaks or records, time does not count. An answer after a strong hint is not counted as right the first time. The Hearing test has no hints. While the hint is on, the screen stays on in these modes (on the start screen and in other modes it behaves as usual).</li>
 <li><b>ℹ️ About the app</b> — in Settings: version, a short description, links to the author and the source code on GitHub. The README there explains how to host the app on your own site.</li>
 <li><b>Start screen</b> — the mode you used last time is highlighted and marked “▶ Continue”. Under the title is today's summary: how many exercises were done today and how many were right. In the main settings you can hide modes you don't need now (“Modes on the start screen”); their data and statistics are kept. There is also “On start, open the mode you finished in”: the app opens that mode right away on its first screen (if you finished on the start screen, that opens); the microphone and speech do not start by themselves. In the Full trainer the category choice is collapsed into the line “▶ ⚙️ Category: …”.</li>
@@ -8794,7 +8806,7 @@ function fillFromHeard(){
 
     // ----- проверка произнесённого слова -----
     function normSpeech(s) {
-        return String(s).toLowerCase()
+        return numsToWords(s).toLowerCase()
             .replace(/ё/g, 'е')
             .replace(/[’ʼʻ`´']/g, '')
             .replace(/[^\p{L}\p{N}]+/gu, ' ')
@@ -8808,7 +8820,8 @@ function fillFromHeard(){
     function speechMatchAlts(res, target, strict) {
         const alts = (res.alts && res.alts.length) ? res.alts : [res.transcript || ''];
         const hit = alts.find(a => isSpeechMatch(a, target, strict));
-        return { ok: !!hit, heard: hit || res.transcript || alts[0] || '' };
+        const heard = hit || res.transcript || alts[0] || '';
+        return { ok: !!hit, heard: /\d/.test(String(target)) ? heard : numsToWords(heard) };
     }
 
     function isSpeechMatch(transcript, target, strict) {
@@ -9054,6 +9067,9 @@ function fillFromHeard(){
             statusRow.style.display = 'none';
             stopTimer();
             restPending = false;
+            if (timerMode === 'rest') { timerMode = 'play'; showRestOverlay(false); }
+            timerSecondsLeft = (parseInt(document.getElementById('playMinutes').value, 10) || 5) * 60;
+            try { localStorage.removeItem('sr.timer'); } catch (e) {}
         }
         saveSettings();
         syncHdrTimer();
@@ -9071,6 +9087,7 @@ function fillFromHeard(){
         const playMins = parseInt(document.getElementById('playMinutes').value, 10) || 5;
         timerSecondsLeft = playMins * 60;
         updateTimerDisplayUI();
+        timerSave();
         if (document.getElementById('timerEnabled').checked) {
             startTimer();
         }
@@ -9092,6 +9109,7 @@ function fillFromHeard(){
                 switchTimerMode();
             }
             updateTimerDisplayUI();
+            timerSave();
         }, 1000);
     }
 
@@ -9110,6 +9128,7 @@ function fillFromHeard(){
         timerSecondsLeft = restMins * 60;
         showRestOverlay(true);
         updateTimerDisplayUI();
+        timerSave();
     }
     // Вызывается после озвучивания фразы: перерыв начнётся, когда речь закончится
     function restAfterSpeech() {
@@ -9123,6 +9142,32 @@ function fillFromHeard(){
         };
         setTimeout(tick, 600);
     }
+
+    // Таймер переживает перезагрузку страницы (случайное «потянуть вниз», обновление приложения, перезапуск):
+    // остаток игры, перерыв и ожидающий перерыв хранятся в sr.timer со временем записи.
+    // Пауза больше перерыва, пока приложение было закрыто, считается отдыхом — тогда игра начинается заново.
+    function timerSave() {
+        try { localStorage.setItem('sr.timer', JSON.stringify({ m: timerMode, left: timerSecondsLeft, pend: restPending ? 1 : 0, t: Date.now() })); } catch (e) {}
+    }
+    function timerRestore() {
+        const playS = (parseInt(document.getElementById('playMinutes').value, 10) || 5) * 60;
+        const restS = (parseInt(document.getElementById('restMinutes').value, 10) || 10) * 60;
+        timerMode = 'play'; timerSecondsLeft = playS; restPending = false;
+        let st = null; try { st = JSON.parse(localStorage.getItem('sr.timer') || 'null'); } catch (e) {}
+        if (!st || typeof st.left !== 'number' || typeof st.t !== 'number') return;
+        const away = Math.max(0, (Date.now() - st.t) / 1000);
+        if (st.m === 'rest') {
+            const rem = Math.round(st.left - away);
+            if (rem > 0 && isChecked('timerEnabled')) { timerMode = 'rest'; timerSecondsLeft = Math.min(rem, restS); showRestOverlay(true); }
+        } else if (away < restS) {
+            timerSecondsLeft = Math.max(0, Math.min(Math.round(st.left), playS));
+            restPending = !!st.pend || timerSecondsLeft <= 0;
+            if (restPending) timerSecondsLeft = 0;
+        }
+        updateTimerDisplayUI();
+    }
+    window.addEventListener('pagehide', () => timerSave());
+    document.addEventListener('visibilitychange', () => { if (document.hidden) timerSave(); });
 
     function stopTimer() {
         if (timerInterval) clearInterval(timerInterval);
@@ -9165,6 +9210,7 @@ function fillFromHeard(){
         timerSecondsLeft = playMins * 60;
         showRestOverlay(false);
         updateTimerDisplayUI();
+        timerSave();
     }
 
     function showRestOverlay(show) {
@@ -9333,6 +9379,7 @@ function fillFromHeard(){
             }
         }
 
+        timerRestore();
         toggleTimerFeature();
         let lastScr0 = null; try { lastScr0 = localStorage.getItem('sr.lastScr'); } catch (e) {}   // до показа стартового экрана, который его перезапишет
         resumeMute = resumeOn();   // озвучка первого задания при запуске не звучит без касания
