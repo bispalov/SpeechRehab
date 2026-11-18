@@ -1023,6 +1023,17 @@
         #readScreen .rd-mic.rec { background: #B3261E; }
         #readScreen .rd-mic { position: sticky; bottom: 8px; z-index: 5; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35); }
         #readScreen .rd-top + .step-progress { margin-top: -4px; }
+        .ml-box { margin-top: 16px; border-top: 1px solid var(--input-border); padding-top: 10px; }
+        .ml-box .ml-btn { width: 100%; text-align: left; }
+        .ml-note { font-size: 0.9em; opacity: 0.85; }
+        .ml-item { border: 1px solid var(--input-border); border-radius: 10px; padding: 8px 10px; margin: 8px 0; overflow-wrap: anywhere; line-height: 1.35; }
+        .ml-item.fix { border-color: #d97706; border-width: 2px; }
+        .ml-meta { font-size: 0.82em; opacity: 0.8; }
+        .ml-norm { font-size: 0.85em; opacity: 0.8; }
+        .ml-fix { color: #d97706; font-weight: 700; }
+        .ml-text { width: 100%; box-sizing: border-box; font-size: 13px; }
+        .ml-box .assist-row { flex-wrap: wrap; }
+        .ml-box .assist-row .assist-btn { flex: 1 1 0; width: auto; min-width: min-content; min-height: 48px; }
         .rd-bridge { width: auto; min-height: 48px; padding: 8px 14px; background-color: #0e7490; }   /* «потянуть вниз» у верхнего края не перезагружает страницу (Chrome) */
         .wr-kb .abc-letters { max-height: 40vh; overflow-y: auto; overscroll-behavior: contain; }   /* на тесном экране буквы листаются внутри, поле ввода остаётся видно */
         button, .mode-card, .ph-chip, .abc-word, .sug { overflow-wrap: anywhere; }
@@ -3150,10 +3161,122 @@
         h += '<div class="assist-row">' +
              '<button class="assist-btn" onclick="exportStatsCsv()">' + escHtml(x.statsExport) + '</button>' +
              '<button class="assist-btn" onclick="resetStats()">' + escHtml(statsTab === 'all' ? x.statsReset : x.stResetMode) + '</button></div>';
+        h += mlHtml();
         document.getElementById('statsPanel').innerHTML = h;
     }
 
+
+    // ===== Журнал непринятых ответов (решение пользователя 2026-11-18) =====
+    // Каждый незасчитанный ответ (и ошибка распознавания) во всех режимах с проверкой речи: что нужно было сказать,
+    // все варианты распознавания как пришли и после обработки. Последние 20, только текст; «📋 Скопировать для разработчика».
+    const ML_MAX = 20;
+    const ML_T = {
+        ru: { title: '🔍 Непринятые ответы', note: 'Последние ответы, которые приложение не засчитало: что нужно было сказать и что услышало распознавание. Если человек сказал верно, а ответ не засчитан, нажмите «Я сказал(а) верно» и пришлите разработчику текст из кнопки ниже.',
+              empty: 'Пока нет непринятых ответов.', need: 'Нужно:', heard: 'Услышано:', norm: 'после обработки:', none: '(ничего)', strict: 'строгая проверка', fix: '✔ человек нажал «Я сказал(а) верно»',
+              copy: '📋 Скопировать для разработчика', copied: 'Скопировано. Вставьте текст в сообщение.', copyFail: 'Не удалось скопировать — выделите текст ниже и скопируйте вручную.', clear: '🗑 Очистить журнал', clearQ: 'Очистить журнал непринятых ответов?', err: 'ошибка распознавания:' },
+        uk: { title: '🔍 Неприйняті відповіді', note: 'Останні відповіді, які застосунок не зарахував: що потрібно було сказати й що почуло розпізнавання. Якщо людина сказала правильно, а відповідь не зараховано, натисніть «Я сказав(ла) правильно» й надішліть розробникові текст із кнопки нижче.',
+              empty: 'Поки немає неприйнятих відповідей.', need: 'Потрібно:', heard: 'Почуто:', norm: 'після обробки:', none: '(нічого)', strict: 'сувора перевірка', fix: '✔ людина натиснула «Я сказав(ла) правильно»',
+              copy: '📋 Скопіювати для розробника', copied: 'Скопійовано. Вставте текст у повідомлення.', copyFail: 'Не вдалося скопіювати — виділіть текст нижче й скопіюйте вручну.', clear: '🗑 Очистити журнал', clearQ: 'Очистити журнал неприйнятих відповідей?', err: 'помилка розпізнавання:' },
+        en: { title: '🔍 Rejected answers', note: 'The latest answers the app did not accept: what had to be said and what speech recognition heard. If the person said it correctly but the answer was not accepted, tap “I said it correctly” and send the developer the text from the button below.',
+              empty: 'No rejected answers yet.', need: 'Needed:', heard: 'Heard:', norm: 'after processing:', none: '(nothing)', strict: 'strict check', fix: '✔ “I said it correctly” was tapped',
+              copy: '📋 Copy for the developer', copied: 'Copied. Paste the text into a message.', copyFail: 'Could not copy — select the text below and copy it by hand.', clear: '🗑 Clear the log', clearQ: 'Clear the log of rejected answers?', err: 'recognition error:' }
+    };
+    function mlT() { return ML_T[currentLang] || ML_T.ru; }
+    let mlOpen = false, mlMsg = '', mlShowText = false;
+    function mlLoad() { try { const a = JSON.parse(localStorage.getItem('sr.misslog') || '[]'); return Array.isArray(a) ? a.filter(e => e && typeof e === 'object') : []; } catch (e) { return []; } }
+    function mlSave(a) { try { localStorage.setItem('sr.misslog', JSON.stringify(a.slice(-ML_MAX))); } catch (e) {} }
+    function mlCut(x) { return String(x == null ? '' : x).replace(/\s+/g, ' ').trim().slice(0, 80); }
+    function mlNorm(x) { try { return mlCut(normSpeech(x)); } catch (e) { return ''; } }
+    function mlAdd(mode, target, alts, opt) {
+        try {
+            opt = opt || {};
+            const a = (Array.isArray(alts) ? alts : [alts]).map(mlCut).filter(Boolean).slice(0, 6);
+            const e = { t: Date.now(), m: mode, l: currentLang, w: mlCut(target), wn: mlNorm(target), a, n: a.map(mlNorm),
+                        s: isChecked('strictSpeech') ? 1 : 0, err: opt.err ? String(opt.err) : '', fix: 0 };
+            if (opt.syl) e.syl = mlCut(opt.syl);
+            const L = mlLoad(); L.push(e); mlSave(L);
+        } catch (e) {}
+    }
+    // «Я сказал(а) верно»: пометить последнюю запись этого слова в этом режиме
+    function mlFix(mode, target) {
+        const L = mlLoad(), w = mlCut(target);
+        for (let i = L.length - 1; i >= 0; i--) if (L[i].m === mode && L[i].w === w && !L[i].err) { L[i].fix = 1; mlSave(L); return true; }
+        return false;
+    }
+    function mlModeName(m) {
+        const id = { full: 'modeFullTitle', ser: 'modeSerTitle', listen: 'modeListenTitle', read: 'modeReadTitle', quiz: 'modeQuizTitle', phr: 'modePhrTitle' }[m];
+        const el = id && document.getElementById(id);
+        return (el && el.textContent.trim()) || m;
+    }
+    function mlTime(t) { const d = new Date(t), p = n => String(n).padStart(2, '0'); return p(d.getDate()) + '.' + p(d.getMonth() + 1) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()); }
+    function mlHtml() {
+        const t = mlT(), L = mlLoad();
+        let h = '<div class="ml-box"><button class="abc-online ml-btn" onclick="mlOpen=!mlOpen; mlMsg=\'\'; renderStatsPanel()">' + (mlOpen ? '▼ ' : '▶ ') + escHtml(t.title) + ' (' + L.length + ')</button>';
+        if (!mlOpen) return h + '</div>';
+        h += '<p class="ml-note">' + escHtml(t.note) + '</p>';
+        if (!L.length) h += '<p>' + escHtml(t.empty) + '</p>';
+        L.slice().reverse().forEach(e => {
+            const heard = e.err ? t.err + ' ' + e.err : (e.a.length ? e.a.join(' | ') : t.none);
+            const normDiff = !e.err && e.n && e.n.join(' | ') !== e.a.join(' | ').toLowerCase();
+            h += '<div class="ml-item' + (e.fix ? ' fix' : '') + '">' +
+                 '<div class="ml-meta">' + escHtml(mlTime(e.t) + ' · ' + mlModeName(e.m) + ' · ' + String(e.l || '').toUpperCase() + (e.s ? ' · ' + t.strict : '')) + '</div>' +
+                 '<div>' + escHtml(t.need) + ' <b>' + escHtml(e.w) + '</b>' + (e.syl && e.syl.replace(/-/g, '') !== e.w ? ' (' + escHtml(e.syl) + ')' : '') + '</div>' +
+                 '<div>' + escHtml(t.heard) + ' <b>' + escHtml(heard) + '</b></div>' +
+                 (normDiff ? '<div class="ml-norm">' + escHtml(t.norm) + ' ' + escHtml(e.n.join(' | ')) + '</div>' : '') +
+                 (e.fix ? '<div class="ml-fix">' + escHtml(t.fix) + '</div>' : '') + '</div>';
+        });
+        if (L.length) {
+            h += '<div class="assist-row"><button class="assist-btn ml-copy" onclick="mlCopy()">' + escHtml(t.copy) + '</button>' +
+                 '<button class="assist-btn ml-clear" onclick="mlClear()">' + escHtml(t.clear) + '</button></div>';
+            if (mlMsg) h += '<p class="ml-msg">' + escHtml(mlMsg) + '</p>';
+            if (mlShowText) h += '<textarea class="ml-text" readonly rows="8">' + escHtml(mlText()) + '</textarea>';
+        }
+        return h + '</div>';
+    }
+    // кратко о телефоне: Android/iOS и модель, версия Chrome
+    function mlDevice() {
+        const ua = navigator.userAgent || '';
+        const os = (ua.match(/Android [\d.]+(?:; [^;)]+)?/) || ua.match(/iPhone OS [\d_]+|iPad/) || ua.match(/Windows NT [\d.]+|Mac OS X [\d_]+|Linux/) || [''])[0];
+        const br = (ua.match(/(?:Chrome|CriOS|Firefox|Version)\/[\d]+/) || [''])[0];
+        return [os, br].filter(Boolean).join(', ');
+    }
+    function mlText() {
+        const L = mlLoad();
+        const lines = ['SpeechRehab v' + APP_VERSION + ' · ' + currentLang + ' · ' + mlDevice()];
+        L.forEach((e, i) => {
+            lines.push('');
+            lines.push((i + 1) + ') ' + mlTime(e.t) + ' · ' + e.m + ' · ' + e.l + (e.s ? ' · strict' : '') + (e.fix ? ' · SAID-CORRECTLY' : ''));
+            lines.push('   target: ' + e.w + (e.syl ? ' [' + e.syl + ']' : '') + (e.wn && e.wn !== e.w ? ' → ' + e.wn : ''));
+            if (e.err) lines.push('   error: ' + e.err);
+            else {
+                lines.push('   heard:  ' + (e.a.length ? e.a.join(' | ') : '(nothing)'));
+                lines.push('   norm:   ' + (e.n || []).join(' | '));
+            }
+        });
+        return lines.join('\n');
+    }
+    function mlCopy() {
+        const t = mlT(), txt = mlText();
+        const done = ok => { mlMsg = ok ? t.copied : t.copyFail; mlShowText = !ok; renderStatsPanel(); };
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(txt).then(() => done(true), () => done(mlCopyOld(txt))); return; }
+        } catch (e) {}
+        done(mlCopyOld(txt));
+    }
+    function mlCopyOld(txt) {
+        try {
+            const ta = document.createElement('textarea'); ta.value = txt; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.append(ta); ta.select(); const ok = document.execCommand('copy'); ta.remove(); return !!ok;
+        } catch (e) { return false; }
+    }
+    function mlClear() {
+        if (!confirm(mlT().clearQ)) return;
+        try { localStorage.removeItem('sr.misslog'); } catch (e) {}
+        mlMsg = ''; mlShowText = false; renderStatsPanel();
+    }
+
     function openStats() {
+        mlMsg = ''; mlShowText = false;
         renderStatsPanel();
         document.getElementById('statsOverlay').classList.remove('hidden');
         document.getElementById('statsBody').scrollTop = 0;
@@ -4919,11 +5042,12 @@
             rd.listening = false;
             if (screenName !== 'read' || rd.view !== 'do' || rdCur() !== it) { rdSyncBtns(); return; }
             if (res.error) {
-                if (res.error !== 'aborted') { rd.res = { err: recErrorText(res.error) }; rdRender(); } else rdSyncBtns();
+                if (res.error !== 'aborted') { mlAdd('read', it.w, [], { err: res.error, syl: rdSylOf(it.w) }); rd.res = { err: recErrorText(res.error) }; rdRender(); } else rdSyncBtns();
                 return;
             }
             const m = speechMatchAlts(res, it.w, isChecked('strictSpeech'));
             recordResult('speech', it.w, m.heard, m.ok);
+            if (!m.ok) mlAdd('read', it.w, res.alts || [res.transcript], { syl: rdSylOf(it.w) });
             rd.prev = { s: it.s, k: it.k, d: it.d.slice(), done: it.done, revealed: rd.revealed };
             rd.res = { ok: m.ok, heard: m.heard, bad: m.ok ? [] : rdBadSyl(it.w, m.heard), fixed: false, stage: it.s };
             rdApply(m.ok, true);
@@ -4975,6 +5099,7 @@
         rd.revealed = rd.prev.revealed;
         rd.res.fixed = true; rd.res.ok = true; rd.res.bad = [];
         recordResult('fix', it.w, '', true);
+        mlFix('read', it.w);
         rdApply(true, false);
     }
     function rdNextStage() {
@@ -5716,7 +5841,7 @@
         box.innerHTML = h;
     }
     // Номер версии приложения (совпадает с номером в sw.js) — виден внизу настроек
-    const APP_VERSION = 84;
+    const APP_VERSION = 85;
     function syncSettGroups() {
         let ver = document.getElementById('appVer');
         if (!ver) { ver = document.createElement('div'); ver.id = 'appVer'; ver.className = 'app-ver'; document.getElementById('settingsPanel').appendChild(ver); }
@@ -6055,6 +6180,7 @@
             } else if (res.error) {
                 train.lastErr = res.error;
                 if (res.error !== 'unsupported') train.attempts++;
+                mlAdd('listen', train.clean, [], { err: res.error, syl: train.word });
             } else {
                 const m = speechMatchAlts(res, train.clean, isChecked('strictSpeech'));
                 const ok = m.ok;
@@ -6064,6 +6190,7 @@
                 train.lastErr = null;
                 train.attempts++;
                 if (ok) train.passed = true;
+                else mlAdd('listen', train.clean, res.alts || [res.transcript], { syl: train.word });
                 recordResult('speech', train.clean, m.heard, ok);
                 speakSpeechFeedback(ok, m.heard, train.clean);
                 flushSpeechFeedback();
@@ -6101,6 +6228,7 @@
         if (train.heard === null || train.heardOk) return;
         train.heardOk = true; train.passed = true; train.selfOk = true;
         recordResult('fix', train.clean, '', true);
+        mlFix('listen', train.clean);
         updateTrainSayUI();
     }
 
@@ -6264,10 +6392,12 @@
             if (res.error) {
                 if (b) { b.disabled = false; b.textContent = mt().again; }
                 document.getElementById('quizStatus').innerText = recErrorText(res.error);
+                if (res.error !== 'aborted') mlAdd('quiz', quiz.cur.clean, [], { err: res.error, syl: quiz.cur.word });
                 return;
             }
             const m = speechMatchAlts(res, quiz.cur.clean, isChecked('strictSpeech'));
             const ok = m.ok;
+            if (!ok) mlAdd('quiz', quiz.cur.clean, res.alts || [res.transcript], { syl: quiz.cur.word });
             quiz.answered = true;
             quiz.results.push({ word: quiz.cur.word, clean: quiz.cur.clean, heard: m.heard, ok, skipped: false });
             recordResult('speech', quiz.cur.clean, m.heard, ok);
@@ -6998,9 +7128,10 @@
         recognizeOnce(null, r => {
             if (screenName !== 'phr' || phr.view !== 'do') return;
             phr.listening = false;
-            if (r.error) { phr.res = null; phr.msg = recErrorText(r.error); phrRender(true); if (r.error === 'no-speech') phrVoice('none'); return; }
+            if (r.error) { if (r.error !== 'aborted') mlAdd('phr', p.t, [], { err: r.error }); phr.res = null; phr.msg = recErrorText(r.error); phrRender(true); if (r.error === 'no-speech') phrVoice('none'); return; }
             const res = phrCompare(p.t, r.alts && r.alts.length ? r.alts : [r.transcript]);
             const allOk = res.rows.every(x => x.st === 'ok');
+            if (!allOk) mlAdd('phr', p.t, r.alts && r.alts.length ? r.alts : [r.transcript]);
             res.counted = allOk;
             phr.res = res;
             phrMark(allOk);
@@ -7245,7 +7376,7 @@
         }
         const acts = abcMk('div', 'abc-row');
         if (!allOkNow && !res.counted) acts.append(abcMk('button', 'assist-btn abc-say', t.count, () => {
-            res.counted = true; p.k++; p.l = Date.now(); phrSave(); phr.msg = t.counted; phrRender(true);
+            res.counted = true; p.k++; p.l = Date.now(); phrSave(); mlFix('phr', p.t); phr.msg = t.counted; phrRender(true);
         }));
         if (phr.tmp) {
             acts.append(abcMk('button', 'assist-btn abc-say', ps().addMy, phrAddTmp));
@@ -7839,8 +7970,8 @@
         const st = ser.step, items = serTarget(), t = sT(), V = SER_VOICE[currentLang] || SER_VOICE.ru;
         if (!st) return;
         ser.fit = true;
-        if (err) { ser.msg = recErrorText(err); serRender(true); return; }
-        if (!alts.length) { ser.msg = t.nothing; serRender(true); serVoice(V.none); return; }
+        if (err) { if (err !== 'aborted') mlAdd('ser', items[st.i], [], { err }); ser.msg = recErrorText(err); serRender(true); return; }
+        if (!alts.length) { mlAdd('ser', items[st.i], [], { err: 'no-speech' }); ser.msg = t.nothing; serRender(true); serVoice(V.none); return; }
         const k = st.i, word = items[k];
         st.tries[k] = (st.tries[k] || 0) + 1;
         if (alts.some(a => serStepHas(word, a))) {
@@ -7858,6 +7989,7 @@
         const order = full.map((w, n) => n).filter(n => n > cur).concat(full.map((w, n) => n).filter(n => n < cur).reverse());
         for (const a of alts) { const j = order.find(n => serStepHas(full[n], a)); if (j !== undefined) { other = j; break; } }
         st.marks[k] = { st: 'bad', h: alts[0], other };
+        mlAdd('ser', word, alts);
         ser.errSeen = true;
         serRender(true);
         if (serNamesShown()) serVoice(V.no.replace('{w}', word)); else serVoice(V.noHid);
@@ -7873,6 +8005,7 @@
     function serStepSkip() { const st = ser.step; if (!st || ser.listening) return; if (!st.marks[st.i]) st.marks[st.i] = { st: 'bad', h: '' }; serStepNext(); }
     function serStepFix() {
         const st = ser.step; if (!st || ser.listening) return;
+        mlFix('ser', serTarget()[st.i]);
         st.marks[st.i] = { st: 'ok', fix: true };
         serStepNext();
     }
@@ -7965,10 +8098,11 @@
         if (ser.sess) { ser.buf += ' ' + ser.sess; ser.sess = ''; }
         if (!wasListening || screenName !== 'ser') return;
         const items = serTarget();
-        if (!ser.buf.trim()) { ser.res = null; ser.msg = sT().nothing; serRender(true); serVoice((SER_VOICE[currentLang] || SER_VOICE.ru).none); return; }
+        if (!ser.buf.trim()) { mlAdd('ser', items.join(', '), [], { err: 'no-speech' }); ser.res = null; ser.msg = sT().nothing; serRender(true); serVoice((SER_VOICE[currentLang] || SER_VOICE.ru).none); return; }
         const res = serEval(items, ser.buf, serTurnWord());
         if (IH.used) { res.hinted = true; IH.used = false; }
         res.counted = res.allOk && !res.hinted;
+        if (!res.allOk) mlAdd('ser', items.join(', '), [ser.buf.trim()]);
         ser.res = res;
         if (!res.allOk) ser.errSeen = true;
         serStat(ser.sid, ser.dir + (ser.mode === 'cont' ? 'c' : ''), res.allOk && !res.hinted);
@@ -8178,7 +8312,7 @@
         else if (!res.allOk) el.append(abcMk('div', 'step-note', t.tapHear));
         const acts = abcMk('div', 'abc-row');
         if (!res.allOk && !res.counted) acts.append(abcMk('button', 'assist-btn abc-say', t.count, () => {
-            res.counted = true; serStat(ser.sid, ser.dir + (ser.mode === 'cont' ? 'c' : ''), true, true); ser.msg = t.counted; serRender(true);
+            res.counted = true; serStat(ser.sid, ser.dir + (ser.mode === 'cont' ? 'c' : ''), true, true); mlFix('ser', serTarget().join(', ')); ser.msg = t.counted; serRender(true);
         }));
         acts.append(abcMk('button', 'assist-btn abc-say', ser.playing ? t.stopPlay : t.listen, () => serSpeakSeries(target)));
         el.append(acts);
@@ -9182,7 +9316,7 @@ function fillFromHeard(){
 
 <h3>Режимы тренировки</h3>
 <ul>
-<li><b>🧩 Полный тренажёр</b> — все блоки на одном экране: выбор слова на слух, проверка произношения, сбор из букв.</li>
+<li><b>🧩 Полный тренажёр</b> — все блоки на одном экране: выбор слова на слух, проверка произношения, сбор из букв. Если распознавание не засчитало верно сказанное слово, нажмите «✔ Я сказал(а) верно».</li>
 <li><b>🔢 Перечисления</b> — тренировка называния рядов по порядку: дни недели, месяцы, времена года, части суток, цвета радуги, числа 1–10, 1–20 и десятки до 100. Можно добавить своё перечисление (например, имена родных). Направление, задание и показ названий собраны в сворачиваемый блок «⚙️» над заданием: в свёрнутом виде в нём видно, что выбрано (▶ — свёрнут, ▼ — раскрыт). Выберите ряд, нажмите «Говорить» и назовите всё по порядку, затем «Закончил(а)» (или просто помолчите). Приложение покажет и голосом скажет, что верно, что пропущено и что лишнее; нажатие на слово озвучивает его. Ряд можно сначала послушать (слова подсвечиваются; повторное нажатие «⏹ Остановить» прерывает озвучку), назвать вперёд или назад и выбрать задание «Продолжить»: даются первые слова, остальное называете сами. Если распознавание ошиблось, нажмите «Я сказал(а) верно». Числа, которые браузер записал цифрами, распознаются как слова. В ⚙️ настройках выбираются направление (только вперёд, вперёд и назад, только назад), показ ряда на экране, способ проверки и голосовая оценка. Проверка «По одному слову»: текущее слово подсвечено, слова пронумерованы; нажмите «🎤 Назвать следующее слово» и скажите одно слово. Если названия скрыты, ряд открывается по ходу: названные слова видны, следующее — «▢ ?», остальное не показано. Верное отмечается ✅, и рамка переходит дальше (если отмеченное слово не поместилось на экране, приложение коротко говорит «Да»); ошибка — ❌ с пояснением, что услышано (если названо другое слово ряда — его номер или «это слово идёт позже / уже было») и голосом «Нет. Нужно: …» (при скрытых названиях — «Нет. Ещё раз»), тогда можно «Ещё раз», «Я сказал(а) верно» или «Пропустить». В итоге — сколько слов названо с первой попытки. Названия «После ошибок» открываются после первой ошибки и остаются видны до нового задания; повторный выбор «После ошибок» или кнопка «🙈 Скрыть ряд» снова их скрывают. Результаты хранятся только на устройстве, записи голоса не сохраняются. Направление: вперёд, назад или «⇄ туда и обратно» (сначала вперёд, сразу назад). Названия на экране можно сделать видимыми, показывать только после ошибок или скрыть совсем — так задание постепенно усложняется.</li>
 <li><b>👂 Тренировка слуха</b> — одно слово в два шага: 1) послушать и повторить вслух (слово звучит само, можно послушать ещё раз или по слогам), 2) собрать из букв. Набор букв выбирается в настройках (группа «Слова»): только буквы слова, буквы слова и 1–3 лишние, похожие по звучанию (д/т, з/с, ш/щ…), или вся азбука (самый трудный уровень: слоги до сборки не подсказываются); это же действует в «Полном тренажёре». Когда слово собрано, приложение коротко говорит «Верно!» и произносит слово или «Не совсем. Замените красные буквы.» (если включена голосовая оценка). Если слово собрано неверно, неверные буквы становятся красными: нажмите на такую букву, чтобы вернуть её, и поставьте на её место другую. В конце итог: исходное слово (с картинкой, если она есть), что вы сказали и что собрали с первого раза, с подсветкой различий. Если всё получилось с первого раза, звучит «Отлично! Всё с первого раза.». Затем — следующее слово или ещё раз это же. Если включена настройка «Обязательно проговаривать слово», к сборке из букв можно перейти только после верного произношения (или трёх попыток). Если распознавание ошиблось, а слово сказано верно, нажмите «Я сказал(а) верно».</li>
 <li><b>📖 Читаю вслух</b> — для слов, которые человек не понимает на слух, но может прочитать. Слова — свой список «Трудные слова»: впишите слово и нажмите «Добавить», или нажмите «📖 Не слышу — прочитать» в «Тренировке слуха» или «Полном тренажёре» (после неудачной попытки), или возьмите из блока «Часто не слышно» (слова с ошибками на слух по статистике). Каждое слово проходит ступени: 1) по слогам — слоги подсвечиваются по очереди, человек читает вслед; 2) целиком медленно — подсветка плавно идёт по слову; 3) целиком в обычном темпе; 4) на слух — слова на экране нет, приложение говорит его, человек повторяет. Чтобы перейти на следующую ступень, нужно несколько верных попыток подряд. Нажмите «🎤 Прочитать» и прочитайте слово вслух: приложение скажет, верно ли; при ошибке покажет, что услышало, и отметит красным слоги, которые прозвучали не так, — нажмите на слог, чтобы его послушать (нажатие на любой слог озвучивает его и на ступенях чтения). Образец целого слова звучит после попытки, а не до неё. Если распознавание ошиблось — «✔ Я сказал(а) верно». Ошибка на слух показывает слово и (по настройке) возвращает на ступень назад. Слово освоено, когда ступень «на слух» пройдена в нескольких разных днях; освоенные слова — в свёрнутом списке «Освоено», их можно вернуть. «⏺ Послушать себя» записывает голос как диктофон (остановка кнопкой «⏹ Стоп» или сама через несколько секунд), сразу проигрывает запись и затем — как правильно. Запись хранится только до следующей записи или выхода из режима: она не сохраняется в телефон или резервную копию и никуда не отправляется.</li>
@@ -9217,6 +9351,7 @@ function fillFromHeard(){
 
 <h3>📊 Статистика</h3>
 <p>Вкладки: «Все», «🧩 Полный тренажёр», «🔢 Перечисления», «👂 Тренировка слуха», «📖 Читаю вслух», «✍️ Письмо». Для каждого режима видно, сколько было попыток и сколько верно сегодня и по дням за последние 7 дней занятий, а также трудные слова и частые путаницы (что было услышано, выбрано, сказано или написано вместо нужного слова). Для перечислений — результаты по каждому ряду и направлению. Вкладка «Все» собирает все режимы, включая «Тест на слух». «Я сказал(а) верно» исправляет последнюю ошибку и не добавляет лишнюю попытку. Слова с ошибками предлагаются чаще. Данные хранятся только на этом устройстве; их можно скачать в виде CSV или сбросить (на вкладке режима — только этот режим). Статистика по режимам ведётся с версии 53, более ранние ответы есть только на вкладке «Все».</p>
+<p><b>🔍 Непринятые ответы</b> — внизу окна статистики свёрнутый журнал последних 20 ответов, которые приложение не засчитало (во всех режимах с проверкой речи): что нужно было сказать и что именно услышало распознавание. Голос не хранится, только этот текст. Если человек сказал верно, а ответ не засчитан, нажмите «✔ Я сказал(а) верно» (такие записи отмечены), затем «📋 Скопировать для разработчика» и пришлите текст — по нему можно точно поправить проверку. «🗑 Очистить журнал» удаляет записи.</p>
 
 <h3>⚙️ Настройки</h3>
 <ul>
@@ -9263,7 +9398,7 @@ function fillFromHeard(){
 
 <h3>Режими тренування</h3>
 <ul>
-<li><b>🧩 Повний тренажер</b> — усі блоки на одному екрані: вибір слова на слух, перевірка вимови, збирання з літер.</li>
+<li><b>🧩 Повний тренажер</b> — усі блоки на одному екрані: вибір слова на слух, перевірка вимови, збирання з літер. Якщо розпізнавання не зарахувало правильно сказане слово, натисніть «✔ Я сказав(ла) правильно».</li>
 <li><b>🔢 Перелічення</b> — тренування називання рядів по порядку: дні тижня, місяці, пори року, частини доби, кольори веселки, числа 1–10, 1–20 і десятки до 100. Можна додати своє перелічення (наприклад, імена рідних). Напрямок, завдання й показ назв зібрано в згортуваний блок «⚙️» над завданням: у згорнутому вигляді в ньому видно, що вибрано (▶ — згорнуто, ▼ — розгорнуто). Оберіть ряд, натисніть «Говорити» й назвіть усе по порядку, потім «Закінчив(ла)» (або просто помовчіть). Застосунок покаже й голосом скаже, що правильно, що пропущено й що зайве; натискання на слово озвучує його. Ряд можна спершу послухати (слова підсвічуються; повторне натискання «⏹ Зупинити» перериває озвучення), назвати вперед чи назад і обрати завдання «Продовжити»: дають перші слова, решту називаєте самі. Якщо розпізнавання помилилося, натисніть «Я сказав(ла) правильно». Числа, які браузер записав цифрами, розпізнаються як слова. У ⚙️ налаштуваннях обираються напрямок (лише вперед, вперед і назад, лише назад), показ ряду на екрані, спосіб перевірки й голосова оцінка. Перевірка «По одному слову»: поточне слово підсвічено, слова пронумеровано; натисніть «🎤 Назвати наступне слово» і скажіть одне слово. Якщо назви приховано, ряд відкривається по ходу: названі слова видно, наступне — «▢ ?», решту не показано. Правильне позначається ✅, і рамка переходить далі (якщо позначене слово не вмістилося на екрані, застосунок коротко каже «Так»); помилка — ❌ з поясненням, що почуто (якщо назвали інше слово ряду — його номер або «це слово йде пізніше / вже було») і голосом «Ні. Треба: …» (якщо назви приховано — «Ні. Ще раз»), тоді можна «Ще раз», «Я сказав(ла) правильно» або «Пропустити». У підсумку — скільки слів названо з першої спроби. Назви «Після помилок» відкриваються після першої помилки й лишаються видимими до нового завдання; повторний вибір «Після помилок» або кнопка «🙈 Сховати ряд» знову їх ховають. Результати зберігаються лише на пристрої, записи голосу не зберігаються. Напрямок: уперед, назад або «⇄ туди й назад» (спершу уперед, одразу назад). Назви на екрані можна зробити видимими, показувати лише після помилок або приховати зовсім — так завдання поступово ускладнюється.</li>
 <li><b>👂 Тренування слуху</b> — одне слово у два кроки: 1) послухати й повторити вголос (слово звучить саме, можна послухати ще раз або по складах), 2) зібрати з літер. Набір літер обирається в налаштуваннях (група «Слова»): лише літери слова, літери слова й 1–3 зайві, схожі за звучанням (д/т, з/с, ш/щ…), або вся абетка (найважчий рівень: склади до збирання не підказуються); це ж діє в «Повному тренажері». Коли слово зібрано, застосунок коротко каже «Правильно!» і вимовляє слово або «Не зовсім. Замініть червоні літери.» (якщо ввімкнено голосову оцінку). Якщо слово зібрано неправильно, неправильні літери стають червоними: натисніть на таку літеру, щоб повернути її, і поставте на її місце іншу. Наприкінці підсумок: вихідне слово (з картинкою, якщо вона є), що ви сказали і що зібрали з першого разу, з підсвічуванням відмінностей. Якщо все вдалося з першого разу, звучить «Чудово! Усе з першого разу.». Потім — наступне слово або ще раз це саме. Якщо ввімкнено налаштування «Обов’язково промовляти слово», до збирання з літер можна перейти лише після правильної вимови (або трьох спроб). Якщо розпізнавання помилилося, а слово сказано правильно, натисніть «Я сказав(ла) правильно».</li>
 <li><b>📖 Читаю вголос</b> — для слів, які людина не розуміє на слух, але може прочитати. Слова — свій список «Важкі слова»: впишіть слово й натисніть «Додати», або натисніть «📖 Не чую — прочитати» в «Тренуванні слуху» чи «Повному тренажері» (після невдалої спроби), або візьміть із блоку «Часто не чути» (слова з помилками на слух за статистикою). Кожне слово проходить сходинки: 1) по складах — склади підсвічуються по черзі, людина читає слідом; 2) цілком повільно — підсвічування плавно йде словом; 3) цілком у звичайному темпі; 4) на слух — слова на екрані немає, застосунок каже його, людина повторює. Щоб перейти на наступну сходинку, потрібно кілька правильних спроб поспіль. Натисніть «🎤 Прочитати» й прочитайте слово вголос: застосунок скаже, чи правильно; у разі помилки покаже, що почув, і позначить червоним склади, які прозвучали не так, — натисніть на склад, щоб його послухати (натискання на будь-який склад озвучує його й на сходинках читання). Зразок цілого слова звучить після спроби, а не до неї. Якщо розпізнавання помилилося — «✔ Я сказав(ла) правильно». Помилка на слух показує слово й (за налаштуванням) повертає на сходинку назад. Слово засвоєно, коли сходинку «на слух» пройдено в кілька різних днів; засвоєні слова — у згорнутому списку «Засвоєно», їх можна повернути. «⏺ Послухати себе» записує голос як диктофон (зупинка кнопкою «⏹ Стоп» або сама через кілька секунд), одразу відтворює запис, а потім — як правильно. Запис зберігається лише до наступного запису або виходу з режиму: він не зберігається в телефон чи резервну копію й нікуди не надсилається.</li>
@@ -9298,6 +9433,7 @@ function fillFromHeard(){
 
 <h3>📊 Статистика</h3>
 <p>Вкладки: «Усі», «🧩 Повний тренажер», «🔢 Перелічення», «👂 Тренування слуху», «📖 Читаю вголос», «✍️ Письмо». Для кожного режиму видно, скільки було спроб і скільки правильно сьогодні та по днях за останні 7 днів занять, а також важкі слова й часті плутанини (що було почуто, обрано, сказано чи написано замість потрібного слова). Для перелічень — результати за кожним рядом і напрямком. Вкладка «Усі» збирає всі режими, зокрема «Тест на слух». «Я сказав(ла) правильно» виправляє останню помилку й не додає зайвої спроби. Слова з помилками пропонуються частіше. Дані зберігаються лише на цьому пристрої; їх можна завантажити як CSV або скинути (на вкладці режиму — лише цей режим). Статистика за режимами ведеться з версії 53, раніші відповіді є лише на вкладці «Усі».</p>
+<p><b>🔍 Неприйняті відповіді</b> — унизу вікна статистики згорнутий журнал останніх 20 відповідей, які застосунок не зарахував (в усіх режимах із перевіркою мовлення): що потрібно було сказати й що саме почуло розпізнавання. Голос не зберігається, лише цей текст. Якщо людина сказала правильно, а відповідь не зараховано, натисніть «✔ Я сказав(ла) правильно» (такі записи позначено), потім «📋 Скопіювати для розробника» й надішліть текст — за ним можна точно виправити перевірку. «🗑 Очистити журнал» видаляє записи.</p>
 
 <h3>⚙️ Налаштування</h3>
 <ul>
@@ -9344,7 +9480,7 @@ function fillFromHeard(){
 
 <h3>Training modes</h3>
 <ul>
-<li><b>🧩 Full trainer</b> — all blocks on one screen: choose the word by ear, pronunciation check, assembling from letters.</li>
+<li><b>🧩 Full trainer</b> — all blocks on one screen: choose the word by ear, pronunciation check, assembling from letters. If recognition did not accept a correctly said word, tap “✔ I said it correctly”.</li>
 <li><b>🔢 Sequences</b> — practice saying series in order: days of the week, months, seasons, parts of the day, colours of the rainbow, numbers 1–10, 1–20 and tens up to 100. You can add your own sequence (for example the names of relatives). Direction, task and word display are in the collapsible “⚙️” block above the task; when collapsed it shows what is selected (▶ collapsed, ▼ open). Choose a series, tap “Speak” and say it all in order, then “Finished” (or just stay silent). The app shows and says by voice what was right, missing or extra; tapping a word speaks it. You can first listen to the series (words are highlighted; tapping “⏹ Stop” ends it), say it forwards or backwards, and choose the “Continue” task: the first words are given and you say the rest. If recognition was wrong, tap “I said it correctly”. Numbers the browser wrote as digits are recognised as words. ⚙️ Settings choose the direction (forwards only, forwards and backwards, backwards only), showing the series on the screen, the checking method and the spoken verdict. With “One word at a time” checking, the current word is highlighted and the words are numbered; tap “🎤 Say the next word” and say one word. If the words are hidden, the series opens as you go: words already said are shown, the next one is “▢ ?”, the rest is not shown. A right word gets ✅ and the frame moves on (if that word is off the screen, the app briefly says “Yes”); a mistake gets ❌ with what was heard (if another word of the series was said — its number or “this word comes later / came earlier”) and by voice “No. It is: …” (“No. Try again” if the words are hidden), then choose “Again”, “I said it correctly” or “Skip”. The summary shows how many words were right first time. Words set to “After errors” open after the first mistake and stay visible until a new task; choosing “After errors” again or “🙈 Hide the series” hides them again. Results are kept only on the device; voice recordings are not saved. Direction: forwards, backwards or “⇄ there and back” (forwards, then straight back). The words on screen can be always shown, shown only after mistakes, or hidden — so the task can be made harder step by step.</li>
 <li><b>👂 Listening practice</b> — one word in two steps: 1) listen and repeat aloud (the word plays by itself; you can listen again or by syllables), 2) assemble it from letters. The letter set is chosen in Settings (the “Words” group): only the word's letters, the word's letters plus 1–3 extra similar-sounding ones (d/t, s/z, f/v…), or the whole alphabet (the hardest level: no syllable hint before the word is assembled); the same applies in the Full trainer. When the word is complete, the app briefly says “Correct!” and the word, or “Not quite. Replace the red letters.” (if the spoken verdict is on). If the word is assembled wrongly, the wrong letters turn red: tap such a letter to return it and put another one in its place. At the end you get a summary: the original word (with a picture if there is one), what you said and what you assembled the first time, with differences highlighted. If everything was right the first time, you hear “Great! All right the first time.” Then the next word or this word again. If “Require saying the word aloud” is on, you can go to letter assembly only after a correct pronunciation (or three attempts). If recognition was wrong but the word was said correctly, tap “I said it correctly”.</li>
 <li><b>📖 Reading aloud</b> — for words the person cannot understand by ear but can read. The words are your own “Difficult words” list: type a word and tap “Add”, or tap “📖 Can’t hear it — read it” in Listening practice or the Full trainer (after an unsuccessful try), or take words from “Often not heard” (words with listening mistakes in the statistics). Each word goes through steps: 1) syllables — they are highlighted one by one and the person reads along; 2) whole, slowly — the highlight moves smoothly along the word; 3) whole at a normal pace; 4) by ear — the word is not on the screen, the app says it and the person repeats. Several correct tries in a row move to the next step. Tap “🎤 Read aloud” and read the word: the app says whether it was right; after a mistake it shows what it heard and marks the syllables that sounded different in red — tap a syllable to hear it (tapping any syllable plays it on the reading steps too). The whole word is played as a model after a try, not before it. If recognition was wrong, tap “✔ I said it correctly”. A mistake by ear shows the word and (if set) goes one step back. A word is learned when the “by ear” step is done on several different days; learned words go to the collapsed “Learned” list and can be brought back. “⏺ Hear myself” records the voice like a voice recorder (stop with “⏹ Stop” or it stops by itself after a few seconds), plays the recording right away and then how it should sound. The recording is kept only until the next recording or until you leave the mode: it is not saved on the phone or in the backup and is not sent anywhere.</li>
@@ -9379,6 +9515,7 @@ function fillFromHeard(){
 
 <h3>📊 Statistics</h3>
 <p>Tabs: “All”, “🧩 Full trainer”, “🔢 Sequences”, “👂 Listening practice”, “📖 Reading aloud”, “✍️ Writing”. For each mode you see how many tries there were and how many were correct today and by day for the last 7 days of practice, plus difficult words and frequent confusions (what was heard, chosen, said or written instead of the target word). For sequences, the results for each series and direction. The “All” tab combines all modes, including the hearing test. “I said it correctly” fixes the last mistake and does not add an extra try. Words with mistakes are offered more often. Data stays on this device only; you can download it as CSV or reset it (on a mode tab, only that mode). Statistics by mode are kept from version 53 on; earlier answers are only in the “All” tab.</p>
+<p><b>🔍 Rejected answers</b> — at the bottom of the statistics window there is a collapsed log of the last 20 answers the app did not accept (in all modes that check speech): what had to be said and what exactly speech recognition heard. The voice is not stored, only this text. If the person said it correctly but the answer was not accepted, tap “✔ I said it correctly” (such entries are marked), then “📋 Copy for the developer” and send the text — it shows exactly what to fix in the check. “🗑 Clear the log” deletes the entries.</p>
 
 <h3>⚙️ Settings</h3>
 <ul>
@@ -9749,7 +9886,9 @@ function fillFromHeard(){
                 const soft = isChecked('gentleMode');
                 box.className = 'speech-result-box ' + (soft ? 'info' : 'incorrect');
                 box.innerText = t.speechYouSaid + `"${transcript}". ` + (soft ? t.retryMsg : t.speechIncorrect);
+                mlAdd('full', targetClean, alts, { syl: targetWordSyllables });
                 box.insertAdjacentHTML('beforeend', buildDiffHtml(targetClean, transcript));
+                box.insertAdjacentHTML('beforeend', '<div style="margin-top:8px"><button class="assist-btn full-countok" onclick="fullCountOk()">' + escHtml(mt().countOk) + '</button></div>');
                 box.insertAdjacentHTML('beforeend', '<div style="margin-top:8px"><button class="assist-btn rd-bridge" onclick="rdBridge(targetWordClean, \'full\')">' + escHtml(rdT().bridge) + '</button></div>');
                 showOwnPanel();
                 speakSpeechFeedback(false, transcript, targetClean);
@@ -9759,6 +9898,7 @@ function fillFromHeard(){
         recognition.onerror = (event) => {
             console.warn("Speech recognition error:", event.error);
             if (event.error !== 'aborted') {
+                mlAdd('full', targetWordClean.toLowerCase(), [], { err: event.error, syl: targetWordSyllables });
                 const eb = document.getElementById('speechResultBox');
                 eb.className = 'speech-result-box info';
                 eb.innerText = recErrorText(event.error);
@@ -9769,6 +9909,19 @@ function fillFromHeard(){
             btn.classList.remove('recording');
             btn.innerText = i18n[currentLang].recordBtnStart;
         };
+    }
+
+    // «Я сказал(а) верно» в «Полном тренажёре»: распознавание ошиблось — ответ засчитывается как исправление
+    function fullCountOk() {
+        if (isRecording) return;
+        const w = targetWordClean.toLowerCase();
+        recordResult('fix', w, '', true);
+        mlFix('full', w);
+        registerSpeechAttempt(true);
+        const box = document.getElementById('speechResultBox');
+        box.className = 'speech-result-box correct';
+        box.innerText = mt().countedOk;
+        scrollToNextButton();
     }
 
     function toggleRecording() {
