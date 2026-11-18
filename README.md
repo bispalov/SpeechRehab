@@ -92,7 +92,17 @@
 - `accents.js` — таблиця наголосів;
 - `dict-uk.js`, `dict-ru.js`, `dict-en.js` — словники.
 
-Необов'язково: `extra-dict.json` — додатковий словник, який підвантажується за наявності інтернету. Файли `README.md` і `LICENSE` застосунку не потрібні, але потрібні для опису й ліцензії проєкту.
+Необов'язково: `extra-dict.json` — додатковий словник, який підвантажується за наявності інтернету; `lex/` — частотні списки слів для підказок. Файли `README.md` і `LICENSE` застосунку не потрібні, але потрібні для опису й ліцензії проєкту.
+
+`tests/` — автоматичні перевірки (Playwright, Chromium); застосунку не потрібні, service worker їх не кешує. Запуск з кореня репозиторію:
+
+```
+pip install playwright && python3 -m playwright install chromium
+python3 tests/run_all.py            # усі тести й перевірка верстки
+python3 tests/run_all.py test16 sw  # лише вибрані
+```
+
+Тести самі піднімають тимчасовий сайт на вільному порту; замість великих словників підставляють маленькі заглушки з `tests/fixtures/` (`SR_REAL_DICTS=1` — зі справжніми словниками). `tests/test_sw.py` перевіряє справжній service worker: оновлення з першого відкриття, роботу офлайн, збереження кешів інших застосунків на тому самому сайті, копію в іншій папці.
 
 Шляхи в `sw.js` і `manifest.json` відносні: застосунок працює в папці з будь-якою назвою; змінювати потрібно лише `"id"` у `manifest.json` (див. «Розміщення на власному сайті»). Після будь-яких змін у файлах збільшуйте номер версії `VER` у `sw.js`, інакше встановлені застосунки не оновляться. Кожна копія видаляє лише власні старі кеші (`speech-rehab-…`), тож кеші інших застосунків на тому самому сайті, наприклад «Говоримо разом», не зачіпаються.
 
@@ -210,7 +220,17 @@ The app needs:
 - `accents.js` — the stress table;
 - `dict-uk.js`, `dict-ru.js`, `dict-en.js` — the dictionaries.
 
-Optional: `extra-dict.json` — an additional dictionary loaded when the internet is available. `README.md` and `LICENSE` are not used by the app but belong to the project.
+Optional: `extra-dict.json` — an additional dictionary loaded when the internet is available; `lex/` — word frequency lists for suggestions. `README.md` and `LICENSE` are not used by the app but belong to the project.
+
+`tests/` — automated checks (Playwright, Chromium); the app does not need them and the service worker does not cache them. Run from the repository root:
+
+```
+pip install playwright && python3 -m playwright install chromium
+python3 tests/run_all.py            # all tests and the layout audit
+python3 tests/run_all.py test16 sw  # only selected ones
+```
+
+The tests start a temporary site on a free port and use small dictionary stubs from `tests/fixtures/` instead of the large dictionaries (`SR_REAL_DICTS=1` uses the real ones). `tests/test_sw.py` checks the real service worker: update on the first open, offline use, caches of other apps on the same site kept, a copy in another folder.
 
 Paths in `sw.js` and `manifest.json` are relative: the app works in a folder with any name; only `"id"` in `manifest.json` needs changing (see “Hosting on your own site”). After changing any file, increase the version `VER` in `sw.js`, otherwise installed copies will not update. Each copy deletes only its own old caches (`speech-rehab-…`), so caches of other apps on the same site, such as «Говоримо разом», are left alone.
 
