@@ -57,7 +57,7 @@ with sync_playwright() as p:
     pg.set_viewport_size({'width': 360, 'height': 740})
     CARDS = "[...document.querySelectorAll('#modeSelect .mode-card')].filter(c=>c.style.display!=='none').map(c=>c.dataset.m)"
     ev("localStorage.removeItem('sr.last'); localStorage.removeItem('sr.home.hide'); localStorage.removeItem('app_stats_v1'); goHome()")
-    ok(len(ev(CARDS)) == 9 and not ev("document.querySelector('.mode-card.last')"), 'all modes, no last mark at first')
+    ok(len(ev(CARDS)) == 10 and not ev("document.querySelector('.mode-card.last')"), 'all modes, no last mark at first')
     ok(ev("document.getElementById('homeToday').style.display") == 'none', 'no today line without practice')
     ok(ev("document.getElementById('hdrTimer').style.display") == 'none', 'no timer on start screen')
     # последний режим
@@ -72,17 +72,17 @@ with sync_playwright() as p:
     ok('Сегодня: упражнений — 1, верно — 100%' in t, 'today line: ' + t)
     # скрыть режимы
     ev("openSettings(); settShow('main')")
-    ok(ev("document.getElementById('labelHomeModes').textContent") == 'Режимы на стартовом экране' and ev("document.querySelectorAll('#homeModesBox input').length") == 9, 'settings list of modes')
+    ok(ev("document.getElementById('labelHomeModes').textContent") == 'Режимы на стартовом экране' and ev("document.querySelectorAll('#homeModesBox input').length") == 10, 'settings list of modes')
     ok(ev("document.querySelector('#homeModesBox label span').textContent").startswith('🧩'), 'mode titles in list')
     for m in ['abc','hear','phr']:
         ev(f"(()=>{{const cb=document.querySelector('#homeModesBox input[data-m=\"{m}\"]'); cb.checked=false; cb.onchange();}})()")
-    ok(ev(CARDS) == ['full','ser','listen','read','wr','quiz'], 'hidden modes not on start screen')
+    ok(ev(CARDS) == ['full','ser','listen','read','num','wr','quiz'], 'hidden modes not on start screen')
     # всё скрыть нельзя
-    for m in ['full','ser','listen','wr','quiz']:
+    for m in ['full','ser','listen','read','num','wr','quiz']:
         ev(f"(()=>{{const cb=document.querySelector('#homeModesBox input[data-m=\"{m}\"]'); cb.checked=false; cb.onchange();}})()")
     ok(len(ev(CARDS)) == 1 and ev("document.querySelectorAll('#homeModesBox input:checked').length") == 1, 'at least one mode stays')
     ev("localStorage.removeItem('sr.home.hide'); homeSync(); closeSettings && closeSettings()")
-    ok(len(ev(CARDS)) == 9, 'modes back')
+    ok(len(ev(CARDS)) == 10, 'modes back')
     ev("localStorage.setItem('sr.home.hide', JSON.stringify(['wr'])); goHome()")
     ok(not ev("document.querySelector('.mode-card.last')") or ev("document.querySelector('.mode-card.last').dataset.m") != 'wr', 'hidden last mode not marked')
     ev("localStorage.removeItem('sr.home.hide'); goHome()")
@@ -116,7 +116,7 @@ with sync_playwright() as p:
     ev("openSettings(); settShow('about')")
     ok(ev("document.getElementById('sgt_about').textContent") == 'ℹ️ О приложении', 'about group title')
     txt = ev("document.getElementById('aboutBox').innerText")
-    ok('Снова слова' in txt and 'Версия 85' in txt and 'Лицензия MIT' in txt and 'без рекламы' in txt, 'about text')
+    ok('Снова слова' in txt and 'Версия 86' in txt and 'Лицензия MIT' in txt and 'без рекламы' in txt, 'about text')
     ok(ev("[...document.querySelectorAll('#aboutBox a')].map(a=>a.href)") == ['https://github.com/bispalov', 'https://github.com/bispalov/SpeechRehab'], 'author and repo links')
     ev("APP_AUTHOR_GH_TEST = 1")
     ok(ev("appGhUser()") == 'bispalov', 'author login set')

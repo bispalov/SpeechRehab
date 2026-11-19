@@ -41,8 +41,9 @@ def make_root(real_dicts=None):
 
 def serve(root, port=0):
     """Поднять http-сервер (порт 0 — любой свободный). Вернуть (сервер, адрес index.html)."""
-    H = functools.partial(http.server.SimpleHTTPRequestHandler, directory=root)
-    H.log_message = lambda *a, **k: None
+    class Quiet(http.server.SimpleHTTPRequestHandler):
+        def log_message(self, *a, **k): pass
+    H = functools.partial(Quiet, directory=root)
     srv = http.server.ThreadingHTTPServer(('127.0.0.1', port), H)
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     return srv, 'http://127.0.0.1:%d/SpeechRehab/index.html' % srv.server_address[1]

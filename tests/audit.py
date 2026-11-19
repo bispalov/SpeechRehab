@@ -49,6 +49,12 @@ SCENES = [
  ('read4bad', "rd.revealed=true; rd.stageMsg=rdT().backStage; rdCur().s=3; rd.res={ok:false, heard:'достопримечательно', bad:[6,7], fixed:false}; rd.prev={s:4,k:0,d:[],done:0,revealed:false}; rdRender()"),
  ('readrec', "rd.rec='blob:x'; rd.recording=true; rd.recMsg=ex().ownRecording; rdRender()"),
  ('readdone', "rd.recording=false; rd.rec=null; rd.done='day'; rd.res={ok:true,heard:'достопримечательность',bad:[],fixed:false}; rdRender()"),
+ ('num_ear', "goHome(); localStorage.setItem('sr.num.set', JSON.stringify({len:0})); startMode('num'); nmStop(); nm.cur.n=777; nmRender()"),
+ ('num_read', "nm.cur.phase='read'; nm.cur.need=2; nm.cur.other=787; nm.cur.res={ok:false, heardN:787, heardText:'787', viaVoice:true}; nmRender()"),
+ ('num_choice', "nmSetChange('answer','choice'); nmNext(); nmStop(); nm.cur.opts=[1000,100,900,990]; nmRender()"),
+ ('num_keys', "nmSetChange('answer','keys'); nmNext(); nmStop(); nm.typed='1000'; nmRender()"),
+ ('num_sum', "nm.summary=true; nm.i=20; nm.firstOk=13; nm.sessConf={'11 → 13':3,'14 → 40':2}; nmRender(); localStorage.removeItem('sr.num.set')"),
+ ('sett_num', "goHome(); openSettings(); settShow('num')"),
  ('sett_read', "goHome(); openSettings(); settShow('read')"),
  ('stats_read', "closeSettings(); openStats(); statsTab='read'; renderStatsPanel()"),
  ('stats_close', "closeStats()"),
@@ -76,7 +82,7 @@ with sync_playwright() as p:
             if res:
                 tot += len(res)
                 print(f'[{lang} {zoom}] {name}:'); [print('   ', r) for r in res]
-            if name in ('wr1','abc','serdo','phrdo','settings','select','readlist','read1res','read2long','read4bad','readrec','sett_read'): pg.screenshot(path=os.path.join(shots_dir(), f'z_{lang}_{zoom}_{name}.png'))
+            if name in ('wr1','abc','serdo','phrdo','settings','select','readlist','read1res','read2long','read4bad','readrec','sett_read','num_read','num_choice','num_keys','sett_num'): pg.screenshot(path=os.path.join(shots_dir(), f'z_{lang}_{zoom}_{name}.png'))
         print(f'== {lang} zoom {zoom}: {tot} issues')
         pg.close()
     b.close()

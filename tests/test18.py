@@ -151,7 +151,7 @@ with sync_playwright() as p:
     ev("statsTab='full'; renderStatsPanel()")
     ok(ev("!!document.querySelector('#statsPanel .ml-item')"), 'log stays open on other tabs')
     txt = ev("mlText()")
-    ok(txt.startswith('SpeechRehab v85') and 'target: сто' in txt and 'heard:  стоп' in txt and 'SAID-CORRECTLY' in txt and 'error: no-speech' in txt, 'developer text: ' + txt[:200])
+    ok(txt.startswith('SpeechRehab v' + str(ev('APP_VERSION'))) and 'target: сто' in txt and 'heard:  стоп' in txt and 'SAID-CORRECTLY' in txt and 'error: no-speech' in txt, 'developer text: ' + txt[:200])
     ev("document.querySelector('#statsPanel .ml-copy').click()"); pg.wait_for_timeout(300)
     clip = ev("navigator.clipboard.readText()")
     ok(clip == txt and 'Скопировано' in ev("document.getElementById('statsPanel').textContent"), 'copied to clipboard')

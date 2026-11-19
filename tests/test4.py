@@ -59,7 +59,7 @@ with sync_playwright() as p:
     # старые данные без режимов
     ev("localStorage.setItem('app_stats_v1', JSON.stringify({ru:{words:{'кот':{ok:1,bad:2}},conf:{'кот>код':2}}}))")
     ev("openStats()")
-    ok(ev("document.querySelectorAll('#statsPanel .stats-tabs button').length") == 6, '6 tabs')
+    ok(ev("document.querySelectorAll('#statsPanel .stats-tabs button').length") == 7, '7 tabs')
     ok('кот' in ev("document.getElementById('statsPanel').innerText"), 'old data visible in All')
     ev("statsTab='full'; renderStatsPanel()")
     ok('версии 53' in ev("document.getElementById('statsPanel').innerText"), 'mode tab without data explains')
