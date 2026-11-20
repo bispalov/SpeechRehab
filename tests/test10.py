@@ -116,7 +116,7 @@ with sync_playwright() as p:
     ev("openSettings(); settShow('about')")
     ok(ev("document.getElementById('sgt_about').textContent") == 'ℹ️ О приложении', 'about group title')
     txt = ev("document.getElementById('aboutBox').innerText")
-    ok('Снова слова' in txt and 'Версия 86' in txt and 'Лицензия MIT' in txt and 'без рекламы' in txt, 'about text')
+    ok('Снова слова' in txt and ('Версия ' + str(ev('APP_VERSION'))) in txt and 'Лицензия MIT' in txt and 'без рекламы' in txt, 'about text')
     ok(ev("[...document.querySelectorAll('#aboutBox a')].map(a=>a.href)") == ['https://github.com/bispalov', 'https://github.com/bispalov/SpeechRehab'], 'author and repo links')
     ev("APP_AUTHOR_GH_TEST = 1")
     ok(ev("appGhUser()") == 'bispalov', 'author login set')

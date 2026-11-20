@@ -70,7 +70,7 @@ with sync_playwright() as p:
     d = dl.value; fn = d.suggested_filename; path = TMP + fn; d.save_as(path)
     ok(fn.startswith('znovu-slova-backup-') and fn.endswith('.json'), 'file name ' + fn)
     obj = _j.load(open(path, encoding='utf-8'))
-    ok(obj['app'] == 'SpeechRehab' and obj['version'] == 86 and 'date' in obj, 'header fields')
+    ok(obj['app'] == 'SpeechRehab' and obj['version'] == pg.evaluate('APP_VERSION') and 'date' in obj, 'header fields')
     ks = obj['data']
     ok('sr.phr.ru' in ks and ks['sr.wr.given'] == '3' and 'app_lang' in ks and 'app_stats_v1' in ks, 'own keys saved')
     ok('aac.settings' not in ks and 'app_lex_ru' not in ks and 'sr.secret.k' not in ks, 'foreign/lex/secret skipped')

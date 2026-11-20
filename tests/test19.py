@@ -73,8 +73,14 @@ with sync_playwright() as p:
     def fresh(lang='ru', st=None):
         ev(f"localStorage.clear(); localStorage.setItem('app_lang','{lang}'); localStorage.setItem('sr.tour.offer','0'); localStorage.setItem('app_timer_enabled','false')" + (f"; localStorage.setItem('sr.num.set', JSON.stringify({st}))" if st else ''))
         pg.reload(); pg.wait_for_timeout(500)
-    def say(alt):
+    def settle():
+        for _ in range(40):
+            if not ev("!!(nm.cur && nm.cur.trans)"): break
+            pg.wait_for_timeout(100)
+        pg.wait_for_timeout(150)
+    def say(alt, wait=True):
         ev(f"__srQueue.push({{alts:[{alt!r}]}}); document.querySelector('#numScreen .nm-mic').click()"); pg.wait_for_timeout(400)
+        if wait: settle()
     def setn(n, ctxp='null'):
         ev(f"nmStop(); nm.cur.n={n}; nm.cur.ctx={ctxp}; nm.cur.opts=null; nmRender()")
     fresh()
@@ -83,7 +89,7 @@ with sync_playwright() as p:
     ok(order.index('num') == order.index('read') + 1, 'card after Reading aloud: ' + str(order))
     ok(ev("document.getElementById('modeNumTitle').textContent") == '🔟 Числа на слух', 'title')
     ev("openSettings(); settShow('num')"); pg.wait_for_timeout(150)
-    ok(ev("document.querySelectorAll('#nmSettBox select').length") == 9 and ev("document.querySelectorAll('#nmSettBox input[type=checkbox]').length") == 3 and ev("document.querySelectorAll('#nmSettBox input[type=number]').length") == 2, 'settings: 9 selects, 3 checkboxes, from/to')
+    ok(ev("document.querySelectorAll('#nmSettBox select').length") == 9 and ev("document.querySelectorAll('#nmSettBox input[type=checkbox]').length") == 5 and ev("document.querySelectorAll('#nmSettBox input[type=number]').length") == 2, 'settings: 9 selects, 5 checkboxes, from/to')
     ok(ev("getComputedStyle(document.getElementById('nmSetCustom')).display") == 'none', 'custom range hidden by default')
     ev("const s=document.getElementById('nmSetRange'); s.value='custom'; s.dispatchEvent(new Event('change'))")
     ok(ev("getComputedStyle(document.getElementById('nmSetCustom')).display") != 'none', 'custom range shown when chosen')
@@ -109,8 +115,10 @@ with sync_playwright() as p:
     i0 = ev("nm.i")
     say('11')
     ok(ev("nm.cur.phase") == 'done' and ev("nm.firstOk") == 1 and ev("!!document.querySelector('#numScreen .nm-dig')"), 'correct first time: done, number shown')
-    pg.wait_for_timeout(2200)
+    pg.wait_for_timeout(2600)
     ok(ev("nm.i") == i0 + 1 and ev("nm.cur.phase") == 'ear', 'auto next number')
+    sp = ev("__spoken"); k = max(i for i, x in enumerate(sp) if x == 'Верно!')
+    ok(sp[k + 1:k + 3] == ['Следующее число.', ev("nmWords(nm.cur.n)")], 'praise, then "Next number", then the number: ' + str(sp[k:k + 3]))
     # ===== ошибка: сравнение, чтение, снова на слух
     setn(11); ev("__spoken.length=0")
     say('тринадцать')
@@ -123,8 +131,17 @@ with sync_playwright() as p:
     ok('одиннадцать' in sp and 'тринадцать' in sp and any('Было' in x for x in sp) and any('Послышалось' in x for x in sp), 'both numbers spoken: ' + str(sp))
     ok(ev("((loadStats().ru.modes||{}).num||{}).conf['11>13']") == 1, 'confusion 11>13 in statistics')
     ok(ev("JSON.parse(localStorage.getItem('sr.misslog')).slice(-1)[0].m") == 'num', 'rejected answer in the log')
-    say('одиннадцать')
+    ev("__spoken.length=0")
+    say('одиннадцать', wait=False)
+    ok(ev("nm.cur.phase") == 'read' and ev("nm.cur.trans") and not ev("!!document.querySelector('#numScreen .nm-mic')") and 'Верно' in ev("document.querySelector('#numScreen .nm-res').textContent"), 'read correctly: praise on the same screen, no answer button yet')
+    pg.wait_for_timeout(700)
+    ok(ev("nm.cur.trans") and 'одиннадцать' not in ev("__spoken"), 'pause after praise: number not spoken yet')
+    settle(); pg.wait_for_timeout(1300)
     ok(ev("nm.cur.phase") == 'ear2' and ev("!!document.querySelector('#numScreen .nm-hidden')"), 'read correctly: hidden again, by ear')
+    sp = ev("__spoken")
+    ok(sp[:3] == ['Верно!', 'Теперь послушайте и повторите.', 'одиннадцать'], 'praise → prompt → number: ' + str(sp))
+    ok('Теперь на слух.' in ev("document.querySelector('#numScreen .nm-phase').textContent"), 'title: Now by ear')
+    ok(ev("!!document.querySelector('#numScreen .nm-mic.nm-cue')"), 'answer button flashes')
     say('11')
     ok(ev("nm.cur.phase") == 'done' and ev("nm.firstOk") == 1, 'by ear again: done, not counted as first time')
     # ошибка на слух после чтения — снова читать
@@ -135,7 +152,7 @@ with sync_playwright() as p:
     # «Я сказал(а) верно»
     ev("nmNext()"); setn(12); f0 = ev("nm.firstOk"); say('20')
     ok(ev("!!document.querySelector('#numScreen .nm-countok')"), 'count-ok button after a voice mistake')
-    ev("document.querySelector('#numScreen .nm-countok').click()"); pg.wait_for_timeout(200)
+    ev("document.querySelector('#numScreen .nm-countok').click()"); pg.wait_for_timeout(200); settle()
     ok(ev("nm.cur.phase") == 'done' and ev("nm.firstOk") == f0 + 1 and ev("JSON.parse(localStorage.getItem('sr.misslog')).slice(-1)[0].fix") == 1, 'count-ok: done, first time, log marked')
     # повторы: прочитать 2 раза, на слух 2 раза
     ev("nmSetChange('read',2); nmSetChange('ear',2); nmSetChange('auto',0); nmNext()"); setn(15)
@@ -145,14 +162,30 @@ with sync_playwright() as p:
     say('15'); ok(ev("nm.cur.phase") == 'ear2' and ev("nm.cur.need") == 1, 'by ear: one more')
     say('15'); ok(ev("nm.cur.phase") == 'done' and ev("!!document.querySelector('#numScreen .nm-next.primary-btn')"), 'done; without auto — "Next number" button')
     ev("localStorage.setItem('sr.num.set', JSON.stringify({len:0}))")
+    # ===== «число звучит только по нажатию»
+    ev("nmSetChange('tap',1); __spoken.length=0; nmNext()"); pg.wait_for_timeout(700)
+    ok(ev("document.querySelector('#numScreen .nm-hidden.tap').textContent") == '▶ Послушать число', 'tap mode: "Hear the number" button')
+    ok(ev("!__spoken.includes(nmWords(nm.cur.n))") and 'Нажмите «Послушать число».' in ev("__spoken"), 'tap mode: number not spoken by itself, prompt instead')
+    ev("document.querySelector('#numScreen .nm-hidden.tap').click()"); pg.wait_for_timeout(300)
+    ok(ev("__spoken.includes(nmWords(nm.cur.n))"), 'tap mode: number spoken after the tap')
+    nn = ev("nm.cur.n"); say(str((nn + 1) % 21)); say(str(nn)); ev("__spoken.length=0"); pg.wait_for_timeout(300)
+    ok(ev("nm.cur.phase") == 'ear2' and ev("!__spoken.includes(nmWords(nm.cur.n))"), 'tap mode after reading: waits for the tap')
+    ev("localStorage.setItem('sr.num.set', JSON.stringify({len:0}))")
+    # ===== микрофон сам после числа
+    ev("nmSetChange('autoMic',1); window.__srLive=0; nmNext()"); pg.wait_for_timeout(200)
+    ev("__srQueue.push({alts:[String(nm.cur.n)]})"); pg.wait_for_timeout(900); settle()
+    ok(ev("nm.cur.phase") == 'done' or ev("nm.firstOk") >= 1 and ev("nm.cur.first") is True, 'auto mic: answered without tapping the mic')
+    ev("localStorage.setItem('sr.num.set', JSON.stringify({len:0,auto:0}))"); ev("nmNext()"); pg.wait_for_timeout(900)
+    ok(not ev("nm.listening"), 'auto mic off by default')
+    ev("nmStop(); localStorage.setItem('sr.num.set', JSON.stringify({len:0}))")
     # ===== выбор из кнопок
     ev("nmSetChange('answer','choice'); nmSetChange('opts',4); nmNext()"); setn(11)
     opts = ev("[...document.querySelectorAll('#numScreen .nm-choice')].map(b=>+b.textContent)")
     ok(len(opts) == 4 and 11 in opts and 13 in opts and len(set(opts)) == 4, 'choice: 4 buttons with 11 and the confused 13: ' + str(opts))
     ok('выберите' in ev("document.querySelector('#numScreen .nm-phase').textContent"), 'choice title')
-    ev("[...document.querySelectorAll('#numScreen .nm-choice')].find(b=>b.textContent==='13').click()"); pg.wait_for_timeout(300)
+    ev("[...document.querySelectorAll('#numScreen .nm-choice')].find(b=>b.textContent==='13').click()"); pg.wait_for_timeout(300); settle()
     ok(ev("nm.cur.phase") == 'read' and ev("!!document.querySelector('#numScreen .nm-readdone')") and ev("!!document.querySelector('#numScreen .nm-mic')"), 'wrong choice: read step with "I read it" and mic')
-    ev("document.querySelector('#numScreen .nm-readdone').click()"); pg.wait_for_timeout(200)
+    ev("document.querySelector('#numScreen .nm-readdone').click()"); pg.wait_for_timeout(200); settle()
     ok(ev("nm.cur.phase") == 'ear2' and ev("!!document.querySelector('#numScreen .nm-choice')"), 'then choose again by ear')
     ev("[...document.querySelectorAll('#numScreen .nm-choice')].find(b=>b.textContent==='11').click()"); pg.wait_for_timeout(300)
     ok(ev("nm.cur.phase") == 'done', 'right choice: done')
@@ -204,10 +237,10 @@ with sync_playwright() as p:
     # ===== итог занятия
     ev("nmSetChange('auto',0); nmSetChange('len',10); nmOpen()")
     for k in range(10):
-        n = ev("nm.cur.n")
-        say(str(n) if k % 3 else str((n + 1) % 21))
+        nn = ev("nm.cur.n")
+        say(str(nn) if k % 3 else str((nn + 1) % 21))
         if ev("nm.cur.phase") == 'read':
-            say(str(n)); say(str(n))
+            say(str(nn)); say(str(nn))
         ev("nmNext()"); pg.wait_for_timeout(100)
     ok(ev("nm.summary") and 'С первого раза' in ev("document.getElementById('numScreen').textContent"), 'summary after 10 numbers')
     ok('Путались' in ev("document.getElementById('numScreen').textContent"), 'summary lists confusions')
