@@ -175,6 +175,26 @@ with sync_playwright() as p:
     ev("nmSetChange('autoMic',1); window.__srLive=0; nmNext()"); pg.wait_for_timeout(200)
     ev("__srQueue.push({alts:[String(nm.cur.n)]})"); pg.wait_for_timeout(900); settle()
     ok(ev("nm.cur.phase") == 'done' or ev("nm.firstOk") >= 1 and ev("nm.cur.first") is True, 'auto mic: answered without tapping the mic')
+    # микрофон сам и на шаге «прочитать»: после объяснения ошибки и после «Верно!», если читать ещё раз
+    ev("localStorage.setItem('sr.num.set', JSON.stringify({len:0, autoMic:1, read:2, auto:0})); nmNext()"); pg.wait_for_timeout(200)
+    ev("nmStop(); nm.cur.n=11; nmRender(); __spoken.length=0; __srQueue.push({alts:['13']}); document.querySelector('#numScreen .nm-mic').click()")
+    pg.wait_for_timeout(600)
+    ok(ev("nm.cur.phase") == 'read', 'auto mic: wrong answer → read')
+    ev("__srQueue.push({alts:['11']}, {alts:['11']})")
+    for _ in range(60):
+        if ev("nm.cur.phase") == 'read' and ev("nm.cur.need") == 1: break
+        pg.wait_for_timeout(100)
+    ok(ev("nm.cur.phase") == 'read' and ev("nm.cur.need") == 1, 'auto mic after the explanation: first reading heard without a tap ' + str(ev("[nm.cur.phase, nm.cur.need]")))
+    for _ in range(60):
+        if ev("nm.cur.phase") != 'read': break
+        pg.wait_for_timeout(100)
+    ok('Прочитайте ещё раз.' in ev("__spoken"), 'after "Correct!" — prompt "Read it once more"')
+    ok(ev("nm.cur.phase") in ('ear2', 'done'), 'second reading also without a tap: ' + str(ev("nm.cur.phase")))
+    ev("nmStop(); __srQueue.length=0")
+    # без «микрофон сам»: подсказка голосом и мигающая кнопка
+    ev("localStorage.setItem('sr.num.set', JSON.stringify({len:0, read:2, auto:0})); nmNext()"); pg.wait_for_timeout(200)
+    ev("nmStop(); nm.cur.n=11; nmRender()"); say('13'); pg.wait_for_timeout(3500); say('11'); pg.wait_for_timeout(800)
+    ok(ev("nm.cur.phase") == 'read' and not ev("nm.listening") and ev("!!document.querySelector('#numScreen .nm-mic.nm-cue')") and 'Прочитайте ещё раз.' in ev("__spoken"), 'without auto mic: prompt + flashing mic button')
     ev("localStorage.setItem('sr.num.set', JSON.stringify({len:0,auto:0}))"); ev("nmNext()"); pg.wait_for_timeout(900)
     ok(not ev("nm.listening"), 'auto mic off by default')
     ev("nmStop(); localStorage.setItem('sr.num.set', JSON.stringify({len:0}))")
