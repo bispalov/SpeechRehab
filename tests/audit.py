@@ -55,6 +55,12 @@ SCENES = [
  ('num_keys', "nmSetChange('answer','keys'); nmNext(); nmStop(); nm.typed='1000'; nmRender()"),
  ('num_sum', "nm.summary=true; nm.i=20; nm.firstOk=13; nm.sessConf={'11 → 13':3,'14 → 40':2}; nmRender(); localStorage.removeItem('sr.num.set')"),
  ('sett_num', "goHome(); openSettings(); settShow('num')"),
+ ('fph_ear', "goHome(); closeSettings(); localStorage.setItem('sr.fph.set', JSON.stringify({sess:0})); startMode('fph'); fpStop(); fp.cur.it={t:'Врач придёт в одиннадцать',c:'health',alt:['Врач придёт в тринадцать','Врач придёт в двенадцать']}; fp.cur.t=fp.cur.it.t; fp.cur.opts=null; fpRender()"),
+ ('fph_read', "fp.cur.phase='read'; fp.cur.need=2; fp.cur.res={ok:false, heard:'врач придёт в тринадцать', rows:phrCompare(fp.cur.t,['врач придёт в тринадцать']).rows, viaVoice:true}; fpRender()"),
+ ('fph_choose', "fpSetChange('task','choose'); fpSetChange('opts',4); fpNext(); fpStop(); fpRender()"),
+ ('fph_yn', "fpSetChange('task','yesno'); fpNext(); fpStop(); fpRender()"),
+ ('fph_list', "fp.view='list'; fpRender(); localStorage.removeItem('sr.fph.set')"),
+ ('sett_fph', "goHome(); openSettings(); settShow('fph')"),
  ('sett_read', "goHome(); openSettings(); settShow('read')"),
  ('stats_read', "closeSettings(); openStats(); statsTab='read'; renderStatsPanel()"),
  ('stats_close', "closeStats()"),
@@ -82,7 +88,7 @@ with sync_playwright() as p:
             if res:
                 tot += len(res)
                 print(f'[{lang} {zoom}] {name}:'); [print('   ', r) for r in res]
-            if name in ('wr1','abc','serdo','phrdo','settings','select','readlist','read1res','read2long','read4bad','readrec','sett_read','num_read','num_choice','num_keys','sett_num'): pg.screenshot(path=os.path.join(shots_dir(), f'z_{lang}_{zoom}_{name}.png'))
+            if name in ('wr1','abc','serdo','phrdo','settings','select','readlist','read1res','read2long','read4bad','readrec','sett_read','num_read','num_choice','num_keys','sett_num','fph_read','fph_yn','sett_fph'): pg.screenshot(path=os.path.join(shots_dir(), f'z_{lang}_{zoom}_{name}.png'))
         print(f'== {lang} zoom {zoom}: {tot} issues')
         pg.close()
     b.close()

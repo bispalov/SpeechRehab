@@ -56,7 +56,7 @@ with sync_playwright() as p:
 
 
     # --- группы настроек
-    ok(ev("document.querySelectorAll('#settingsPanel .sg').length") == 9, '9 settings groups')
+    ok(ev("document.querySelectorAll('#settingsPanel .sg').length") == 10, '10 settings groups')
     ok(ev("!document.getElementById('setPhrVoice') && !document.getElementById('setSerVoice') && !document.getElementById('setPhrAuto')"), 'old split settings removed')
     ev("openSettings()")
     ok(ev("document.querySelector('.sg.open').dataset.g") == 'main', 'main group open on start screen')

@@ -247,6 +247,7 @@ with sync_playwright() as p:
     # ===== фразы
     ev("nmSetChange('ctx',2); nmNext()")
     ok(ev("!!nm.cur.ctx") and ev("nm.cur.ctx.show.includes(String(nm.cur.n))"), 'phrase with the number: ' + str(ev("nm.cur.ctx && nm.cur.ctx.show")))
+    ok(ev("(()=>{ for (let i=0;i<300;i++){ nmNext(); nmStop(); if(!nm.cur.ctx) return false; } return true })()"), 'only phrases: every number has a phrase (0 is replaced), 300 tries')
     ok(ev("(()=>{for(let i=0;i<300;i++){const c=nmCtxFor(21); if(c && /гривн|минут/.test(c.show)) return false;} return true})()"), 'no feminine phrases for 21')
     ok(ev("(()=>{for(let i=0;i<200;i++){const c=nmCtxFor(5); if(c && /Мне 5/.test(c.show)) return c.show==='Мне 5 лет';} return true})()"), 'agreement: Мне 5 лет')
     setn(13, "{show:'Кабинет 13', say:'Кабинет тринадцать'}"); ev("__spoken.length=0; nmSpeak(false)"); pg.wait_for_timeout(300)
