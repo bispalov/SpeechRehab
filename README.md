@@ -73,6 +73,20 @@
 
 **Мова.** Під час першого запуску мова інтерфейсу відповідає мові пристрою (українська, російська чи англійська; в інших випадках — англійська). Змінити її можна в «Налаштуваннях», вибір запам'ятовується. Маніфест застосунку українською: після встановлення під іконкою відображається назва «Знову слова». Адреса й назва репозиторію (`SpeechRehab`) не змінювалися, тому встановлені копії оновлюються як раніше.
 
+### 🌐 Браузери
+
+Застосунок зроблено для **Chrome** (на Android — звичайний Chrome): там працює все. Під час першого відкриття в іншому браузері застосунок сам показує, чого там немає (перевіряються можливості браузера, а не його назва); що вміє поточний браузер, видно в ⚙️ → «ℹ️ Про застосунок».
+
+| | Chrome (Android, ПК) | Samsung Internet | Safari (iPhone) | Firefox, Opera, Edge на телефоні |
+|---|---|---|---|---|
+| 🎤 Розпізнавання мовлення | ✔ (зазвичай потрібен інтернет) | з обмеженнями | з обмеженнями | ✖ |
+| 🔊 Озвучення | ✔ | ✔ | ✔ | ✔ |
+| ⏺ Запис голосу | ✔ | ✔ | ✔ | ✔ |
+
+- Без розпізнавання не можна перевірити «скажіть слово»; вибір варіантів, складання з літер, прослуховування й письмо працюють.
+- Голос для озвучення береться з телефона: якщо немає голосу для мови, його встановлюють у налаштуваннях телефона («Синтез мовлення»).
+- У кожного браузера (і у вбудованого браузера Facebook, Viber, Telegram) свої дані — переносяться через «💾 Зберегти копію даних».
+
 ### 🌐 Розміщення на власному сайті
 
 Застосунок можна розмістити на будь-якому сайті — окремо або разом із «Говоримо разом». Щоб він встановлювався з вашого домену:
@@ -203,6 +217,20 @@ No build tools, servers, or dependencies are required — it is a set of static 
 **Reinstalling.** «Знову слова» and «Говоримо разом» install side by side as separate apps. If an app was removed and you want to install it again, Chrome may still consider it installed and not offer installation. Clearing the site data in Chrome helps (Settings → Site settings → All sites → the app address → “Clear & reset”). ⚠️ Both apps are hosted at the same address, so clearing deletes the settings, own words, phrases and statistics of **both**. Before that, save a data backup in each of them (“💾 Data” → “Save data backup”), and load the backups after installing again.
 
 **Language.** On first launch the interface language follows the device language (Ukrainian, Russian or English; English otherwise). It can be changed in Settings and the choice is remembered. The app manifest is in Ukrainian, so after installation the name under the icon is «Знову слова». The address and the repository name (`SpeechRehab`) have not changed, so installed copies keep updating.
+
+### 🌐 Browsers
+
+The app is made for **Chrome** (on Android — regular Chrome): everything works there. On first opening in another browser the app shows what is missing (it checks what the browser can do, not its name); what the current browser can do is shown in ⚙️ → “ℹ️ About the app”.
+
+| | Chrome (Android, PC) | Samsung Internet | Safari (iPhone) | Firefox, Opera, Edge on phones |
+|---|---|---|---|---|
+| 🎤 Speech recognition | ✔ (usually needs internet) | limited | limited | ✖ |
+| 🔊 Speech output | ✔ | ✔ | ✔ | ✔ |
+| ⏺ Voice recording | ✔ | ✔ | ✔ | ✔ |
+
+- Without recognition “say the word” cannot be checked; choosing options, building from letters, listening and writing work.
+- The voice comes from the phone: if there is no voice for the language, install one in the phone settings (“Text-to-speech”).
+- Every browser (and the built-in browser of Facebook, Viber, Telegram) has its own data — move it with “💾 Save data backup”.
 
 ### 🌐 Hosting on your own site
 

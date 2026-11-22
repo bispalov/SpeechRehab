@@ -147,7 +147,7 @@ with sync_playwright() as p:
     ok(ev("HELP_KEYS.indexOf('s_touch')") == ev("HELP_KEYS.indexOf('s_idlehint')") + 1, 'help key placed')
     for L, title in (('ru', 'Управление и нажатия'), ('uk', 'Керування й натискання'), ('en', 'Control and taps')):
         ev(f"localStorage.setItem('app_lang','{L}')"); pg.reload(); pg.wait_for_timeout(400)
-        ok(ev("helpParse(currentLang).items.length") == 47, f'{L}: 47 help items')
+        ok(ev("helpParse(currentLang).items.length") == 48, f'{L}: 48 help items')
         ok(title in ev("document.getElementById('sgt_touch').textContent"), f'{L}: group title')
         t = ev("(()=>{ const h = helpParse(currentLang); const i = HELP_KEYS.indexOf('s_touch'); return JSON.stringify(h.items[i]); })()")
         ok(title.split(' ')[0] in t or title in t, f'{L}: help item for the group: ' + t[:80])

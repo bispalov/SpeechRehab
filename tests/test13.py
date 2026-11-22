@@ -71,7 +71,7 @@ with sync_playwright() as p:
     ev("localStorage.setItem('app_lang','ru')"); pg.reload(); pg.wait_for_timeout(500)
     ev("goHome(); openHelp()"); pg.wait_for_timeout(100)
     D = "[...document.querySelectorAll('#helpBody details.hp-item')]"
-    ok(ev(D + ".length") == 47 and ev(D + ".every(d=>!d.open)"), 'start screen: all 47 items, collapsed')
+    ok(ev(D + ".length") == 48 and ev(D + ".every(d=>!d.open)"), 'start screen: all 48 items, collapsed')
     ok(ev("document.getElementById('helpTitle').innerText") == 'Справка' and 'Нажмите на заголовок' in ev("document.getElementById('helpBody').innerText"), 'title and note')
     ok(ev("document.querySelectorAll('#helpBody h3').length") == 3, 'group headings for list sections')
     # раскрытие по заголовку
@@ -100,7 +100,7 @@ with sync_playwright() as p:
         ok(ev("document.getElementById('helpTitle').innerText") == '❓ Справка: ' + NAMES[m], f'{m}: help over settings still about mode')
         ev("closeHelp(); closeSettings()")
     ev("openHelp(); document.querySelector('#helpBody .hp-all').click()")
-    ok(ev(D + ".length") == 47 and ev("document.getElementById('helpTitle').innerText") == 'Справка', '«Вся справка» opens contents')
+    ok(ev(D + ".length") == 48 and ev("document.getElementById('helpTitle').innerText") == 'Справка', '«Вся справка» opens contents')
     ev("closeHelp()")
     # «Назад» закрывает справку
     ev("quiz.active=false; goHome(); startMode('abc')"); pg.mouse.click(5, 5); pg.wait_for_timeout(100)

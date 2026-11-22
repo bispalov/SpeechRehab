@@ -234,7 +234,7 @@ with sync_playwright() as p:
     # ===== статистика, справка, обучение
     ev("goHome(); openStats ? openStats() : 0"); pg.wait_for_timeout(200)
     ok(ev("statTabName('fph')") == '💬 Фразы на слух', 'stats tab name')
-    ok(ev("HELP_KEYS.length") == 47 and ev("helpParse('ru').items.length") == 47 and ev("helpParse('uk').items.length") == 47 and ev("helpParse('en').items.length") == 47, 'help: 47 items in every language')
+    ok(ev("HELP_KEYS.length") == 48 and ev("helpParse('ru').items.length") == 48 and ev("helpParse('uk').items.length") == 48 and ev("helpParse('en').items.length") == 48, 'help: 48 items in every language')
     ok(ev("TOUR_STEPS.fph.length") == 4 and ev("['ru','uk','en'].every(l => [1,2,3,4].every(i => TOUR_T[l]['fph'+i]))"), 'tutorial: 4 steps in 3 languages')
     # ===== язык
     ev("closeStats && closeStats(); localStorage.setItem('app_lang','uk')"); pg.reload(); pg.wait_for_timeout(500)

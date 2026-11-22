@@ -502,6 +502,13 @@
         .res-bad { color: #d9534f; font-weight: bold; }
         .quiz-row { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--input-border); }
         #dictOverlay { z-index: 910; }
+        #brwOverlay { z-index: 995; }
+        .brw-panel h2 { margin: 0 0 10px; font-size: 1.3em; line-height: 1.3; }
+        .brw-list { margin: 0 0 10px; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+        .brw-list li { font-size: 1.1em; line-height: 1.4; padding: 10px 12px; border-radius: 12px; border: 2px solid #ffc107; overflow-wrap: anywhere; }
+        .brw-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+        .brw-row > button { flex: 1 1 0; width: auto; min-width: min-content; min-height: 52px; margin: 0; }
+        .about-brw { font-size: 0.95em; overflow-wrap: anywhere; }
         .sg { border: 2px solid var(--input-border); border-radius: 10px; overflow: hidden; }
         .sg-h { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 54px; text-align: left; font-weight: bold; font-size: 1.05em; border: 0; border-radius: 0; background: var(--card-bg); color: var(--text-color); cursor: pointer; }
         .sg.open .sg-h { background: var(--option-btn-hover); }
@@ -1485,6 +1492,17 @@
     </div>
 </div>
 
+<div id="brwOverlay" class="help-overlay hidden">
+    <div class="help-panel brw-panel" role="dialog" aria-modal="true" aria-labelledby="brwTitle">
+        <h2 id="brwTitle"></h2>
+        <ul class="brw-list" id="brwList"></ul>
+        <p class="bk-note" id="brwNote"></p>
+        <div class="brw-row">
+            <button type="button" class="assist-btn brw-chrome" id="brwChrome"></button>
+            <button type="button" class="primary-btn brw-ok" id="brwOk" onclick="brwClose()"></button>
+        </div>
+    </div>
+</div>
 <div id="dictOverlay" class="help-overlay hidden" onclick="onDictOverlayClick(event)">
     <div class="help-panel" role="dialog" aria-modal="true" aria-labelledby="dictTitle">
         <div class="help-head">
@@ -6934,7 +6952,7 @@
     // приложение делает один шаг назад и, если ещё есть куда возвращаться, кладёт запись снова.
     // На стартовом экране без окон записи нет, и «Назад» закрывает приложение.
     let navSkip = false;
-    const NAV_OVERLAYS = ['dictOverlay', 'helpOverlay', 'statsOverlay', 'settingsOverlay'];
+    const NAV_OVERLAYS = ['brwOverlay', 'dictOverlay', 'helpOverlay', 'statsOverlay', 'settingsOverlay'];
     function overlayOpen(id) { const e = document.getElementById(id); return !!(e && !e.classList.contains('hidden')); }
     function navDepth() { return screenName !== 'select' || NAV_OVERLAYS.some(overlayOpen); }
     let navWaitTouch = false;
@@ -6957,6 +6975,7 @@
     }
     function appBack() {
         if (TOUR.active || TOUR.offer) { tourEnd(); return; }
+        if (overlayOpen('brwOverlay')) { brwClose(); return; }
         if (overlayOpen('dictOverlay')) { closeDict(); return; }
         if (overlayOpen('helpOverlay')) { closeHelp(); return; }
         if (overlayOpen('statsOverlay')) { closeStats(); return; }
@@ -7290,19 +7309,104 @@
         el.append(inn);
     }
 
+    // ===== Проверка браузера (v93, решение пользователя 2026-11-22) =====
+    // Проверяются возможности (а не название браузера): распознавание, озвучка, голос языка, запись. При первом открытии
+    // в браузере, где чего-то нет, — окно со списком; второй раз то же самое не показывается (sr.brw.seen = подпись списка).
+    const BRW_T = {
+        ru: { title: 'В этом браузере часть функций не работает', sr: '🎤 Распознавание речи не работает: задания «скажите слово» проверить нельзя. Выбор вариантов, сборка из букв, прослушивание и письмо работают.',
+              srPart: '🎤 Распознавание речи в этом браузере работает с ограничениями: может не включиться или прерываться.',
+              tts: '🔊 Озвучка не работает: приложение не сможет произносить слова.', voice: '🔊 На телефоне нет голоса для языка «{l}»: слова могут звучать с акцентом или не прозвучать. Голос можно установить в настройках телефона («Синтез речи» / «Преобразование текста в речь»).',
+              rec: '⏺ Запись своего голоса не работает («Записать себя», «Послушать себя», запись фраз).',
+              note: 'Всё работает в Chrome. Данные (фразы, статистика, записи) в каждом браузере свои — перенести их можно через «💾 Сохранить копию данных».',
+              chrome: '🌐 Открыть в Chrome', ok: 'Понятно', lang: { ru: 'русский', uk: 'украинский', en: 'английский' },
+              sum: 'Этот браузер:', srY: 'распознавание речи ✔', srN: 'распознавание речи ✖', srP: 'распознавание речи — с ограничениями', ttsY: 'озвучка ✔', ttsN: 'озвучка ✖', recY: 'запись ✔', recN: 'запись ✖' },
+        uk: { title: 'У цьому браузері частина функцій не працює', sr: '🎤 Розпізнавання мовлення не працює: завдання «скажіть слово» перевірити не можна. Вибір варіантів, складання з літер, прослуховування й письмо працюють.',
+              srPart: '🎤 Розпізнавання мовлення в цьому браузері працює з обмеженнями: може не ввімкнутися або перериватися.',
+              tts: '🔊 Озвучення не працює: застосунок не зможе вимовляти слова.', voice: '🔊 На телефоні немає голосу для мови «{l}»: слова можуть звучати з акцентом або не прозвучати. Голос можна встановити в налаштуваннях телефона («Синтез мовлення» / «Перетворення тексту на мовлення»).',
+              rec: '⏺ Запис свого голосу не працює («Записати себе», «Послухати себе», запис фраз).',
+              note: 'Усе працює в Chrome. Дані (фрази, статистика, записи) у кожному браузері свої — перенести їх можна через «💾 Зберегти копію даних».',
+              chrome: '🌐 Відкрити в Chrome', ok: 'Зрозуміло', lang: { ru: 'російська', uk: 'українська', en: 'англійська' },
+              sum: 'Цей браузер:', srY: 'розпізнавання мовлення ✔', srN: 'розпізнавання мовлення ✖', srP: 'розпізнавання мовлення — з обмеженнями', ttsY: 'озвучення ✔', ttsN: 'озвучення ✖', recY: 'запис ✔', recN: 'запис ✖' },
+        en: { title: 'Some features do not work in this browser', sr: '🎤 Speech recognition does not work: “say the word” tasks cannot be checked. Choosing options, building from letters, listening and writing work.',
+              srPart: '🎤 Speech recognition works with limitations in this browser: it may not start or may stop.',
+              tts: '🔊 Speech output does not work: the app cannot say the words.', voice: '🔊 The phone has no voice for “{l}”: words may sound with an accent or not at all. A voice can be installed in the phone settings (“Text-to-speech”).',
+              rec: '⏺ Recording your own voice does not work (“Record yourself”, “Hear myself”, phrase recordings).',
+              note: 'Everything works in Chrome. Data (phrases, statistics, recordings) is separate in each browser — move it with “💾 Save data backup”.',
+              chrome: '🌐 Open in Chrome', ok: 'OK', lang: { ru: 'Russian', uk: 'Ukrainian', en: 'English' },
+              sum: 'This browser:', srY: 'speech recognition ✔', srN: 'speech recognition ✖', srP: 'speech recognition — limited', ttsY: 'speech output ✔', ttsN: 'speech output ✖', recY: 'recording ✔', recN: 'recording ✖' }
+    };
+    function brwT() { return BRW_T[currentLang] || BRW_T.ru; }
+    // распознавание: 2 — есть, 1 — есть, но с ограничениями (Samsung Internet), 0 — нет
+    function brwCaps() {
+        const ua = navigator.userAgent || '';
+        const hasSr = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+        const limited = /SamsungBrowser/i.test(ua);
+        const tts = !!window.speechSynthesis && typeof window.SpeechSynthesisUtterance === 'function';
+        let voice = null;   // null — неизвестно (список голосов ещё пуст)
+        try { const vs = tts ? window.speechSynthesis.getVoices() : []; if (vs && vs.length) { const pre = { ru: 'ru', uk: 'uk', en: 'en' }[currentLang] || currentLang; voice = vs.some(v => String(v.lang || '').toLowerCase().replace('_', '-').startsWith(pre)); } } catch (e) {}
+        const rec = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+        return { sr: hasSr ? (limited ? 1 : 2) : 0, tts, voice, rec, android: /Android/i.test(ua), chrome: /Chrome\//.test(ua) && !/SamsungBrowser|EdgA|Edg\/|OPR\/|YaBrowser|Firefox|FxiOS|CriOS/i.test(ua) };
+    }
+    function brwIssues(c) {
+        const t = brwT(), out = [];
+        if (!c.sr) out.push(['sr', t.sr]); else if (c.sr === 1) out.push(['srPart', t.srPart]);
+        if (!c.tts) out.push(['tts', t.tts]); else if (c.voice === false) out.push(['voice-' + currentLang, t.voice.replace('{l}', t.lang[currentLang] || currentLang)]);
+        if (!c.rec) out.push(['rec', t.rec]);
+        return out;
+    }
+    function brwSummary() {
+        const t = brwT(), c = brwCaps();
+        return t.sum + ' ' + [c.sr === 2 ? t.srY : c.sr === 1 ? t.srP : t.srN, c.tts ? t.ttsY : t.ttsN, c.rec ? t.recY : t.recN].join(', ') + '.';
+    }
+    function brwShow(force) {
+        const c = brwCaps(), list = brwIssues(c), t = brwT();
+        if (!list.length && !force) return false;
+        const sig = list.map(x => x[0]).sort().join(',');
+        let seen = ''; try { seen = localStorage.getItem('sr.brw.seen') || ''; } catch (e) {}
+        if (!force && seen === sig) return false;
+        document.getElementById('brwTitle').textContent = t.title;
+        const ul = document.getElementById('brwList'); ul.innerHTML = '';
+        list.forEach(x => { const li = document.createElement('li'); li.textContent = x[1]; ul.append(li); });
+        document.getElementById('brwNote').textContent = t.note;
+        const ch = document.getElementById('brwChrome');
+        const needChrome = c.android && !c.chrome && list.some(x => !x[0].startsWith('voice'));
+        ch.style.display = needChrome ? '' : 'none'; ch.textContent = t.chrome;
+        ch.onclick = () => { location.href = 'intent://' + location.host + location.pathname + location.search + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(location.href) + ';end'; };
+        document.getElementById('brwOk').textContent = t.ok;
+        brw.sig = sig;
+        document.getElementById('brwOverlay').classList.remove('hidden');
+        try { navSync(); } catch (e) {}
+        return true;
+    }
+    const brw = { sig: '', done: false };
+    function brwClose() {
+        try { localStorage.setItem('sr.brw.seen', brw.sig); } catch (e) {}
+        document.getElementById('brwOverlay').classList.add('hidden');
+        try { navSync(); } catch (e) {}
+    }
+    // при запуске: ждём список голосов (до 1,5 с); во встроенном браузере соцсети — своя плашка, окно не нужно
+    function brwStart() {
+        if (brw.done) return; brw.done = true;
+        try { if (iabNeeded()) return; } catch (e) {}
+        let fired = false;
+        const go = () => { if (fired) return; fired = true; if (TOUR.active || TOUR.offer) { setTimeout(() => { fired = false; brw.done = false; brwStart(); }, 3000); return; } brwShow(false); };
+        try { if ('speechSynthesis' in window && !window.speechSynthesis.getVoices().length) { window.speechSynthesis.addEventListener('voiceschanged', () => setTimeout(go, 50), { once: true }); setTimeout(go, 1500); return; } } catch (e) {}
+        setTimeout(go, 300);
+    }
+
     // ===== О приложении (настройки → «ℹ️ О приложении») =====
     // Логин автора на GitHub. Если пусто — берётся из адреса вида <логин>.github.io (так на GitHub Pages ссылка верна сама).
     const APP_AUTHOR_GH = 'bispalov';
     const APP_REPO = 'SpeechRehab';
     const ABOUT_T = {
         ru: { name: 'Снова слова', desc: 'Бесплатное приложение для восстановления речи, слуха и письма после инсульта: для людей с афазией, апраксией и аграфией и их близких.',
-              facts: ['Бесплатно, без рекламы и регистрации.', 'Работает без интернета (распознаванию речи обычно нужна сеть).', 'Все данные хранятся только на этом устройстве. Голос записывается только по кнопкам «Записать себя» и «Послушать себя», чтобы сразу его прослушать, и нигде не сохраняется.', 'Не заменяет логопеда или реабилитолога.'],
+              facts: ['Бесплатно, без рекламы и регистрации.', 'Работает без интернета (распознаванию речи обычно нужна сеть).', 'Все данные хранятся только на этом устройстве. Голос записывается только по кнопкам: «Записать себя» и «Послушать себя» — чтобы сразу прослушать, такая запись нигде не сохраняется; «🔴 Записать» в «💬 Фразах на слух» — запись фразы хранится на этом телефоне и входит в копию данных.', 'Не заменяет логопеда или реабилитолога.'],
               ver: 'Версия', author: 'Автор', code: 'Исходный код и инструкции', lic: 'Лицензия MIT. Код написан ИИ-ассистентом Claude (Anthropic) по заданию и под руководством автора.', mirror: 'Эта копия размещена не на сайте автора.' },
         uk: { name: 'Знову слова', desc: 'Безкоштовний застосунок для відновлення мовлення, слуху й письма після інсульту: для людей з афазією, апраксією та аграфією і їхніх близьких.',
-              facts: ['Безкоштовно, без реклами й реєстрації.', 'Працює без інтернету (розпізнаванню мовлення зазвичай потрібна мережа).', 'Усі дані зберігаються лише на цьому пристрої. Голос записується лише за кнопками «Записати себе» і «Послухати себе», щоб одразу його прослухати, і ніде не зберігається.', 'Не замінює логопеда чи реабілітолога.'],
+              facts: ['Безкоштовно, без реклами й реєстрації.', 'Працює без інтернету (розпізнаванню мовлення зазвичай потрібна мережа).', 'Усі дані зберігаються лише на цьому пристрої. Голос записується лише за кнопками: «Записати себе» і «Послухати себе» — щоб одразу прослухати, такий запис ніде не зберігається; «🔴 Записати» у «💬 Фразах на слух» — запис фрази зберігається на цьому телефоні й входить до копії даних.', 'Не замінює логопеда чи реабілітолога.'],
               ver: 'Версія', author: 'Автор', code: 'Вихідний код та інструкції', lic: 'Ліцензія MIT. Код написав ШІ-асистент Claude (Anthropic) за завданням і під керівництвом автора.', mirror: 'Ця копія розміщена не на сайті автора.' },
         en: { name: 'Words Again', desc: 'A free app for recovering speech, hearing and writing after a stroke: for people with aphasia, apraxia and agraphia and their families.',
-              facts: ['Free, no ads, no sign-up.', 'Works offline (speech recognition usually needs the internet).', 'All data stays on this device only. The voice is recorded only with the “Record yourself” and “Hear myself” buttons, to listen to it right away, and is not saved anywhere.', 'Does not replace a speech therapist.'],
+              facts: ['Free, no ads, no sign-up.', 'Works offline (speech recognition usually needs the internet).', 'All data stays on this device only. The voice is recorded only with buttons: “Record yourself” and “Hear myself” — to listen right away, such a recording is not saved anywhere; “🔴 Record” in “💬 Phrases by ear” — the phrase recording is kept on this phone and is included in the data backup.', 'Does not replace a speech therapist.'],
               ver: 'Version', author: 'Author', code: 'Source code and instructions', lic: 'MIT license. The code was written by the AI assistant Claude (Anthropic) on the assignment and under the direction of the author.', mirror: 'This copy is not hosted on the author’s site.' }
     };
     function appGhUser() {
@@ -7322,10 +7426,11 @@
             if (APP_AUTHOR_GH && !/\.github\.io$/i.test(location.hostname || '')) h += '<p class="bk-note">' + escHtml(t.mirror) + '</p>';
         }
         h += '<p class="bk-note">' + escHtml(t.lic) + '</p>';
+        h += '<p class="about-brw" id="aboutBrw">' + escHtml(brwSummary()) + '</p>';
         box.innerHTML = h;
     }
     // Номер версии приложения (совпадает с номером в sw.js) — виден внизу настроек
-    const APP_VERSION = 92;
+    const APP_VERSION = 93;
     function syncSettGroups() {
         let ver = document.getElementById('appVer');
         if (!ver) { ver = document.createElement('div'); ver.id = 'appVer'; ver.className = 'app-ver'; document.getElementById('settingsPanel').appendChild(ver); }
@@ -10887,7 +10992,16 @@ function fillFromHeard(){
 
 <h3>Без интернета и установка</h3>
 <p>Откройте приложение в Chrome и выберите «Установить приложение» или «Добавить на главный экран». После первого запуска с интернетом оно работает и без сети. Исключение — распознавание речи, ему обычно нужен интернет. Если приложение обновили, закройте его и откройте снова.</p>
-<p>Если слова не озвучиваются, проверьте громкость и выберите другой голос в настройках.</p>`
+<p>Если слова не озвучиваются, проверьте громкость и выберите другой голос в настройках.</p>
+<h3>🌐 Браузеры: что где работает</h3>
+<p>Приложение сделано для <b>Chrome</b> (на Android — обычный Chrome): там работает всё. В других браузерах часть функций может не работать — тогда при первом открытии приложение само покажет, чего именно нет; что умеет текущий браузер, видно и в ⚙️ → «ℹ️ О приложении».</p>
+<ul>
+<li>🎤 <b>Распознавание речи</b> — работает в Chrome; в Samsung Internet и Safari (iPhone) — с ограничениями; в Firefox, Opera и Edge на телефоне не работает. Без него нельзя проверить «скажите слово», а выбор вариантов, сборка из букв, прослушивание и письмо работают. В Chrome на Android распознаванию обычно нужен интернет.</li>
+<li>🔊 <b>Озвучка</b> — работает почти во всех браузерах, но голос берётся из телефона: если нет голоса для языка, установите его в настройках телефона («Синтез речи»).</li>
+<li>⏺ <b>Запись голоса</b> («Записать себя», «Послушать себя», запись фраз) — работает в большинстве браузеров.</li>
+<li>💾 <b>Данные в разных браузерах</b> — у каждого браузера (и у встроенного браузера Facebook, Viber, Telegram) свои фразы, статистика и записи. Перенести их можно через «💾 Сохранить копию данных» и «📂 Загрузить копию данных».</li>
+</ul>
+<p>Если что-то не работает, сначала откройте приложение в Chrome и посмотрите номер версии внизу настроек.</p>`
         },
         uk: {
             btn: 'Довідка', title: 'Довідка', close: 'Закрити', tocNote: 'Натисніть на заголовок, щоб прочитати пункт. У режимах кнопка ❓ показує довідку лише про цей режим.', expandAll: '▼ Розгорнути всі пункти', collapseAll: '▲ Згорнути всі пункти', modeTitle: '❓ Довідка: {m}', all: '📖 Уся довідка',
@@ -10974,7 +11088,16 @@ function fillFromHeard(){
 
 <h3>Без інтернету та встановлення</h3>
 <p>Відкрийте застосунок у Chrome і виберіть «Установити застосунок» або «Додати на головний екран». Після першого запуску з інтернетом він працює і без мережі. Виняток — розпізнавання мовлення, йому зазвичай потрібен інтернет. Якщо застосунок оновили, закрийте його й відкрийте знову.</p>
-<p>Якщо слова не озвучуються, перевірте гучність і виберіть інший голос у налаштуваннях.</p>`
+<p>Якщо слова не озвучуються, перевірте гучність і виберіть інший голос у налаштуваннях.</p>
+<h3>🌐 Браузери: що де працює</h3>
+<p>Застосунок зроблено для <b>Chrome</b> (на Android — звичайний Chrome): там працює все. В інших браузерах частина функцій може не працювати — тоді під час першого відкриття застосунок сам покаже, чого саме немає; що вміє поточний браузер, видно й у ⚙️ → «ℹ️ Про застосунок».</p>
+<ul>
+<li>🎤 <b>Розпізнавання мовлення</b> — працює в Chrome; у Samsung Internet і Safari (iPhone) — з обмеженнями; у Firefox, Opera й Edge на телефоні не працює. Без нього не можна перевірити «скажіть слово», а вибір варіантів, складання з літер, прослуховування й письмо працюють. У Chrome на Android розпізнаванню зазвичай потрібен інтернет.</li>
+<li>🔊 <b>Озвучення</b> — працює майже в усіх браузерах, але голос береться з телефона: якщо немає голосу для мови, встановіть його в налаштуваннях телефона («Синтез мовлення»).</li>
+<li>⏺ <b>Запис голосу</b> («Записати себе», «Послухати себе», запис фраз) — працює в більшості браузерів.</li>
+<li>💾 <b>Дані в різних браузерах</b> — у кожного браузера (і у вбудованого браузера Facebook, Viber, Telegram) свої фрази, статистика й записи. Перенести їх можна через «💾 Зберегти копію даних» і «📂 Завантажити копію даних».</li>
+</ul>
+<p>Якщо щось не працює, спершу відкрийте застосунок у Chrome і подивіться номер версії внизу налаштувань.</p>`
         },
         en: {
             btn: 'Help', title: 'Help', close: 'Close', tocNote: 'Tap a heading to read the item. Inside a mode the ❓ button shows help only about that mode.', expandAll: '▼ Expand all items', collapseAll: '▲ Collapse all items', modeTitle: '❓ Help: {m}', all: '📖 All help',
@@ -11061,7 +11184,16 @@ function fillFromHeard(){
 
 <h3>Offline use and installing</h3>
 <p>Open the app in Chrome and choose “Install app” or “Add to home screen”. After the first launch with internet it also works without a network. The exception is speech recognition, which usually needs internet. After an update, close the app and open it again.</p>
-<p>If words are not spoken, check the volume and pick another voice in the settings.</p>`
+<p>If words are not spoken, check the volume and pick another voice in the settings.</p>
+<h3>🌐 Browsers: what works where</h3>
+<p>The app is made for <b>Chrome</b> (on Android — regular Chrome): everything works there. In other browsers some features may not work — then on first opening the app shows what exactly is missing; what the current browser can do is also shown in ⚙️ → “ℹ️ About the app”.</p>
+<ul>
+<li>🎤 <b>Speech recognition</b> — works in Chrome; with limitations in Samsung Internet and Safari (iPhone); does not work in Firefox, Opera and Edge on phones. Without it “say the word” cannot be checked, but choosing options, building from letters, listening and writing work. In Chrome on Android recognition usually needs internet.</li>
+<li>🔊 <b>Speech output</b> — works in almost all browsers, but the voice comes from the phone: if there is no voice for the language, install one in the phone settings (“Text-to-speech”).</li>
+<li>⏺ <b>Voice recording</b> (“Record yourself”, “Hear myself”, phrase recordings) — works in most browsers.</li>
+<li>💾 <b>Data in different browsers</b> — every browser (and the built-in browser of Facebook, Viber, Telegram) has its own phrases, statistics and recordings. Move them with “💾 Save data backup” and “📂 Load data backup”.</li>
+</ul>
+<p>If something does not work, first open the app in Chrome and check the version number at the bottom of the settings.</p>`
         }
     };
 
@@ -11074,7 +11206,7 @@ function fillFromHeard(){
         'listen', 'syll', 'hint', 'choose', 'build', 'next', 'counters',
         'pron', 'stats',
         's_groups', 's_verdict', 's_lang', 's_options', 's_voice', 's_gentle', 's_emoji', 's_autospeak', 's_blocks', 's_strict', 's_require', 's_timer', 's_idlehint', 's_touch', 's_read', 's_num', 's_fph', 's_about', 's_start', 's_abcset', 's_mywords', 's_data', 's_fb',
-        'dict', 'offline'
+        'dict', 'offline', 'browser'
     ];
     const HELP_MODE = {
         full:   ['m_full', 'listen', 'syll', 'hint', 'choose', 'build', 'next', 'counters', 'pron', 's_blocks', 's_require', 's_strict', 's_verdict', 's_idlehint', 'stats'],
@@ -11842,6 +11974,7 @@ function fillFromHeard(){
         showScreen('select');
         refreshModeTexts();
         resumeOnStart(lastScr0);
+        brwStart();
     };
 
     // Оффлайн: регистрация service worker (нужен HTTPS или localhost).
