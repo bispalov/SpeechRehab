@@ -1044,6 +1044,7 @@
         #numScreen .nm-hidden.tap { font-size: clamp(22px, 7vw, 30px); font-weight: 800; min-height: 96px; border-style: solid; border-color: #43a047; }
         @keyframes nmCue { 0%, 100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); } 50% { box-shadow: 0 0 0 8px rgba(250, 204, 21, 0.8); } }
         #numScreen .nm-cue { animation: nmCue 0.9s ease-in-out 3; }
+        #recordBtn.nm-cue { animation: nmCue 0.9s ease-in-out 3; }
         #numScreen .nm-cmp { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 10px; }
         #numScreen .nm-cmpcol { display: flex; flex-direction: column; align-items: stretch; gap: 4px; text-align: center; min-width: 0; }
         #numScreen .nm-cmplbl { font-size: 18px; font-weight: 700; overflow-wrap: anywhere; }
@@ -1287,6 +1288,12 @@
             <label class="checkbox-label" for="requireSpeech">
                 <input type="checkbox" id="requireSpeech" onchange="saveSettings()">
                 <span id="labelRequireSpeech">Require saying the word aloud (otherwise Next is locked)</span>
+            </label>
+        </div>
+        <div class="control-group">
+            <label class="checkbox-label" for="fullAutoMic">
+                <input type="checkbox" id="fullAutoMic" onchange="saveSettings()">
+                <span id="labelFullAutoMic"></span>
             </label>
         </div>
         <div class="control-group">
@@ -2695,6 +2702,7 @@
             updateStatsUI();
             setupSpellBuilder(targetWordSyllables);
             scrollToNextButton();
+            if (!isChecked('modeSpell')) fullAutoMic();
         } else {
             recordResult('choice', targetClean, selectedClean, false);
             btnElement.classList.add('eliminated');
@@ -2862,6 +2870,7 @@
 
         setupSpellBuilder(targetWordSyllables);
         if (selectedClean !== targetClean) scrollToSpellCard();
+        if (!isChecked('modeSpell')) fullAutoMic();
     }
 
     function setupSpellBuilder(syllableWord) {
@@ -2913,6 +2922,7 @@
                 vibrateShort(60);
                 scrollToNextButton();
             }
+            fullAutoMic();
         } else {
             // неверные буквы подсвечены красным; нажатие на такую букву возвращает её в набор
             trainVoice(mt().vBuildBad);
@@ -2921,6 +2931,7 @@
 
     function nextQuestion() {
         isAnswered = false;
+        fullAutoTok++;
         try { ihNewTask(); } catch (e) {}
         resetHint();
         clearFeedback();
@@ -2968,6 +2979,7 @@
             need: 'Нужно: ', said: 'Вы сказали: ',
             strict: 'Строгая проверка речи (в ответе не должно быть других слов)',
             requireLabel: 'Обязательно проговаривать слово (иначе нельзя перейти к следующему) — 🧩 тренажёр и 👂 слух',
+            fullAutoMic: '🧩 После выбора и сборки слова сам прокручивать к «🎤 Проговорить» и включать микрофон (при «Обязательно проговаривать»)',
             requireMsg: 'Сначала проговорите слово вслух.',
             listenOpt: 'Послушать этот вариант', ttsNo: 'Озвучивание не поддерживается в этом браузере.',
             recNo: 'Распознавание речи не поддерживается в этом браузере.', defVoice: 'Системный голос по умолчанию'
@@ -2991,6 +3003,7 @@
             need: 'Потрібно: ', said: 'Ви сказали: ',
             strict: 'Сувора перевірка мовлення (у відповіді не має бути інших слів)',
             requireLabel: 'Обов’язково промовляти слово (інакше не можна перейти до наступного) — 🧩 тренажер і 👂 слух',
+            fullAutoMic: '🧩 Після вибору й складання слова самому прокручувати до «🎤 Проговорити» і вмикати мікрофон (при «Обов’язково промовляти»)',
             requireMsg: 'Спочатку промовте слово вголос.',
             listenOpt: 'Послухати цей варіант', ttsNo: 'Озвучення не підтримується в цьому браузері.',
             recNo: 'Розпізнавання мовлення не підтримується в цьому браузері.', defVoice: 'Системний голос за замовчуванням'
@@ -3014,6 +3027,7 @@
             need: 'Target: ', said: 'You said: ',
             strict: 'Strict speech check (no other words allowed in the answer)',
             requireLabel: 'Require saying the word aloud (otherwise Next is locked) — 🧩 trainer and 👂 listening',
+            fullAutoMic: '🧩 After choosing and building the word, scroll to “🎤 Pronounce” and turn the microphone on by itself (with “Require saying the word aloud”)',
             requireMsg: 'Please say the word aloud first.',
             listenOpt: 'Listen to this option', ttsNo: 'Speech output is not supported in this browser.',
             recNo: 'Speech recognition is not supported in this browser.', defVoice: 'Default system voice'
@@ -3568,6 +3582,7 @@
         document.getElementById('ownPlayBothBtn').innerText = x.ownBoth;
         document.getElementById('labelStrictSpeech').innerText = x.strict;
         document.getElementById('labelRequireSpeech').innerText = x.requireLabel;
+        document.getElementById('labelFullAutoMic').innerText = x.fullAutoMic;
         document.getElementById('dictBtn').innerText = dx().btn;
         if (!document.getElementById('dictOverlay').classList.contains('hidden')) {
             renderDictTexts(); renderDictList(); renderDictOnline();
@@ -7223,7 +7238,7 @@
         box.innerHTML = h;
     }
     // Номер версии приложения (совпадает с номером в sw.js) — виден внизу настроек
-    const APP_VERSION = 90;
+    const APP_VERSION = 91;
     function syncSettGroups() {
         let ver = document.getElementById('appVer');
         if (!ver) { ver = document.createElement('div'); ver.id = 'appVer'; ver.className = 'app-ver'; document.getElementById('settingsPanel').appendChild(ver); }
@@ -10757,7 +10772,7 @@ function fillFromHeard(){
 <li><b>Автоозвучивание</b> — новое слово или фраза (в «Моих фразах») произносится само.</li>
 <li><b>Блоки заданий</b> — можно включать и отключать «выбор слова» и «сбор из букв»; для режима только из букв можно показывать слоги.</li>
 <li><b>Строгая проверка речи</b> — в ответе не должно быть других слов. Слово должно совпасть точно; похожее, но неточное слово не засчитывается. Служебные слова, которые распознавание дописывает само («в воскресенье», «и кот»), лишними не считаются.</li>
-<li><b>Обязательно проговаривать слово</b> — пока слово не произнесено верно, «Следующее слово» не срабатывает, а страница возвращается к блоку проговаривания. После трёх неудачных попыток переход открывается, чтобы не застрять.</li>
+<li><b>Обязательно проговаривать слово</b> — пока слово не произнесено верно, «Следующее слово» не срабатывает, а страница возвращается к блоку проговаривания. После трёх неудачных попыток переход открывается, чтобы не застрять. Галочка ниже — <b>«Сам включать микрофон»</b> (🧩, по умолчанию выключена): когда слово выбрано и собрано из букв, приложение договаривает слово, само прокручивает экран к «🎤 Проговорить и проверить себя», кнопка мигает, и микрофон включается — остаётся только сказать слово. Если слово уже сказано верно раньше (до сборки) или попытки закончились, приложение никуда не прокручивает и микрофон не включает. После неверного ответа микрофон сам не включается: можно послушать образец, нажать «Я сказал(а) верно» или снова «🎤».</li>
 <li><b>Таймер «Игра / Отдых»</b> — после времени игры включается пауза для отдыха; длительность задаётся в минутах. Время игры идёт только внутри режимов тренировки; на стартовом экране таймер не показывается, а пока открыты настройки, справка или статистика, он стоит (в шапке значок ⏸). В «Азбуке» и «Подсказке по сказанному» перерыв не прерывает человека: он начнётся после того, как фраза озвучена, или при выходе из режима (в шапке ☕). Оставшееся время видно в шапке во всех режимах, включая «Полный тренажёр»; нажатие на него ставит паузу. Таймер не сбрасывается, если страница перезагрузилась или приложение перезапустилось: время игры и перерыв продолжаются. Если приложение было закрыто дольше перерыва, это считается отдыхом — время игры начинается заново.</li>
 <li><b>💡 Подсказка, если долго нет действия</b> — в настройках, группа «Слова»: выключено (по умолчанию), 15, 20 или 30 секунд. Работает в «Полном тренажёре», «Тренировке слуха», «Читаю вслух», «Числах на слух», «Письме» и «Перечислениях». В «Читаю вслух» до попытки слово не звучит: подсказка — снова подсветить слоги, на ступени «на слух» — показать слово. Если человек ничего не делает выбранное время, подсказка идёт ступенями: 1) мягко пульсирует кнопка, которую нужно нажать, сверху короткая строка; 2) приложение говорит, что сделать, и ещё раз произносит слово (если включена «Подсказка голосом»); 3) сильная подсказка: бледнеет неверный вариант, подсвечивается следующая нужная буква, звучит первый слог следующего слова в ряду. Дальше ничего не повторяется. Отсчёт начинается заново после любого нажатия на кнопку, букву или вариант; касание пустого места (чтобы экран не погас) и прокрутка его не сбрасывают. Пока говорит приложение или идёт запись, время не считается. Ответ после сильной подсказки не засчитывается как верный с первого раза. В «Тесте на слух» подсказок нет. Пока подсказка включена, экран в этих режимах не гаснет (на стартовом экране и в других режимах — как обычно).</li>
 <li><b>📖 Настройки «Читаю вслух»</b> — отдельная группа: сколько верных попыток подряд нужно для перехода на следующую ступень (1–3), темп подсветки слогов, с какой ступени начинать слово, включать ли ступень «на слух» и картинку на ней, возвращать ли к чтению после ошибки на слух, звучит ли образец и после верной попытки, длительность записи «Послушать себя» и звучит ли после неё «Как правильно», за сколько разных дней слово считается освоенным.</li>
@@ -10820,7 +10835,7 @@ function fillFromHeard(){
 
 <h3>Перевірка вимови</h3>
 <ul>
-<li>Натисніть <b>🎤 Промовити і перевірити себе</b>, коли з’явиться «Слухаю», скажіть слово.</li>
+<li>Натисніть <b>🎤 Проговорити і перевірити себе</b>, коли з’явиться «Слухаю», скажіть слово.</li>
 <li>Застосунок озвучить результат: «Правильно» або «Неправильно, ви вимовили … Потрібно: …» і покаже, які літери відрізняються. У м’якому режимі замість «Неправильно» звучить «Майже. Послухайте ще раз» і правильне слово. Слово зараховується, якщо воно є серед варіантів, які розпізнав браузер. Поки мікрофон слухає, застосунок нічого не озвучує.</li>
 <li>Після правильного слова сторінка сама прокручується до кнопки «Наступне слово».</li>
 <li>Після неправильного слова з’являється блок <b>🎧 Записати себе</b>: натисніть, скажіть слово, натисніть ще раз для зупинки. Потім порівняйте на слух: «Еталон», «Мій запис» або «Підряд». Блок ховається при переході до наступного слова.</li>
@@ -10843,7 +10858,7 @@ function fillFromHeard(){
 <li><b>Автоозвучення</b> — нове слово або фраза (у «Моїх фразах») вимовляється саме.</li>
 <li><b>Блоки завдань</b> — можна вмикати й вимикати «вибір слова» та «збирання з літер»; для режиму лише з літер можна показувати склади.</li>
 <li><b>Сувора перевірка мовлення</b> — у відповіді не має бути інших слів. Слово має збігтися точно; схоже, але неточне слово не зараховується. Службові слова, які розпізнавання дописує саме («в неділю», «і кіт»), зайвими не вважаються.</li>
-<li><b>Обов’язково промовляти слово</b> — доки слово не вимовлено правильно, «Наступне слово» не спрацьовує, а сторінка повертається до блоку промовляння. Після трьох невдалих спроб перехід відкривається, щоб не застрягти.</li>
+<li><b>Обов’язково промовляти слово</b> — доки слово не вимовлено правильно, «Наступне слово» не спрацьовує, а сторінка повертається до блоку промовляння. Після трьох невдалих спроб перехід відкривається, щоб не застрягти. Позначка нижче — <b>«Самому вмикати мікрофон»</b> (🧩, типово вимкнена): коли слово вибрано й складено з літер, застосунок договорює слово, сам прокручує екран до «🎤 Проговорити і перевірити себе», кнопка блимає, і мікрофон вмикається — лишається тільки сказати слово. Якщо слово вже сказано правильно раніше (до складання) або спроби закінчилися, застосунок нікуди не прокручує й мікрофон не вмикає. Після неправильної відповіді мікрофон сам не вмикається: можна послухати зразок, натиснути «Я сказав(ла) правильно» або знову «🎤».</li>
 <li><b>Таймер «Гра / Відпочинок»</b> — після часу гри вмикається пауза для відпочинку; тривалість задається в хвилинах. Час гри йде лише всередині режимів тренування; на стартовому екрані таймер не показується, а поки відкрито налаштування, довідку чи статистику, він стоїть (у шапці значок ⏸). В «Абетці» й «Підказці за сказаним» перерва не перериває людину: вона почнеться після того, як фразу озвучено, або при виході з режиму (у шапці ☕). Залишок часу видно в шапці в усіх режимах, зокрема в «Повному тренажері»; натискання на нього ставить паузу. Таймер не скидається, якщо сторінка перезавантажилася або застосунок перезапустився: час гри й перерва тривають далі. Якщо застосунок був закритий довше за перерву, це вважається відпочинком — час гри починається заново.</li>
 <li><b>💡 Підказка, якщо довго немає дії</b> — у налаштуваннях, група «Слова»: вимкнено (за замовчуванням), 15, 20 або 30 секунд. Працює в «Повному тренажері», «Тренуванні слуху», «Читаю вголос», «Числах на слух», «Письмі» та «Переліченнях». У «Читаю вголос» до спроби слово не звучить: підказка — знову підсвітити склади, на сходинці «на слух» — показати слово. Якщо людина нічого не робить обраний час, підказка йде сходинками: 1) м’яко пульсує кнопка, яку треба натиснути, згори короткий рядок; 2) застосунок каже, що зробити, і ще раз вимовляє слово (якщо ввімкнено «Підказка голосом»); 3) сильна підказка: блідне неправильний варіант, підсвічується наступна потрібна літера, звучить перший склад наступного слова в ряду. Далі нічого не повторюється. Відлік починається заново після будь-якого натискання на кнопку, літеру чи варіант; дотик до порожнього місця (щоб екран не згас) і прокручування його не скидають. Поки говорить застосунок або йде запис, час не рахується. Відповідь після сильної підказки не зараховується як правильна з першого разу. У «Тесті на слух» підказок немає. Поки підказку ввімкнено, екран у цих режимах не гасне (на стартовому екрані й в інших режимах — як зазвичай).</li>
 <li><b>📖 Налаштування «Читаю вголос»</b> — окрема група: скільки правильних спроб поспіль потрібно для переходу на наступну сходинку (1–3), темп підсвічування складів, з якої сходинки починати слово, чи вмикати сходинку «на слух» і картинку на ній, чи повертати до читання після помилки на слух, чи звучить зразок і після правильної спроби, тривалість запису «Послухати себе» і чи звучить після нього «Як правильно», за скільки різних днів слово вважається засвоєним.</li>
@@ -10929,7 +10944,7 @@ function fillFromHeard(){
 <li><b>Speak a new word or phrase automatically</b> — the new word, or the phrase in “My phrases”, is spoken on its own.</li>
 <li><b>Task blocks</b> — “choose the word” and “assemble from letters” can be turned on and off; in letters-only mode syllables can be shown.</li>
 <li><b>Strict speech check</b> — no other words allowed in the answer. The word must match exactly; a similar but inexact word is not accepted. Little words that recognition adds by itself (“on Sunday”, “and cat”) are not counted as extra.</li>
-<li><b>Require saying the word aloud</b> — “Next word” does not work until the word is pronounced correctly, and the page scrolls back to the speaking block. After three failed attempts it unlocks so you never get stuck.</li>
+<li><b>Require saying the word aloud</b> — “Next word” does not work until the word is pronounced correctly, and the page scrolls back to the speaking block. After three failed attempts it unlocks so you never get stuck. The checkbox below — <b>“Turn the microphone on by itself”</b> (🧩, off by default): when the word is chosen and built from letters, the app finishes saying the word, scrolls to “🎤 Pronounce and check yourself”, the button blinks and the microphone turns on — you only have to say the word. If the word was already said correctly earlier (before building) or the attempts are used up, the app does not scroll or turn the microphone on. After a wrong answer the microphone does not turn on by itself: you can listen to the model, tap “I said it correctly” or tap “🎤” again.</li>
 <li><b>Play / Rest timer</b> — after the play time a rest break starts; durations are set in minutes. Play time runs only inside training modes; on the start screen the timer is hidden, and while Settings, Help or Statistics are open the timer stands still (⏸ in the header). In ABC and “Suggestions from what was said” the break does not interrupt the person: it starts after a phrase has been spoken or when leaving the mode (☕ in the header). The time left is shown in the header in every mode; tapping it pauses the timer. The timer is not reset if the page reloads or the app restarts: play time and the break continue. If the app was closed for longer than the break, that counts as rest and play time starts again.</li>
 <li><b>💡 Hint when nothing happens for a while</b> — in Settings, the “Words” group: off (default), 15, 20 or 30 seconds. Works in the Full trainer, Listening practice, Reading aloud, Numbers by ear, Writing and Sequences. In Reading aloud the word is not played before a try: the hint highlights the syllables again, and on the “by ear” step shows the word. If the person does nothing for the chosen time, the hint comes in steps: 1) the button to press pulses gently and a short line appears at the top; 2) the app says what to do and says the word again (if “Spoken hint” is on); 3) a strong hint: a wrong option fades, the next needed letter is highlighted, the first syllable of the next word in a series is heard. Nothing repeats after that. The count restarts after any tap on a button, letter or option; touching an empty spot (to keep the screen on) or scrolling does not reset it. While the app speaks or records, time does not count. An answer after a strong hint is not counted as right the first time. The Hearing test has no hints. While the hint is on, the screen stays on in these modes (on the start screen and in other modes it behaves as usual).</li>
 <li><b>📖 Reading aloud settings</b> — a separate group: how many correct tries in a row move to the next step (1–3), the syllable highlight speed, which step a word starts with, whether to use the “by ear” step and a picture on it, whether a mistake by ear goes back to reading, whether the model also plays after a correct try, the “Hear myself” recording length and whether “How it should sound” plays after it, and on how many different days a word must be done to count as learned.</li>
@@ -11315,6 +11330,54 @@ function fillFromHeard(){
         };
     }
 
+    // 🧩 «Сам включать микрофон» (v91, решение пользователя 2026-11-22): при «Обязательно проговаривать», когда слово
+    // выбрано и собрано, — дождаться конца озвучки, прокрутить к «🎤 Проговорить и проверить себя», мигнуть ей и включить
+    // микрофон. Один раз на слово: после неверного ответа или ошибки распознавания сам не включается (можно нажать
+    // «Я сказал(а) верно», послушать, перейти к чтению).
+    let fullAutoTok = 0;
+    function fullAutoMicSync() {
+        const r = document.getElementById('requireSpeech'), a = document.getElementById('fullAutoMic');
+        if (!r || !a) return;
+        a.disabled = !r.checked;
+        const lb = a.closest('label'); if (lb) lb.style.opacity = r.checked ? '' : '0.55';
+    }
+    function fullAutoMicOn() {
+        return isChecked('fullAutoMic') && isChecked('requireSpeech') && speechRecognitionAvailable();
+    }
+    function fullAutoMicFree() {
+        // слово уже засчитано (сказано верно, «Я сказал(а) верно») или попытки исчерпаны — переход открыт, звать к микрофону незачем
+        if (screenName !== 'full' || isRecording || micBusy() || !nextIsLocked()) return false;
+        if (typeof TOUR !== 'undefined' && (TOUR.active || TOUR.offer)) return false;
+        const ro = document.getElementById('restOverlay');
+        if (ro && getComputedStyle(ro).display !== 'none' && !ro.classList.contains('hidden')) return false;
+        if (document.hidden) return false;
+        return true;
+    }
+    function fullAutoMic() {
+        if (!fullAutoMicOn()) return;
+        const tok = ++fullAutoTok, word = targetWordClean;
+        let waited = 0;
+        const still = () => tok === fullAutoTok && word === targetWordClean && fullAutoMicFree();
+        const tick = () => {
+            if (!still()) return;
+            let speaking = false; try { speaking = window.speechSynthesis.speaking || window.speechSynthesis.pending; } catch (e) {}
+            if (speaking && waited < 6000) { waited += 150; setTimeout(tick, 150); return; }
+            // слово договорено — пауза, прокрутка к кнопке, мигание, затем микрофон
+            setTimeout(() => {
+                if (!still()) return;
+                cancelAutoScroll();
+                const btn = document.getElementById('recordBtn');
+                if (!btn) return;
+                const top = btn.getBoundingClientRect().top, hb = tourHdrBottom();
+                const target = Math.max(0, currentScrollY() + top - Math.max(12, hb + 12));
+                if (top < hb + 4 || btn.getBoundingClientRect().bottom > visibleViewportHeight()) animateScrollTo(() => target, 400);
+                btn.classList.remove('nm-cue'); void btn.offsetWidth; btn.classList.add('nm-cue');
+                setTimeout(() => { if (still()) toggleRecording(); }, 700);
+            }, 600);
+        };
+        setTimeout(tick, 400);
+    }
+
     // «Я сказал(а) верно» в «Полном тренажёре»: распознавание ошиблось — ответ засчитывается как исправление
     function fullCountOk() {
         if (isRecording) return;
@@ -11590,6 +11653,8 @@ function fillFromHeard(){
         localStorage.setItem('app_spell_syll_hint', document.getElementById('spellSyllableHint').checked);
         localStorage.setItem('app_strict_speech', document.getElementById('strictSpeech').checked);
         localStorage.setItem('app_require_speech', document.getElementById('requireSpeech').checked);
+        localStorage.setItem('app_full_automic', document.getElementById('fullAutoMic').checked);
+        fullAutoMicSync();
         updateNextLock();
     }
 
@@ -11620,12 +11685,13 @@ function fillFromHeard(){
         const savedRestMins = localStorage.getItem('app_rest_mins');
         if (savedRestMins) document.getElementById('restMinutes').value = savedRestMins;
 
-        [['app_gentle', 'gentleMode'], ['app_emoji', 'emojiEnabled'], ['app_autospeak', 'autoSpeak'], ['app_mode_choice', 'modeChoice'], ['app_mode_spell', 'modeSpell'], ['app_spell_syll_hint', 'spellSyllableHint'], ['app_strict_speech', 'strictSpeech'], ['app_require_speech', 'requireSpeech']].forEach(([key, id]) => {
+        [['app_gentle', 'gentleMode'], ['app_emoji', 'emojiEnabled'], ['app_autospeak', 'autoSpeak'], ['app_mode_choice', 'modeChoice'], ['app_mode_spell', 'modeSpell'], ['app_spell_syll_hint', 'spellSyllableHint'], ['app_strict_speech', 'strictSpeech'], ['app_require_speech', 'requireSpeech'], ['app_full_automic', 'fullAutoMic']].forEach(([key, id]) => {
             const v = localStorage.getItem(key);
             if (v !== null) document.getElementById(id).checked = (v === 'true');
         });
         applyAssistSettings();
         applyModeSettings();
+        fullAutoMicSync();
     }
 
     // Пере-синхронізація мови/словника з localStorage при поверненні до
