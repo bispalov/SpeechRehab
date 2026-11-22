@@ -198,7 +198,7 @@ with sync_playwright() as p:
         ok(word in ev("helpParse(currentLang).items.map(i=>i.html||i.text||JSON.stringify(i)).join(' ')") or word in ev("document.body.innerHTML"), f'{L}: help mentions the setting')
         lb = ev("document.getElementById('labelFullAutoMic').textContent")
         ok(lb and ev("i18n[currentLang].recordBtnStart").split(' ')[1].rstrip('и') in lb, f'{L}: label names the button: ' + lb)
-    ok(ev("helpParse('ru').items.length") == ev("HELP_KEYS.length") == 46, 'help item count unchanged')
+    ok(ev("helpParse('ru').items.length") == ev("HELP_KEYS.length") == 47, 'help item count')
     # вёрстка настройки
     for W in (360, 313, 277, 240):
         pg.set_viewport_size({'width': W, 'height': 600})

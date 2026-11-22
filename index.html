@@ -1249,6 +1249,33 @@
         </div>
             </div>
         </div>
+        <div class="sg" data-g="touch">
+            <button type="button" class="sg-h" onclick="settToggle('touch')" aria-expanded="false"><span class="sg-arr">▶</span><span class="sg-t" id="sgt_touch"></span></button>
+            <div class="sg-b">
+        <div class="control-group">
+            <label class="checkbox-label" for="tapVib">
+                <input type="checkbox" id="tapVib" onchange="tapSetChange('vib', this.checked ? '1' : '0')">
+                <span id="labelTapVib"></span>
+            </label>
+        </div>
+        <div class="control-group">
+            <label for="tapSound" id="labelTapSound"></label>
+            <select id="tapSound" onchange="tapSetChange('sound', this.value)">
+                <option value="0" id="optTapSound0"></option>
+                <option value="1" id="optTapSound1"></option>
+                <option value="2" id="optTapSound2"></option>
+            </select>
+            <p class="bk-note" id="tapSoundNote"></p>
+        </div>
+        <div class="control-group">
+            <label class="checkbox-label" for="keepAwake">
+                <input type="checkbox" id="keepAwake" onchange="tapSetChange('awake', this.checked ? '1' : '0')">
+                <span id="labelKeepAwake"></span>
+            </label>
+            <p class="bk-note" id="keepAwakeNote"></p>
+        </div>
+            </div>
+        </div>
         <div class="sg" data-g="train">
             <button type="button" class="sg-h" onclick="settToggle('train')" aria-expanded="false"><span class="sg-arr">▶</span><span class="sg-t" id="sgt_train"></span></button>
             <div class="sg-b">
@@ -4688,7 +4715,7 @@
     // Экран не гаснет, пока включена подсказка и открыт режим с подсказками (Wake Lock API; где его нет — ничего не происходит).
     // Блокировку браузер сам снимает, когда приложение свёрнуто; при возврате она запрашивается снова.
     let ihWake = null, ihWakeReq = false;
-    function ihWakeWanted() { return !!ihSec() && ['full', 'listen', 'read', 'num', 'fph', 'wr', 'ser'].includes(screenName) && !document.hidden; }
+    function ihWakeWanted() { return !document.hidden && (tapSet().awake || (!!ihSec() && ['full', 'listen', 'read', 'num', 'fph', 'wr', 'ser'].includes(screenName))); }
     function ihWakeSync() {
         try {
             if (!('wakeLock' in navigator)) return;
@@ -7063,6 +7090,66 @@
         const sn = document.getElementById('serNamesSelect'); if (sn) sn.value = p.names;
         const c2 = document.getElementById('setSerVoice'); if (c2) c2.checked = p.voice;
     }
+    // ===== 👆 Управление и нажатия (v92, как в «Говоримо разом», решение пользователя 2026-11-22) =====
+    // Вибрация и звук при нажатии кнопок — подтверждение, что нажатие принято (у близкого снижен слух и зрение);
+    // «Не гасить экран» — общий Wake Lock (ihWakeSync), пока приложение на экране.
+    const TAP_T = {
+        ru: { title: '👆 Управление и нажатия', vib: 'Вибрация при нажатии', sound: 'Звук при нажатии кнопок', sounds: ['выключен', 'тихий', 'громкий'],
+              soundNote: 'Короткий низкий щелчок — его легче расслышать при снижении слуха. Пока включён микрофон, щелчка нет.',
+              awake: 'Не гасить экран, пока приложение открыто', awakeNote: 'Пока приложение на экране, экран не гаснет; если свернуть приложение — гаснет как обычно. Расходует больше заряда.' },
+        uk: { title: '👆 Керування й натискання', vib: 'Вібрація під час натискання', sound: 'Звук під час натискання кнопок', sounds: ['вимкнено', 'тихий', 'гучний'],
+              soundNote: 'Коротке низьке клацання — його легше почути при зниженому слуху. Поки ввімкнено мікрофон, клацання немає.',
+              awake: 'Не гасити екран, поки застосунок відкритий', awakeNote: 'Поки застосунок на екрані, екран не гасне; якщо згорнути застосунок — гасне як зазвичай. Витрачає більше заряду.' },
+        en: { title: '👆 Control and taps', vib: 'Vibrate on tap', sound: 'Sound on button taps', sounds: ['off', 'quiet', 'loud'],
+              soundNote: 'A short low click — easier to hear with hearing loss. No click while the microphone is on.',
+              awake: 'Keep the screen on while the app is open', awakeNote: 'While the app is on the screen, the screen stays on; when the app is minimised it turns off as usual. Uses more battery.' }
+    };
+    function tapT() { return TAP_T[currentLang] || TAP_T.ru; }
+    function tapSet() {
+        let v = '0', so = '0', aw = '0';
+        try { v = localStorage.getItem('sr.tap.vib') || '0'; so = localStorage.getItem('sr.tap.sound') || '0'; aw = localStorage.getItem('sr.awake') || '0'; } catch (e) {}
+        return { vib: v === '1', sound: ['0', '1', '2'].includes(so) ? +so : 0, awake: aw === '1' };
+    }
+    function tapSetChange(k, v) {
+        try { localStorage.setItem(k === 'awake' ? 'sr.awake' : 'sr.tap.' + k, String(v)); } catch (e) {}
+        if (k === 'awake') { try { ihWakeSync(); } catch (e) {} }
+        if (k === 'sound' && +v) tapClick(+v);          // сразу дать услышать выбранную громкость
+        if (k === 'vib' && v === '1') { try { navigator.vibrate && navigator.vibrate(20); } catch (e) {} }
+    }
+    function tapSettRender() {
+        const t = tapT(), s = tapSet(), set = (id, x) => { const e = document.getElementById(id); if (e) e.textContent = x; };
+        set('sgt_touch', t.title); set('labelTapVib', t.vib); set('labelTapSound', t.sound); set('tapSoundNote', t.soundNote);
+        t.sounds.forEach((x, i) => set('optTapSound' + i, x));
+        set('labelKeepAwake', t.awake); set('keepAwakeNote', t.awakeNote);
+        const v = document.getElementById('tapVib'); if (v) v.checked = s.vib;
+        const so = document.getElementById('tapSound'); if (so) so.value = String(s.sound);
+        const aw = document.getElementById('keepAwake'); if (aw) aw.checked = s.awake;
+    }
+    let tapCtx = null;
+    // короткий низкий щелчок (WebAudio, без файлов): 600 Гц, ~45 мс, затухание
+    function tapClick(level) {
+        try {
+            const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+            if (!tapCtx) tapCtx = new AC();
+            if (tapCtx.state === 'suspended') tapCtx.resume();
+            const t0 = tapCtx.currentTime, o = tapCtx.createOscillator(), g = tapCtx.createGain();
+            o.type = 'triangle'; o.frequency.setValueAtTime(600, t0); o.frequency.exponentialRampToValueAtTime(380, t0 + 0.045);
+            g.gain.setValueAtTime(level >= 2 ? 0.55 : 0.18, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.05);
+            o.connect(g); g.connect(tapCtx.destination); o.start(t0); o.stop(t0 + 0.06);
+            window.__tapClicks = (window.__tapClicks || 0) + 1;
+        } catch (e) {}
+    }
+    document.addEventListener('click', e => {
+        const el = e.target && e.target.closest ? e.target.closest('button, .mode-card, input[type="checkbox"], input[type="radio"]') : null;
+        if (!el || el.disabled) return;
+        const s = tapSet();
+        if (!s.vib && !s.sound) return;
+        if (s.vib) { try { navigator.vibrate && navigator.vibrate(20); } catch (x) {} }
+        // во время записи щелчок попал бы в микрофон
+        let busy = false; try { busy = micBusy() || (typeof isRecording !== 'undefined' && isRecording); } catch (x) {}
+        if (s.sound && !busy) tapClick(s.sound);
+    }, true);
+
     const SETT_T = {
         ru: { main: '⚙️ Основные', train: 'Слова: 🧩 тренажёр, 👂 слух, ✍️ письмо, 📝 тест на слух', abc: '🔤 Азбука и 🎤 подсказка по сказанному', phr: '🗣 Мои фразы', ser: '🔢 Перечисления', data: '💾 Данные: копия и перенос', about: 'ℹ️ О приложении',
               verdict: 'Голосом говорить, правильно ли сказано (во всех режимах)', quiz: '📝 Тест на слух: можно один раз повторить слово', wrGiven: '✍️ Письмо (все уровни): сколько первых букв слова или фразы подсказывать (меньше — сложнее)', wrG: ['0 — без подсказки', '1 буква', '2 буквы', '3 буквы'], wrHide: '✍️ Письмо: сворачивать панель с буквами после каждой нажатой буквы, чтобы было видно задание. Вернуть её — кнопкой «Показать буквы».' },
@@ -7238,13 +7325,14 @@
         box.innerHTML = h;
     }
     // Номер версии приложения (совпадает с номером в sw.js) — виден внизу настроек
-    const APP_VERSION = 91;
+    const APP_VERSION = 92;
     function syncSettGroups() {
         let ver = document.getElementById('appVer');
         if (!ver) { ver = document.createElement('div'); ver.id = 'appVer'; ver.className = 'app-ver'; document.getElementById('settingsPanel').appendChild(ver); }
         ver.textContent = ({ ru: 'Версия приложения: ', uk: 'Версія застосунку: ', en: 'App version: ' }[currentLang] || 'Version: ') + APP_VERSION;
         const t = SETT_T[currentLang] || SETT_T.ru;
         ['main', 'train', 'abc', 'phr', 'ser', 'data', 'about'].forEach(g => { const e = document.getElementById('sgt_' + g); if (e) e.textContent = t[g]; });
+        tapSettRender();
         document.getElementById('sgt_read').textContent = rdT().title;
         rdSettRender();
         document.getElementById('sgt_num').textContent = nmT().title;
@@ -10762,7 +10850,7 @@ function fillFromHeard(){
 
 <h3>⚙️ Настройки</h3>
 <ul>
-<li><b>Группы</b> — настройки разделены на группы: основные, слова (🧩 👂 ✍️ 📝), 🔤 Азбука и 🎤 подсказка, 🗣 Мои фразы, 🔢 Перечисления, 💾 данные. Открыта одна группа; если открыть настройки из режима, сразу раскрывается его группа.</li>
+<li><b>Группы</b> — настройки разделены на группы: основные, 👆 управление и нажатия, слова (🧩 👂 ✍️ 📝), 🔤 Азбука и 🎤 подсказка, 🗣 Мои фразы, 🔢 Перечисления, 📖 Читаю вслух, 🔟 Числа на слух, 💬 Фразы на слух, 💾 данные, ℹ️ о приложении. Открыта одна группа; если открыть настройки из режима, сразу раскрывается его группа.</li>
 <li><b>Голосом говорить, правильно ли сказано</b> — одна настройка для всех режимов. После ошибки приложение называет правильное слово.</li>
 <li><b>Язык и тема</b> — русский, украинский, английский; светлая и тёмная тема.</li>
 <li><b>Количество вариантов</b> — 2, 3 или 4.</li>
@@ -10775,6 +10863,7 @@ function fillFromHeard(){
 <li><b>Обязательно проговаривать слово</b> — пока слово не произнесено верно, «Следующее слово» не срабатывает, а страница возвращается к блоку проговаривания. После трёх неудачных попыток переход открывается, чтобы не застрять. Галочка ниже — <b>«Сам включать микрофон»</b> (🧩, по умолчанию выключена): когда слово выбрано и собрано из букв, приложение договаривает слово, само прокручивает экран к «🎤 Проговорить и проверить себя», кнопка мигает, и микрофон включается — остаётся только сказать слово. Если слово уже сказано верно раньше (до сборки) или попытки закончились, приложение никуда не прокручивает и микрофон не включает. После неверного ответа микрофон сам не включается: можно послушать образец, нажать «Я сказал(а) верно» или снова «🎤».</li>
 <li><b>Таймер «Игра / Отдых»</b> — после времени игры включается пауза для отдыха; длительность задаётся в минутах. Время игры идёт только внутри режимов тренировки; на стартовом экране таймер не показывается, а пока открыты настройки, справка или статистика, он стоит (в шапке значок ⏸). В «Азбуке» и «Подсказке по сказанному» перерыв не прерывает человека: он начнётся после того, как фраза озвучена, или при выходе из режима (в шапке ☕). Оставшееся время видно в шапке во всех режимах, включая «Полный тренажёр»; нажатие на него ставит паузу. Таймер не сбрасывается, если страница перезагрузилась или приложение перезапустилось: время игры и перерыв продолжаются. Если приложение было закрыто дольше перерыва, это считается отдыхом — время игры начинается заново.</li>
 <li><b>💡 Подсказка, если долго нет действия</b> — в настройках, группа «Слова»: выключено (по умолчанию), 15, 20 или 30 секунд. Работает в «Полном тренажёре», «Тренировке слуха», «Читаю вслух», «Числах на слух», «Письме» и «Перечислениях». В «Читаю вслух» до попытки слово не звучит: подсказка — снова подсветить слоги, на ступени «на слух» — показать слово. Если человек ничего не делает выбранное время, подсказка идёт ступенями: 1) мягко пульсирует кнопка, которую нужно нажать, сверху короткая строка; 2) приложение говорит, что сделать, и ещё раз произносит слово (если включена «Подсказка голосом»); 3) сильная подсказка: бледнеет неверный вариант, подсвечивается следующая нужная буква, звучит первый слог следующего слова в ряду. Дальше ничего не повторяется. Отсчёт начинается заново после любого нажатия на кнопку, букву или вариант; касание пустого места (чтобы экран не погас) и прокрутка его не сбрасывают. Пока говорит приложение или идёт запись, время не считается. Ответ после сильной подсказки не засчитывается как верный с первого раза. В «Тесте на слух» подсказок нет. Пока подсказка включена, экран в этих режимах не гаснет (на стартовом экране и в других режимах — как обычно).</li>
+<li><b>👆 Управление и нажатия</b> — «Вибрация при нажатии» и «Звук при нажатии кнопок» (выключен, тихий, громкий) подтверждают, что нажатие принято: короткая вибрация и низкий щелчок, который легче расслышать при снижении слуха; пока включён микрофон, щелчка нет. «Не гасить экран, пока приложение открыто» — экран не гаснет, пока приложение на экране (свернули — гаснет как обычно), расходует больше заряда. Всё по умолчанию выключено.</li>
 <li><b>📖 Настройки «Читаю вслух»</b> — отдельная группа: сколько верных попыток подряд нужно для перехода на следующую ступень (1–3), темп подсветки слогов, с какой ступени начинать слово, включать ли ступень «на слух» и картинку на ней, возвращать ли к чтению после ошибки на слух, звучит ли образец и после верной попытки, длительность записи «Послушать себя» и звучит ли после неё «Как правильно», за сколько разных дней слово считается освоенным.</li>
 <li><b>🔟 Настройки «Числа на слух»</b> — отдельная группа: какие числа (от 0 до 20, 11–19, десятки, трудные пары 11/13, 13/30, 12/20…, до 100, до 1000 или свой диапазон «от — до»), как отвечать (голосом, выбрать из 2–4 кнопок, набрать цифрами), как показывать число после ошибки (цифрами и словом, только цифрами, только словом), сколько раз прочитать вслух и сколько раз потом повторить на слух (1–3), сравнивать ли «было» и «послышалось», числа во фразах (нет / иногда / только во фразах), темп речи, сколько чисел в занятии (10, 20, без конца), чаще давать числа с ошибками, сразу переходить к следующему числу после верного ответа. Ещё две настройки: число звучит только после нажатия «▶ Послушать число» (человек сам решает, когда готов слушать) и микрофон включается сам каждый раз, когда нужно сказать или прочитать число (и после объяснения ошибки).</li>
 <li><b>💬 Настройки «Фразы на слух»</b> — отдельная группа: задание (повторить голосом, выбрать из написанных вариантов, ответить «да / нет»), сколько вариантов для выбора (2–4), какие фразы (общие и свои, только общие, только свои), тема, длина фраз, показывать ли тему перед фразой, говорить ли записанным голосом, паузы между словами при «Медленно», сколько раз прочитать вслух и повторить на слух после ошибки (1–3), сравнивать ли «было» и «послышалось», темп речи, фраз в занятии (10, 20, без конца), чаще давать фразы с ошибками, сразу следующая фраза после верного ответа, фраза звучит только после нажатия «▶ Послушать фразу», микрофон включается сам.</li>
@@ -10848,7 +10937,7 @@ function fillFromHeard(){
 
 <h3>⚙️ Налаштування</h3>
 <ul>
-<li><b>Групи</b> — налаштування поділено на групи: основні, слова (🧩 👂 ✍️ 📝), 🔤 Абетка й 🎤 підказка, 🗣 Мої фрази, 🔢 Перелічення, 💾 дані. Відкрита одна група; якщо відкрити налаштування з режиму, одразу розкривається його група.</li>
+<li><b>Групи</b> — налаштування поділено на групи: основні, 👆 керування й натискання, слова (🧩 👂 ✍️ 📝), 🔤 Абетка й 🎤 підказка, 🗣 Мої фрази, 🔢 Перелічення, 📖 Читаю вголос, 🔟 Числа на слух, 💬 Фрази на слух, 💾 дані, ℹ️ про застосунок. Відкрита одна група; якщо відкрити налаштування з режиму, одразу розкривається його група.</li>
 <li><b>Голосом казати, чи правильно сказано</b> — одне налаштування для всіх режимів. Після помилки застосунок називає правильне слово.</li>
 <li><b>Мова і тема</b> — російська, українська, англійська; світла й темна тема.</li>
 <li><b>Кількість варіантів</b> — 2, 3 або 4.</li>
@@ -10861,6 +10950,7 @@ function fillFromHeard(){
 <li><b>Обов’язково промовляти слово</b> — доки слово не вимовлено правильно, «Наступне слово» не спрацьовує, а сторінка повертається до блоку промовляння. Після трьох невдалих спроб перехід відкривається, щоб не застрягти. Позначка нижче — <b>«Самому вмикати мікрофон»</b> (🧩, типово вимкнена): коли слово вибрано й складено з літер, застосунок договорює слово, сам прокручує екран до «🎤 Проговорити і перевірити себе», кнопка блимає, і мікрофон вмикається — лишається тільки сказати слово. Якщо слово вже сказано правильно раніше (до складання) або спроби закінчилися, застосунок нікуди не прокручує й мікрофон не вмикає. Після неправильної відповіді мікрофон сам не вмикається: можна послухати зразок, натиснути «Я сказав(ла) правильно» або знову «🎤».</li>
 <li><b>Таймер «Гра / Відпочинок»</b> — після часу гри вмикається пауза для відпочинку; тривалість задається в хвилинах. Час гри йде лише всередині режимів тренування; на стартовому екрані таймер не показується, а поки відкрито налаштування, довідку чи статистику, він стоїть (у шапці значок ⏸). В «Абетці» й «Підказці за сказаним» перерва не перериває людину: вона почнеться після того, як фразу озвучено, або при виході з режиму (у шапці ☕). Залишок часу видно в шапці в усіх режимах, зокрема в «Повному тренажері»; натискання на нього ставить паузу. Таймер не скидається, якщо сторінка перезавантажилася або застосунок перезапустився: час гри й перерва тривають далі. Якщо застосунок був закритий довше за перерву, це вважається відпочинком — час гри починається заново.</li>
 <li><b>💡 Підказка, якщо довго немає дії</b> — у налаштуваннях, група «Слова»: вимкнено (за замовчуванням), 15, 20 або 30 секунд. Працює в «Повному тренажері», «Тренуванні слуху», «Читаю вголос», «Числах на слух», «Письмі» та «Переліченнях». У «Читаю вголос» до спроби слово не звучить: підказка — знову підсвітити склади, на сходинці «на слух» — показати слово. Якщо людина нічого не робить обраний час, підказка йде сходинками: 1) м’яко пульсує кнопка, яку треба натиснути, згори короткий рядок; 2) застосунок каже, що зробити, і ще раз вимовляє слово (якщо ввімкнено «Підказка голосом»); 3) сильна підказка: блідне неправильний варіант, підсвічується наступна потрібна літера, звучить перший склад наступного слова в ряду. Далі нічого не повторюється. Відлік починається заново після будь-якого натискання на кнопку, літеру чи варіант; дотик до порожнього місця (щоб екран не згас) і прокручування його не скидають. Поки говорить застосунок або йде запис, час не рахується. Відповідь після сильної підказки не зараховується як правильна з першого разу. У «Тесті на слух» підказок немає. Поки підказку ввімкнено, екран у цих режимах не гасне (на стартовому екрані й в інших режимах — як зазвичай).</li>
+<li><b>👆 Керування й натискання</b> — «Вібрація під час натискання» і «Звук під час натискання кнопок» (вимкнено, тихий, гучний) підтверджують, що натискання прийнято: коротка вібрація й низьке клацання, яке легше почути при зниженому слуху; поки ввімкнено мікрофон, клацання немає. «Не гасити екран, поки застосунок відкритий» — екран не гасне, поки застосунок на екрані (згорнули — гасне як зазвичай), витрачає більше заряду. Усе типово вимкнено.</li>
 <li><b>📖 Налаштування «Читаю вголос»</b> — окрема група: скільки правильних спроб поспіль потрібно для переходу на наступну сходинку (1–3), темп підсвічування складів, з якої сходинки починати слово, чи вмикати сходинку «на слух» і картинку на ній, чи повертати до читання після помилки на слух, чи звучить зразок і після правильної спроби, тривалість запису «Послухати себе» і чи звучить після нього «Як правильно», за скільки різних днів слово вважається засвоєним.</li>
 <li><b>🔟 Налаштування «Числа на слух»</b> — окрема група: які числа (від 0 до 20, 11–19, десятки, важкі пари 11/13, 13/30, 12/20…, до 100, до 1000 або свій діапазон «від — до»), як відповідати (голосом, вибрати з 2–4 кнопок, набрати цифрами), як показувати число після помилки (цифрами й словом, лише цифрами, лише словом), скільки разів прочитати вголос і скільки разів потім повторити на слух (1–3), чи порівнювати «було» і «почулося», числа у фразах (ні / іноді / лише у фразах), темп мовлення, скільки чисел у занятті (10, 20, без кінця), частіше давати числа з помилками, одразу переходити до наступного числа після правильної відповіді. Ще два налаштування: число звучить лише після натискання «▶ Послухати число» (людина сама вирішує, коли готова слухати) і мікрофон вмикається сам щоразу, коли треба сказати або прочитати число (і після пояснення помилки).</li>
 <li><b>💬 Налаштування «Фрази на слух»</b> — окрема група: завдання (повторити голосом, вибрати з написаних варіантів, відповісти «так / ні»), скільки варіантів для вибору (2–4), які фрази (загальні й свої, лише загальні, лише свої), тема, довжина фраз, чи показувати тему перед фразою, чи говорити записаним голосом, паузи між словами при «Повільно», скільки разів прочитати вголос і повторити на слух після помилки (1–3), чи порівнювати «було» і «почулося», темп мовлення, фраз у занятті (10, 20, без кінця), частіше давати фрази з помилками, одразу наступна фраза після правильної відповіді, фраза звучить лише після натискання «▶ Послухати фразу», мікрофон вмикається сам.</li>
@@ -10934,7 +11024,7 @@ function fillFromHeard(){
 
 <h3>⚙️ Settings</h3>
 <ul>
-<li><b>Groups</b> — settings are split into groups: general, words (🧩 👂 ✍️ 📝), 🔤 ABC and 🎤 suggestions, 🗣 My phrases, 🔢 Sequences, 💾 data. One group is open; when Settings are opened from a mode, that mode's group opens.</li>
+<li><b>Groups</b> — settings are split into groups: general, 👆 control and taps, words (🧩 👂 ✍️ 📝), 🔤 ABC and 🎤 suggestions, 🗣 My phrases, 🔢 Sequences, 📖 Reading aloud, 🔟 Numbers by ear, 💬 Phrases by ear, 💾 data, ℹ️ about the app. One group is open; when Settings are opened from a mode, that mode's group opens.</li>
 <li><b>Say aloud whether it was said correctly</b> — one setting for all modes. After a mistake the app says the right word.</li>
 <li><b>Language and theme</b> — Russian, Ukrainian, English; light and dark theme.</li>
 <li><b>Number of options</b> — 2, 3 or 4.</li>
@@ -10947,6 +11037,7 @@ function fillFromHeard(){
 <li><b>Require saying the word aloud</b> — “Next word” does not work until the word is pronounced correctly, and the page scrolls back to the speaking block. After three failed attempts it unlocks so you never get stuck. The checkbox below — <b>“Turn the microphone on by itself”</b> (🧩, off by default): when the word is chosen and built from letters, the app finishes saying the word, scrolls to “🎤 Pronounce and check yourself”, the button blinks and the microphone turns on — you only have to say the word. If the word was already said correctly earlier (before building) or the attempts are used up, the app does not scroll or turn the microphone on. After a wrong answer the microphone does not turn on by itself: you can listen to the model, tap “I said it correctly” or tap “🎤” again.</li>
 <li><b>Play / Rest timer</b> — after the play time a rest break starts; durations are set in minutes. Play time runs only inside training modes; on the start screen the timer is hidden, and while Settings, Help or Statistics are open the timer stands still (⏸ in the header). In ABC and “Suggestions from what was said” the break does not interrupt the person: it starts after a phrase has been spoken or when leaving the mode (☕ in the header). The time left is shown in the header in every mode; tapping it pauses the timer. The timer is not reset if the page reloads or the app restarts: play time and the break continue. If the app was closed for longer than the break, that counts as rest and play time starts again.</li>
 <li><b>💡 Hint when nothing happens for a while</b> — in Settings, the “Words” group: off (default), 15, 20 or 30 seconds. Works in the Full trainer, Listening practice, Reading aloud, Numbers by ear, Writing and Sequences. In Reading aloud the word is not played before a try: the hint highlights the syllables again, and on the “by ear” step shows the word. If the person does nothing for the chosen time, the hint comes in steps: 1) the button to press pulses gently and a short line appears at the top; 2) the app says what to do and says the word again (if “Spoken hint” is on); 3) a strong hint: a wrong option fades, the next needed letter is highlighted, the first syllable of the next word in a series is heard. Nothing repeats after that. The count restarts after any tap on a button, letter or option; touching an empty spot (to keep the screen on) or scrolling does not reset it. While the app speaks or records, time does not count. An answer after a strong hint is not counted as right the first time. The Hearing test has no hints. While the hint is on, the screen stays on in these modes (on the start screen and in other modes it behaves as usual).</li>
+<li><b>👆 Control and taps</b> — “Vibrate on tap” and “Sound on button taps” (off, quiet, loud) confirm that a tap was accepted: a short vibration and a low click that is easier to hear with hearing loss; there is no click while the microphone is on. “Keep the screen on while the app is open” — the screen stays on while the app is on the screen (minimised — it turns off as usual), uses more battery. Everything is off by default.</li>
 <li><b>📖 Reading aloud settings</b> — a separate group: how many correct tries in a row move to the next step (1–3), the syllable highlight speed, which step a word starts with, whether to use the “by ear” step and a picture on it, whether a mistake by ear goes back to reading, whether the model also plays after a correct try, the “Hear myself” recording length and whether “How it should sound” plays after it, and on how many different days a word must be done to count as learned.</li>
 <li><b>🔟 Numbers by ear settings</b> — a separate group: which numbers (0–20, 11–19, tens, hard pairs 13/30, 14/40, 11/12…, up to 100, up to 1000 or your own “from — to” range), how to answer (by voice, choose from 2–4 buttons, type the digits), how to show the number after a mistake (digits and word, digits only, word only), how many times to read aloud and then repeat by ear (1–3), whether to compare “it was” and “you heard”, numbers in phrases (no / sometimes / only in phrases), speech speed, numbers per session (10, 20, no limit), give numbers with past mistakes more often, go to the next number at once after a correct answer. Two more settings: the number is played only after tapping “▶ Hear the number” (the person decides when they are ready) and the microphone turns on by itself whenever the number has to be said or read (also after a mistake is explained).</li>
 <li><b>💬 Phrases by ear settings</b> — a separate group: the task (repeat by voice, choose from written options, answer “yes / no”), how many options to choose from (2–4), which phrases (common and own, common only, own only), topic, phrase length, whether to show the topic before the phrase, whether to use your recorded voice, pauses between words with “Slowly”, how many times to read aloud and repeat by ear after a mistake (1–3), whether to compare “it was” and “you heard”, speech speed, phrases per session (10, 20, no limit), give phrases with mistakes more often, next phrase at once after a correct answer, play the phrase only after tapping “▶ Hear the phrase”, turn the microphone on by itself.</li>
@@ -10982,7 +11073,7 @@ function fillFromHeard(){
         'm_full', 'm_ser', 'm_listen', 'm_read', 'm_num', 'm_fph', 'm_wr', 'm_quiz', 'm_abc', 'm_hear', 'm_phr', 'nav', 'tour',
         'listen', 'syll', 'hint', 'choose', 'build', 'next', 'counters',
         'pron', 'stats',
-        's_groups', 's_verdict', 's_lang', 's_options', 's_voice', 's_gentle', 's_emoji', 's_autospeak', 's_blocks', 's_strict', 's_require', 's_timer', 's_idlehint', 's_read', 's_num', 's_fph', 's_about', 's_start', 's_abcset', 's_mywords', 's_data', 's_fb',
+        's_groups', 's_verdict', 's_lang', 's_options', 's_voice', 's_gentle', 's_emoji', 's_autospeak', 's_blocks', 's_strict', 's_require', 's_timer', 's_idlehint', 's_touch', 's_read', 's_num', 's_fph', 's_about', 's_start', 's_abcset', 's_mywords', 's_data', 's_fb',
         'dict', 'offline'
     ];
     const HELP_MODE = {

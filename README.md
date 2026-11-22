@@ -57,7 +57,8 @@
 - **Навчання по кроках** — під час першого входу в режим застосунок пропонує показати, як займатися: підсвічує потрібні кнопки, пояснює коротко й голосом; повторити — ❓ у режимі → «🎓 Навчання».
 - **Довідка ❓** — на стартовому екрані вся довідка змістом (пункти розгортаються натисканням), у режимі — лише про цей режим, з кнопкою «📖 Уся довідка».
 - **Стартовий екран** — останній режим позначено «▶ Продовжити», під заголовком підсумок дня; непотрібні зараз режими можна сховати в налаштуваннях; за бажанням застосунок під час запуску одразу відкриває режим, у якому закінчили.
-- **Резервна копія даних** — у налаштуваннях (група «💾 Дані») можна зберегти всі налаштування, свої слова й фрази та статистику в один файл і завантажити їх на іншому телефоні або після перевстановлення.
+- **Резервна копія даних** — у налаштуваннях (група «💾 Дані») можна зберегти всі налаштування, свої слова й фрази, записи голосу та статистику в один файл і завантажити їх на іншому телефоні або після перевстановлення.
+- **👆 Керування й натискання** — у налаштуваннях: вібрація й низьке клацання під час натискання кнопок (тихе або гучне; поки ввімкнено мікрофон, клацання немає) і «Не гасити екран, поки застосунок відкритий». Усе типово вимкнено.
 - **Підказка для вбудованого браузера** — якщо посилання відкрито всередині Facebook, Instagram, Messenger тощо, згори з’являється жовта плашка: там застосунок не бачить ваших даних, тож його варто відкрити в Chrome (кнопка «Відкрити в Chrome» на Android або «Копіювати посилання»).
 
 ### 🚀 Як почати
@@ -187,7 +188,8 @@ The app runs entirely in the browser — no installation, no backend, no account
 - **Step-by-step tutorial** — on first entering a mode the app offers to show how to practise: it highlights the needed buttons and explains briefly and aloud; repeat via ❓ inside the mode → “🎓 Tutorial”.
 - **Help ❓** — on the start screen all help as a table of contents (items open with a tap), inside a mode only about that mode, with an “📖 All help” button.
 - **Start screen** — the last used mode is marked “▶ Continue”, today's summary is shown under the title; modes you don't need now can be hidden in Settings; optionally the app opens the mode you finished in right on start.
-- **Data backup** — in Settings (the “💾 Data” group) all settings, your own words and phrases, and statistics can be saved to one file and loaded on another phone or after reinstalling.
+- **Data backup** — in Settings (the “💾 Data” group) all settings, your own words and phrases, voice recordings and statistics can be saved to one file and loaded on another phone or after reinstalling.
+- **👆 Control and taps** — in Settings: vibration and a low click on button taps (quiet or loud; no click while the microphone is on) and “Keep the screen on while the app is open”. Everything is off by default.
 - **In-app browser hint** — if the link is opened inside Facebook, Instagram, Messenger, etc., a yellow bar appears at the top: the app cannot see your data there, so it is better to open it in Chrome (“Open in Chrome” on Android, or “Copy link”).
 
 ### 🚀 Getting started
